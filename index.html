@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Qtemp技術指標回測</title></head><body style="margin:0;background:#fff">
+
+<style>
+#qtemp_root{
+  --ink:#142238;--muted:#526176;--line:#dce4ed;--surface:#f5f8fc;
+  --navy:#203b60;--gold:#895c18;--up:#b6293b;--down:#117454;
+  background:#fff;color:var(--ink);color-scheme:light;box-sizing:border-box;
+  width:100%;max-width:1320px;margin:0 auto;padding:clamp(16px,3vw,36px);
+  font:14px/1.5 Inter,"Noto Sans TC",system-ui,sans-serif;
+}
+#qtemp_root *{box-sizing:border-box}
+#qtemp_root h1,#qtemp_root h2,#qtemp_root h3{margin:0;line-height:1.25;font-weight:700}
+#qtemp_root h1{font-size:clamp(23px,3.2vw,39px);letter-spacing:-.035em}
+#qtemp_root h2{font-size:clamp(20px,2.4vw,27px);letter-spacing:-.035em;overflow-wrap:anywhere}
+#qtemp_root h3{font-size:15px;margin:22px 0 10px}
+#qtemp_root .muted{color:var(--muted)}
+#qtemp_root .head,#qtemp_root .controls,#qtemp_root .filters,#qtemp_root .tabs{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap
+}
+#qtemp_root .head{justify-content:space-between;gap:12px;margin-bottom:19px}
+#qtemp_root .source{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600}
+#qtemp_root .source::before{content:"";width:7px;height:7px;border-radius:50%;background:#6e819d}
+#qtemp_root .query{padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+#qtemp_root .controls input[type=search]{flex:1;min-width:140px}
+#qtemp_root input::placeholder{color:#627086;opacity:1}
+#qtemp_root button,#qtemp_root input,#qtemp_root select{
+  font:inherit;color:var(--ink);background:#fff;border:1px solid #cdd8e5;border-radius:8px;padding:8px 11px
+}
+#qtemp_root button{font-weight:600;cursor:pointer}
+#qtemp_root button:hover:not(:disabled){background:#edf3fa;border-color:#a8bbd1}
+#qtemp_root button:disabled{opacity:.55;cursor:wait}
+#qtemp_root :is(button,input,select):focus-visible{outline:2px solid #406b9b;outline-offset:2px}
+#qtemp_root .primary{background:var(--navy);color:#fff;border-color:var(--navy)}
+#qtemp_root .primary:hover:not(:disabled){background:#2b4b76;border-color:#2b4b76}
+#qtemp_root .filters label{display:inline-flex;align-items:center;gap:6px;max-width:100%}
+#qtemp_root input[type=file],#qtemp_root select[data-q=matches]{max-width:100%}
+#qtemp_root [data-q=comparetools] label{flex-wrap:wrap}
+#qtemp_root input[type=file]{min-width:0}
+#qtemp_root .status{min-height:20px;margin:8px 1px 0;font-size:12px}
+#qtemp_root .status.error{color:var(--up);font-weight:600}
+#qtemp_root .asset{display:flex;align-items:baseline;gap:5px 13px;flex-wrap:wrap;margin:22px 0 12px}
+#qtemp_root .asset h2{color:#0a1424;font-weight:750}
+#qtemp_root .asset .muted{font-size:12px;font-variant-numeric:tabular-nums}
+#qtemp_root .tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+#qtemp_root .tile{
+  background:#fff;border:1px solid var(--line);border-radius:12px;padding:13px 15px;
+  box-shadow:0 2px 5px #213b5c08;color:var(--muted);font-size:12px;font-weight:600
+}
+#qtemp_root .tile strong{
+  display:block;margin-top:4px;color:var(--ink);font-size:clamp(17px,2.45vw,28px);line-height:1.25;
+  font-variant-numeric:tabular-nums;font-weight:700;letter-spacing:-.045em;overflow-wrap:anywhere
+}
+#qtemp_root .tile.qtemp{background:#fdf8ef;border-color:#e9d9bc;color:var(--gold)}
+#qtemp_root .tile.qtemp strong{color:var(--gold)}
+#qtemp_root .tile strong.positive{color:var(--up)}
+#qtemp_root .tile strong.negative{color:var(--down)}
+#qtemp_root .tabs{flex-wrap:nowrap;overflow-x:auto;gap:13px;margin:15px 0 12px;border-bottom:1px solid var(--line)}
+#qtemp_root .tabs button{
+  flex:none;white-space:nowrap;padding:11px 5px 10px;border:0;border-bottom:2px solid transparent;
+  border-radius:0;color:var(--muted)
+}
+#qtemp_root .tabs button:hover{background:var(--surface)}
+#qtemp_root .tabs button:focus-visible{outline-offset:-3px}
+#qtemp_root .tabs button[aria-pressed=true]{color:var(--navy);border-bottom-color:var(--navy)}
+#qtemp_root .panel{
+  min-width:0;padding:clamp(10px,1.6vw,18px);background:#fff;border:1px solid var(--line);
+  border-radius:14px;box-shadow:0 4px 16px #213b5c0a
+}
+#qtemp_root .chart-tools{justify-content:space-between;margin-bottom:8px}
+#qtemp_root .chart-tools button{padding:6px 10px;font-size:12px}
+#qtemp_root .range{display:flex;flex-wrap:wrap;gap:5px}
+#qtemp_root .chart-tools [data-q=reset-chart]{color:var(--muted)}
+#qtemp_root .ohlc{
+  display:flex;align-items:baseline;gap:4px 13px;flex-wrap:wrap;
+  margin:0 0 8px;padding:7px 10px;background:var(--surface);border-radius:8px;
+  font-size:12px;font-variant-numeric:tabular-nums
+}
+#qtemp_root .ohlc span{white-space:nowrap;color:var(--muted)}
+#qtemp_root .ohlc strong{color:var(--ink);margin-left:3px;font-weight:650}
+#qtemp_root .ohlc span:last-child strong{color:var(--gold)}
+#qtemp_root .plot{height:660px;min-width:0}
+#qtemp_root .table{overflow:auto;max-height:580px;border-radius:8px;margin-top:7px}
+#qtemp_root table{border-collapse:separate;border-spacing:0;width:100%;font-variant-numeric:tabular-nums}
+#qtemp_root th,#qtemp_root td{text-align:right;padding:10px 12px;white-space:nowrap;border-bottom:1px solid #e7edf4}
+#qtemp_root th:first-child,#qtemp_root td:first-child{text-align:left}
+#qtemp_root th{position:sticky;top:0;background:#edf3fa;color:#3f536d;font-size:12px;font-weight:700}
+#qtemp_root tbody tr:nth-child(even){background:#f8fafc}
+#qtemp_root tbody tr:hover{background:#edf4fb}
+#qtemp_root .note{color:var(--muted);margin:10px 1px 0;font-size:12px}
+#qtemp_root [hidden]{display:none!important}
+@media(max-width:650px){
+  #qtemp_root .query{padding:10px}
+  #qtemp_root .tiles{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  #qtemp_root .tile{padding:10px 12px}
+  #qtemp_root .asset{margin-top:16px}
+  #qtemp_root .plot{height:520px}
+  #qtemp_root .tabs{gap:10px}
+  #qtemp_root .ohlc{gap:4px 9px}
+}
+@media(max-width:420px){
+  #qtemp_root .controls input[type=search]{flex-basis:100%}
+  #qtemp_root select[data-q=matches]{flex-basis:100%}
+  #qtemp_root .chart-tools button{padding-inline:7px}
+}
+</style>
+<section id="qtemp_root">
+  <div class="head"><h1>Qtemp技術指標回測</h1><span class="source muted">Yahoo Finance</span></div>
+  <div class="query">
+    <div class="controls">
+      <input data-q="symbol" type="search" aria-label="股票、ETF 或指數" value="2330" placeholder="2330、0050、AAPL、^TWII">
+      <button data-q="search" type="button">搜尋名稱</button>
+      <select data-q="matches" aria-label="搜尋結果" hidden></select>
+      <button data-q="load" class="primary" type="button">載入並計算</button>
+    </div>
+  </div>
+  <p class="status muted" data-q="status" role="status"></p>
+  <div data-q="results" hidden>
+    <div class="asset"><h2 data-q="title"></h2><span class="muted" data-q="subtitle"></span></div>
+    <div class="tiles">
+      <div class="tile">最近收盤<strong data-q="close"></strong></div>
+      <div class="tile">日漲跌<strong data-q="change"></strong></div>
+      <div class="tile">成交量<strong data-q="volume"></strong></div>
+      <div class="tile qtemp">QTemp<strong data-q="score"></strong></div>
+    </div>
+    <nav class="tabs" aria-label="分析分頁">
+      <button data-tab="chart" type="button">行情與 QTemp</button><button data-tab="annual" type="button">年度統計</button>
+      <button data-tab="events" type="button">訊號明細</button><button data-tab="returns" type="button">歷史報酬</button>
+      <button data-tab="details" type="button">行情與基本資料</button><button data-tab="raw" type="button">日線與公司行動</button><button data-tab="compare" type="button">TradingView 對照</button>
+    </nav>
+    <div class="panel">
+      <div class="filters" data-q="filters" hidden>
+        <label>訊號 <select data-q="signal"><option>低估值</option><option>高估值</option><option>底背離</option><option>頂背離</option></select></label>
+        <label>近 <select data-q="years" aria-label="統計年數"></select> 年</label>
+      </div>
+      <div data-q="charttools" hidden>
+        <div class="filters chart-tools">
+          <div class="range" role="group" aria-label="圖表顯示範圍">
+            <button type="button" data-range="22">1 月</button><button type="button" data-range="132">6 月</button>
+            <button type="button" data-range="252">1 年</button><button type="button" data-range="all">全部</button>
+          </div>
+          <button type="button" data-q="reset-chart">重設視圖</button>
+        </div>
+        <div class="ohlc" data-q="ohlc">
+          <span><strong data-value="day"></strong></span>
+          <span>開<strong data-value="open"></strong></span><span>高<strong data-value="high"></strong></span>
+          <span>低<strong data-value="low"></strong></span><span>收<strong data-value="close"></strong></span>
+          <span>量<strong data-value="volume"></strong></span><span>QTemp<strong data-value="score"></strong></span>
+        </div>
+      </div>
+      <div class="filters" data-q="comparetools" hidden><label>TradingView 日 K CSV <input type="file" data-q="csv" accept=".csv,text/csv"></label><button data-q="compare" type="button">逐日比對</button></div>
+      <div class="plot" data-q="plot" hidden></div>
+      <div data-q="table" hidden></div>
+      <p class="note" data-q="note"></p>
+    </div>
+  </div>
+</section>
+<script>
+(async () => {
+  const root = document.getElementById('qtemp_root');
+  const q = name => root.querySelector('[data-q="'+name+'"]');
+  const tabs = Array.from(root.querySelectorAll('[data-tab]'));
+  const num = new Intl.NumberFormat('zh-TW', {maximumFractionDigits:2});
+  const pct = x => (x>=0?'+':'')+(x*100).toFixed(2)+'%';
+  let data, audit, active = 'chart', chartKey = '', busy = false;
+  const status = (value, error=false) => { q('status').textContent=value; q('status').classList.toggle('error',error); };
+  const rpc = async (method,args) => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 90000);
+    try {
+      const reply = await fetch('/api/' + method, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({args}),
+        signal: controller.signal
+      });
+      const result = await reply.json();
+      if (!reply.ok || result.error) throw new Error(result.error || '伺服器暫時無法處理請求。');
+      return result;
+    } catch (error) {
+      if (error.name === 'AbortError') throw new Error('資料讀取逾時，請稍後重試。');
+      throw error;
+    } finally { clearTimeout(timeout); }
+  };
+  let chart, observer;
+  const ensureChart = () => {
+    if (globalThis.LightweightCharts) return Promise.resolve();
+    const loadScript=source=>new Promise((resolve,reject)=>{
+      const script = document.createElement('script');
+      script.src=source;
+      script.onload=resolve;
+      script.onerror=reject;
+      document.head.append(script);
+    });
+    const bundle='/lightweight-charts@5.1.0/dist/lightweight-charts.standalone.production.js';
+    if (!ensureChart.task) ensureChart.task = loadScript('https://cdn.jsdelivr.net/npm'+bundle)
+      .catch(()=>loadScript('https://unpkg.com'+bundle)).catch(()=>{
+        ensureChart.task=null;
+        throw new Error('TradingView 圖表元件載入失敗，請確認網路連線。');
+      });
+    return ensureChart.task;
+  };
+  function fitChart(range) {
+    if (!chart || !data) return;
+    const candles=data.figure.candles;
+    if(range==='all') { chart.timeScale().fitContent(); return; }
+    const n=candles.length;
+    chart.timeScale().setVisibleLogicalRange({from:Math.max(0,n-Number(range)),to:n+4});
+  }
+  function drawChart(current) {
+    const L=globalThis.LightweightCharts, plot=q('plot');
+    const up='#bf3445', down='#148161', gold='#986717', axis='#54647a', border='#dce4ed', grid='#edf1f6';
+    const crosshair={color:'#8394ab',labelBackgroundColor:'#324d6e'};
+    if (observer) observer.disconnect();
+    if (chart) chart.remove();
+    chart=L.createChart(plot,{
+      width:Math.max(1,plot.clientWidth),height:plot.clientHeight,
+      localization:{locale:'zh-TW'},
+      layout:{background:{color:'#ffffff'},textColor:axis,attributionLogo:true,
+              panes:{enableResize:true,separatorColor:border,separatorHoverColor:'#bac9da'}},
+      grid:{vertLines:{color:grid},horzLines:{color:grid}},
+      crosshair:{mode:L.CrosshairMode.Normal,vertLine:crosshair,horzLine:crosshair},
+      rightPriceScale:{borderColor:border},
+      handleScroll:{mouseWheel:true,pressedMouseMove:true,horzTouchDrag:true,vertTouchDrag:false},
+      handleScale:{mouseWheel:true,axisPressedMouseMove:true,axisDoubleClickReset:true,pinch:true},
+      timeScale:{rightOffset:4,borderColor:border,barSpacing:7,minBarSpacing:1}
+    });
+    const c=chart.addSeries(L.CandlestickSeries,{upColor:up,downColor:down,
+      borderVisible:false,wickUpColor:up,wickDownColor:down},0);
+    const v=chart.addSeries(L.HistogramSeries,{priceFormat:{type:'volume'},priceLineVisible:false},1);
+    const t=chart.addSeries(L.LineSeries,{color:gold,lineWidth:2,priceLineVisible:false,
+      lineType:L.LineType.WithSteps,
+      autoscaleInfoProvider:()=>({priceRange:{minValue:-105,maxValue:105}})},2);
+    chart.panes().forEach((pane,i)=>pane.setStretchFactor([5,1.2,2.2][i]));
+    const candles=current.figure.candles, scores=current.figure.scores;
+    const byDay=new Map(candles.map((row,i)=>[row[0],[row,scores[i]]]));
+    c.setData(candles.map(([time,open,high,low,close])=>({time,open,high,low,close})));
+    v.setData(candles.map(([time,open,high,low,close,volume])=>volume===null?{time}:
+      {time,value:volume,color:close>=open?'#bf344578':'#14816178'}));
+    t.setData(candles.map(([time],i)=>({time,value:scores[i]})));
+    [-90,0,90].forEach(price=>t.createPriceLine({price,color:'#aebacf',lineStyle:L.LineStyle.Dotted,axisLabelVisible:false}));
+    const markerStyle={buy:['低','#235fbb'],sell:['高','#a73044'],bull:['底','#07745d'],bear:['頂','#925911']};
+    L.createSeriesMarkers(c,current.figure.marks.map(([time,type])=>{
+      const low=type==='buy'||type==='bull', [text,color]=markerStyle[type];
+      return {time,position:low?'belowBar':'aboveBar',shape:low?'arrowUp':'arrowDown',color,text};
+    }));
+    for(const [start,end,p0,p1,t0,t1,type] of current.figure.segments){
+      const color=markerStyle[type][1];
+      for(const [pane,y0,y1] of [[0,p0,p1],[2,t0,t1]]){
+        const line=chart.addSeries(L.LineSeries,{color,lineWidth:1,lineStyle:L.LineStyle.Dotted,
+          lastValueVisible:false,priceLineVisible:false,crosshairMarkerVisible:false,autoscaleInfoProvider:()=>null},pane);
+        line.setData([{time:start,value:y0},{time:end,value:y1}]);
+      }
+    }
+    const readouts=Array.from(q('ohlc').querySelectorAll('[data-value]'));
+    const update=entry=>{
+      if(!entry) return;
+      const [[day,o,h,l,close,volume],score]=entry;
+      const values={day,open:o,high:h,low:l,close,volume,score};
+      for(const node of readouts){
+        const value=values[node.dataset.value];
+        node.textContent=value===null?'—':typeof value==='number'?num.format(value):value;
+      }
+    };
+    chart.subscribeCrosshairMove(p=>update(byDay.get(p.time)||byDay.get(candles.at(-1)[0])));
+    update(byDay.get(candles.at(-1)[0]));
+    observer=new ResizeObserver(()=>{if(!plot.hidden&&plot.clientWidth)chart.resize(plot.clientWidth,plot.clientHeight);});
+    observer.observe(plot);
+    fitChart('252');
+    q('reset-chart').onclick=()=>{
+      chart.panes().forEach((_,i)=>chart.priceScale('right',i).applyOptions({autoScale:true}));
+      fitChart('252');
+    };
+  }
+  function createTable(payload) {
+    const holder = document.createElement('div'); holder.className='table';
+    if (!payload.rows.length) { holder.textContent='沒有符合條件的資料。'; return holder; }
+    const table=document.createElement('table');
+    const header=table.createTHead().insertRow();
+    for (const name of payload.columns) { const cell=document.createElement('th'); cell.scope='col'; cell.textContent=name; header.append(cell); }
+    const body=table.createTBody();
+    for (const row of payload.rows) {
+      const tr=body.insertRow();
+      row.forEach((value,i) => {
+        const key=payload.columns[i];
+        let text=value;
+        if (value==null) text='—';
+        else if (typeof value==='boolean') text=value?'是':'否';
+        else if (typeof value==='number') text=key.includes('報酬率') ? pct(value) : key==='年度'?String(value):num.format(value);
+        else if (/^\d{4}-\d\d-\d\dT00:00:00/.test(value)) text=value.slice(0,10);
+        tr.insertCell().textContent=text;
+      });
+    }
+    holder.append(table);
+    return holder;
+  }
+  function render() {
+    if (!data) return;
+    for (const btn of tabs) btn.setAttribute('aria-pressed',String(btn.dataset.tab===active));
+    const chart = active==='chart';
+    const plot = q('plot');
+    plot.hidden=!chart; q('table').hidden=chart;
+    q('filters').hidden=!['annual','events'].includes(active);
+    q('charttools').hidden=!chart;
+    q('comparetools').hidden=active!=='compare';
+    if (chart) {
+      q('note').textContent='滾輪縮放、按住拖曳 · 日 K 與訊號採已收盤資料 · '+data.basis;
+      if (chartKey===data.symbol) return;
+      const current=data;
+      ensureChart().then(() => {
+        if (data!==current || active!=='chart') return;
+        drawChart(current);
+        chartKey=current.symbol;
+      }).catch(error => status(error.message,true));
+      return;
+    }
+    if (active==='compare') {
+      q('table').replaceChildren(...(audit?[createTable(audit.table)]:[]));
+      q('note').textContent=audit?audit.note:'匯入同標的的 TradingView 日 K CSV，包含成交量和 QTemp 分數。匯出時請使用相同價格口徑與指標設定。';
+      return;
+    }
+    const years=Number(q('years').value);
+    const lowerYear=Number(data.end.slice(0,4))-years+1;
+    const signal=q('signal').value;
+    let payload, note='';
+    if(active==='annual') {
+      const source=data.annual[signal];
+      payload={columns:source.columns,rows:source.rows.filter(row=>row[0]>=lowerYear)};
+      note=data.start+' 至 '+data.end+' · 訊號按確認日歸年 · 當年報酬截至最近收盤';
+    } else if(active==='events') {
+      payload={columns:data.events.columns,rows:data.events.rows.filter(row=>row[0]===signal && Number(String(row[2]).slice(0,4))>=lowerYear).slice(0,300)};
+      note='同類訊號同日列一次，依確認日排序。';
+    } else if(active==='returns') { payload=data.returns; note=data.basis+' · 以最近收盤計算'; }
+    else if(active==='details') { payload=data.details; note=data.infoMissing?'Yahoo 基本資料暫時無法取得':'Yahoo 報價可能延遲'; }
+    else { payload=data.daily; note='最近 120 根還原日 K · 股利與拆併股依 Yahoo 回傳'; }
+    q('table').replaceChildren(createTable(payload));
+    if(active==='raw') {
+      const heading=document.createElement('h3'); heading.textContent='股利與拆併股';
+      q('table').append(heading,createTable(data.actions));
+    }
+    q('note').textContent=note;
+  }
+  async function load() {
+    if (busy) return;
+    const symbol=(q('matches').value || q('symbol').value).trim();
+    if (!symbol) { status('請輸入標的。',true); return; }
+    busy=true; q('load').disabled=true; q('search').disabled=true;
+    q('results').hidden=true; status('讀取 Yahoo Finance…');
+    try {
+      data=await rpc('analyze',[symbol]);
+      chartKey=''; audit=null;
+      q('title').textContent=data.symbol+' '+(data.name===data.symbol?'':data.name);
+      q('subtitle').textContent=[data.market,data.currency,data.end].filter(Boolean).join(' · ');
+      q('close').textContent=num.format(data.last);
+      q('change').textContent=pct(data.change); q('change').className=data.change>=0?'positive':'negative';
+      q('volume').textContent=data.volume==null?'—':num.format(data.volume);
+      q('score').textContent=data.qtemp.toFixed(2);
+      q('results').hidden=false; status(data.start+' 至 '+data.end+' · '+data.basis);
+      render();
+    } catch(error) { status(error.message,true); }
+    finally { busy=false; q('load').disabled=false; q('search').disabled=false; }
+  }
+  async function search() {
+    if(busy) return;
+    const query=q('symbol').value.trim();
+    if(!query) return;
+    busy=true; q('search').disabled=true; q('load').disabled=true; status('搜尋 Yahoo Finance…');
+    try {
+      const result=await rpc('search',[query]);
+      q('matches').replaceChildren();
+      result.choices.forEach(([label,value])=>q('matches').add(new Option(label,value)));
+      q('matches').hidden=!result.choices.length;
+      status(result.choices.length?'找到 '+result.choices.length+' 個候選標的。':'沒有搜尋結果。');
+    } catch(error) { status(error.message,true); }
+    finally { busy=false; q('search').disabled=false; q('load').disabled=false; }
+  }
+  for(let i=1;i<=10;i++) q('years').add(new Option(i,i));
+  q('years').value='10';
+  for(const button of tabs) button.onclick=()=>{active=button.dataset.tab;render();};
+  ['years','signal'].forEach(key=>{q(key).onchange=render;});
+  q('symbol').oninput=()=>{q('matches').replaceChildren();q('matches').hidden=true;};
+  q('symbol').onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();/[^A-Z0-9.^=_\s-]/i.test(e.currentTarget.value)?search():load();}};
+  q('search').onclick=search; q('load').onclick=load;
+  root.querySelectorAll('[data-range]').forEach(btn=>{btn.onclick=()=>fitChart(btn.dataset.range);});
+  q('compare').onclick=async()=>{
+    if (!data||busy) return;
+    const file=q('csv').files[0];
+    if (!file||file.size>2000000){status('請選取 2 MB 內的 TradingView CSV。',true);return;}
+    const current=data;
+    busy=true;q('compare').disabled=true;status('比對交易日、收盤價、成交量與 QTemp 分數…');
+    try {
+      const result=await rpc('compare',[current.symbol,await file.text()]);
+      if(data===current){audit=result;status('比對完成。');render();}
+    } catch(error) {status(error.message,true);}
+    finally {busy=false;q('compare').disabled=false;}
+  };
+  await load();
+})();
+</script>
+
+</body></html>
