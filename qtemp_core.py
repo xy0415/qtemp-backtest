@@ -575,8 +575,8 @@ def signal_forward_study(frame, events, years=10, horizons=(5, 20, 60, 120)):
         subset = selected.loc[selected['類型'].eq(label)]
         records_by_horizon = {h: [] for h in horizons}
         available = len(subset)
-        for record in subset.itertuples(index=False):
-            confirmation = int(record.確認位置)
+        for confirm_position, confirm_date in subset[['確認位置', '確認日']].itertuples(index=False, name=None):
+            confirmation = int(confirm_position)
             entry_index = confirmation + 1
             if entry_index > last_index:
                 continue
@@ -598,7 +598,7 @@ def signal_forward_study(frame, events, years=10, horizons=(5, 20, 60, 120)):
                 adverse = float(lo / entry - 1. if direction > 0 else 1. - hi / entry)
                 favorable = float(hi / entry - 1. if direction > 0 else 1. - lo / entry)
                 trade = {
-                    'signal': label, 'confirmation': record.確認日.date().isoformat(),
+                    'signal': label, 'confirmation': pd.Timestamp(confirm_date).date().isoformat(),
                     'entry': frame.index[entry_index].date().isoformat(),
                     'exit': frame.index[exit_index].date().isoformat(),
                     'horizon': int(h), 'entryPrice': float(entry), 'exitPrice': float(exit_price),
