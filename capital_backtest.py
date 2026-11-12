@@ -79,8 +79,8 @@ def _schedule(start, end, mode, timing):
     return sorted(set(dates))
 
 
-def capital_comparison(symbol, start, end, initial, annual_dca, frequency,
-                       signal_amount, timing="end", fee_percent="0.1", lump_mode="match_dca"):
+def capital_comparison(symbol, start, end, initial, periodic_amount, frequency,
+                       signal_amount, timing="end", lump_mode="match_dca"):
     symbol = symbols(str(symbol), 1)[0]
     try:
         requested_start = pd.Timestamp(start).normalize()
@@ -100,12 +100,9 @@ def capital_comparison(symbol, start, end, initial, annual_dca, frequency,
     if timing not in ("begin","end"):
         raise ValueError("投資時點應為期初或期末")
     ia = _money(initial, "期初金額")
-    cfa = _money(annual_dca, "年度定期定額金額")
+    per_period = _money(periodic_amount, "每期定額金額")
     signal_cash = _money(signal_amount, "每次訊號投入金額")
-    fee = _money(fee_percent, "單邊交易費率") / 100
-    if fee > .02:
-        raise ValueError("單邊交易費率不可超過2%")
-    if ia <= 0 and cfa <= 0 and signal_cash <= 0:
+    if ia <= 0 and per_period <= 0 and signal_cash <= 0:
         raise ValueError("至少要有一種投入資金")
 
     actual, full, values, events = snapshot(symbol, int(datetime.now(timezone.utc).timestamp() // 900))
@@ -130,8 +127,6 @@ def capital_comparison(symbol, start, end, initial, annual_dca, frequency,
     # the first available trading session on or after the due date.
     schedule = _schedule(requested_start, available_end, str(frequency), str(timing))
     periodic = {}
-    per_period = cfa / {"weekly":52, "monthly":12, "quarterly":4,
-                        "semiannual":2, "annual":1}[frequency]
     for due in schedule:
         # 期初於該期首個可交易日開盤買進；期末於最後交易日收盤買進。
         if timing == "begin":
@@ -193,11 +188,11 @@ def capital_comparison(symbol, start, end, initial, annual_dca, frequency,
                 initial_purchase=base.get(i,0.)
                 extra_purchase=source.get(i,0.)
                 if initial_purchase>0:
-                    shares+=initial_purchase*(1-fee)/op
+                    shares+=initial_purchase/op
                     purchase_count+=1
                 if extra_purchase>0:
                     execution_price=cl if kind=="dca" and timing=="end" else op
-                    shares+=extra_purchase*(1-fee)/execution_price
+                    shares+=extra_purchase/execution_price
                     purchase_count+=1
             end_value=shares*cl
             wealth.append(float(end_value))
@@ -242,8 +237,8 @@ def capital_comparison(symbol, start, end, initial, annual_dca, frequency,
         "symbol":actual,"requestedStart":requested_start.date().isoformat(),
         "requestedEnd":requested_end.date().isoformat(),
         "start":dates[0].strftime("%Y-%m-%d"),"end":dates[-1].strftime("%Y-%m-%d"),
-        "days":len(dates),"frequency":frequency,"timing":timing,"fee":fee,
-        "annualDca":cfa,"periodicAmount":per_period,"signalAmount":signal_cash,
+        "days":len(dates),"frequency":frequency,"timing":timing,
+        "periodicAmount":per_period,"signalAmount":signal_cash,
         "initialAmount":ia,"lumpMode":lump_mode,"lumpBudget":lump_budget,"strategies":merged,
-        "note":"期初投入金額 IA 在三策略皆於首個交易日開盤買入；QTemp 策略僅於已確認「低估值」訊號的下一個交易日開盤追加指定金額，從不賣出；定投依日曆頻率將年度 CFA 平均分期，含首尾不足一期的完整單期金額；期初於首個交易日開盤買進，期末於該期最後交易日收盤買進；單筆策略預設於期初一次投入與定期定額整段期間相同的計畫總本金（屬期初已知未來定投計畫的假設），也可改為僅投入 IA；後續不追加資金。所有策略按 Yahoo Adj Close 比例還原 OHLC，允許小數股。總報酬率=期末資產/累積投入−1；年化 XIRR 依實際資金流日期；最大回撤與年化波動使用排除新增入金的日報酬近似值。不同策略投入本金不同，資產總額不宜直接視為績效高低；未含稅、滑價、無風險利率及交易限制。"
+        "note":"期初投入金額 IA 在三策略皆於首個交易日開盤買入；QTemp 策略僅於已確認「低估值」訊號的下一個交易日開盤追加指定金額，從不賣出；定投依設定頻率每期投入指定金額，含首尾不足一期的完整單期金額；期初於首個交易日開盤買進，期末於該期最後交易日收盤買進；單筆策略預設於期初一次投入與定期定額整段期間相同的計畫總本金（屬期初已知未來定投計畫的假設），也可改為僅投入 IA；後續不追加資金。所有策略按 Yahoo Adj Close 比例還原 OHLC，允許小數股。總報酬率=期末資產/累積投入−1；年化 XIRR 依實際資金流日期；最大回撤與年化波動使用排除新增入金的日報酬近似值。不同策略投入本金不同，資產總額不宜直接視為績效高低；不計交易手續費、稅、滑價、無風險利率及交易限制。"
     }
