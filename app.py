@@ -67,6 +67,11 @@ def api(method):
     try:
         result = {'search': site_search, 'analyze': site_analyze, 'compare': site_compare, 'quote': site_quote, 'closed_day': site_closed_day, 'scan': scan, 'compare_assets': compare_assets, 'strategy': strategy, 'capital_comparison': capital_comparison, 'research': site_research}[method](*args)
         return jsonify(result)
+    except ValueError as error:
+        return jsonify({'error': str(error)[:300]}), 400
+    except RuntimeError as error:
+        app.logger.warning('Market data temporarily unavailable: %s', str(error)[:150])
+        return jsonify({'error': 'Yahoo 歷史行情暫時無法取得：' + str(error)[:240]}), 503
     except Exception:
         app.logger.exception('API request failed')
         return jsonify({'error': '伺服器處理發生錯誤，請稍後重試'}), 500
