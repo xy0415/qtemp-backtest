@@ -33,7 +33,8 @@ def _market_sessions(first, last, zone):
         return None, "交易所日曆無法載入，缺失交易日數未估計"
 
 
-def _audit(symbol, frame, values, events, zone):
+def _audit(symbol, frame, values, events, zone, metadata=None):
+    metadata=metadata or {}
     first,last=frame.index[0],frame.index[-1]
     sessions,cal_note=_market_sessions(first,last,zone)
     absent=[] if sessions is None else sorted(set(sessions.normalize())-set(frame.index.normalize()))
@@ -50,6 +51,9 @@ def _audit(symbol, frame, values, events, zone):
     return {
         "source":"Yahoo Finance / yfinance",
         "queriedAt": now.strftime("%Y-%m-%d %H:%M UTC"),
+        "dataStatus":metadata.get("_qtemp_cache_status","未標記"),
+        "cachedAt":metadata.get("_qtemp_cache_saved_at"),
+        "cacheAgeSeconds":metadata.get("_qtemp_cache_age_seconds"),
         "symbol":symbol,
         "start":first.date().isoformat(),
         "end":last.date().isoformat(),
@@ -132,7 +136,7 @@ def site_research(requested):
     _, raw, meta, zone=load_market(actual)
     return {
       "symbol":actual,
-      "quality":_audit(actual,raw,values,events,zone),
+      "quality":_audit(actual,raw,values,events,zone,meta),
       "eventStudy":_event_study(frame,events),
       "calendar":_calendar(events,frame)
     }
