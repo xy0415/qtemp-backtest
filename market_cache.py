@@ -42,6 +42,8 @@ def _read(symbol):
             or not ohlc.gt(0).all().all()
             or not np.isfinite(frame["Adj Close"]).all()
             or not frame["Adj Close"].gt(0).all()
+            or not frame["High"].ge(ohlc[["Open","Low","Close"]].max(axis=1)).all()
+            or not frame["Low"].le(ohlc[["Open","High","Close"]].min(axis=1)).all()
             or not frame.index.is_monotonic_increasing
             or frame.index.has_duplicates):
             return None
