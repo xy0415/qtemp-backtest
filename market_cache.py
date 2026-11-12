@@ -12,7 +12,7 @@ import pandas as pd
 import numpy as np
 
 ROOT=Path(os.environ.get("QTEMP_CACHE_DIR","/tmp/qtemp_verified_prices"))
-FRESH_SECONDS=12*3600
+FRESH_SECONDS=15*60
 BACKUP_SECONDS=7*86400
 
 def _path(symbol):
