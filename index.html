@@ -512,7 +512,7 @@
     for (const btn of tabs) btn.setAttribute('aria-pressed',String(btn.dataset.tab===active));
     const chart = active==='chart';
     const plot = q('plot');
-    plot.hidden=!chart; q('table').hidden=chart;
+    plot.hidden=!chart; q('table').hidden=chart || active==='study';
     q('filters').hidden=!['annual','events'].includes(active);
     q('charttools').hidden=!chart;
     q('studytools').hidden=active!=='study';
