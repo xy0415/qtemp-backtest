@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="QTemp Analytics">
+<defs>
+<linearGradient id="q" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#5557df"/><stop offset=".55" stop-color="#6b6ff0"/><stop offset="1" stop-color="#68a6f7"/></linearGradient>
+</defs>
+<rect width="64" height="64" rx="15" fill="url(#q)"/>
+<g fill="#fff" opacity=".28"><rect x="14" y="35" width="6" height="14" rx="2"/><rect x="25" y="29" width="6" height="20" rx="2"/><rect x="36" y="34" width="6" height="15" rx="2"/><rect x="47" y="20" width="5" height="29" rx="2"/></g>
+<path d="M14 34 25 27 36 32 49 17" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+<g fill="#fff"><circle cx="14" cy="34" r="2.5"/><circle cx="25" cy="27" r="2.5"/><circle cx="36" cy="32" r="2.5"/><circle cx="49" cy="17" r="2.5"/></g>
+</svg>
