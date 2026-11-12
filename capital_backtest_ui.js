@@ -18,14 +18,14 @@ panel.innerHTML='<div class="capital-head"><div><h3>長期投資策略回測</h3
 '<div class="capital-section"><div class="capital-section-head"><h3>策略報酬比較</h3><div class="capital-buttons"><button id="cap-wealth" type="button" aria-pressed="true">資產價值</button><button id="cap-return" type="button" aria-pressed="false">累積報酬率</button><button id="cap-png" type="button">匯出 PNG</button></div></div>'+
 '<div class="capital-legend" id="cap-legend"></div><div class="capital-svg-wrap" id="cap-chart"></div><p class="capital-chart-note" id="cap-chart-note"></p></div>'+
 '<div class="capital-section"><h3>績效對照表</h3><div class="capital-table-scroller" id="cap-table"></div></div>'+
-'<div class="capital-section"><h3>統計基礎</h3><p class="capital-chart-note" id="cap-method"></p></div></div>';
+'<div class="capital-section"><div class="capital-section-head"><h3>逐筆買入明細</h3><div class="capital-buttons"><label>策略 <select id="cap-trade-kind"><option value="qtemp">QTemp 低估值</option><option value="dca">定期定額</option><option value="lump">單筆投入</option></select></label><button type="button" id="cap-trades-csv">匯出交易 CSV</button></div></div><div class="capital-table-scroller" id="cap-trades-table"></div><div class="capital-trade-pager"><button type="button" id="cap-trade-prev">上一頁</button><span id="cap-trade-position"></span><button type="button" id="cap-trade-next">下一頁</button></div><p class="capital-chart-note">成交價格使用 Adj Close 還原的日線開盤或收盤價；不計手續費及稅費。每筆期末市值為該筆買入股數按回測最後一日收盤價計算。</p></div>'+'<div class="capital-section"><h3>統計基礎</h3><p class="capital-chart-note" id="cap-method"></p></div></div>';
 const $=id=>document.getElementById(id);
 const money=x=>x===null||x===undefined?'—':Number(x).toLocaleString('zh-TW',{maximumFractionDigits:0});
 const decimal=x=>x==null?'—':Number(x).toLocaleString('zh-TW',{maximumFractionDigits:2});
 const percent=x=>x==null?'—':(x*100).toFixed(2)+'%';
 const colors=['#5d64eb','#2889e3','#ec8945'];
 const ids=['qtemp','dca','lump'];
-let latest=null, mode='wealth';
+let latest=null, mode='wealth', tradePage=0;
 const endDate=new Date();
 $('cap-end').value=[endDate.getFullYear(),String(endDate.getMonth()+1).padStart(2,'0'),String(endDate.getDate()).padStart(2,'0')].join('-');
 function element(tag,cls,txt){
@@ -74,6 +74,43 @@ function drawTable(data){
  });
  host.append(t);
 }
+function drawTrades(){
+ const host=$('cap-trades-table');host.replaceChildren();
+ if(!latest)return;
+ const current=latest.strategies.find(x=>x.id===$('cap-trade-kind').value);
+ const trades=current?.trades||[],pageSize=20,totalPages=Math.max(1,Math.ceil(trades.length/pageSize));
+ tradePage=Math.max(0,Math.min(tradePage,totalPages-1));
+ const t=document.createElement('table');t.className='capital-performance capital-trades';
+ const columns=['類型','訊號確認日','實際買入日','買入價','投入金額','本次買入股數',
+ '累積股數','持股總成本','平均持股成本','當日持股市值','本次持股期末市值'];
+ const hr=t.createTHead().insertRow();columns.forEach(name=>hr.append(element('th','',name)));
+ const body=t.createTBody();
+ trades.slice(tradePage*pageSize,(tradePage+1)*pageSize).forEach(trade=>{
+  const row=body.insertRow();
+  [trade.type,trade.confirmation||'—',trade.entry,decimal(trade.price),money(trade.amount),
+   decimal(trade.addedShares),decimal(trade.shares),money(trade.costBasis),decimal(trade.avgCost),
+   money(trade.purchaseDayValue),money(trade.lotEndValue)].forEach(val=>row.insertCell().textContent=val);
+ });
+ host.append(t);
+ $('cap-trade-prev').disabled=tradePage===0;
+ $('cap-trade-next').disabled=tradePage>=totalPages-1;
+ $('cap-trade-position').textContent=(tradePage+1)+' / '+totalPages+' 頁 · '+trades.length+' 筆'+(current?.tradesTruncated?'（列表截斷）':'');
+}
+$('cap-trade-kind').onchange=()=>{tradePage=0;drawTrades()};
+$('cap-trade-prev').onclick=()=>{tradePage--;drawTrades()};
+$('cap-trade-next').onclick=()=>{tradePage++;drawTrades()};
+$('cap-trades-csv').onclick=()=>{
+ if(!latest)return;
+ const current=latest.strategies.find(x=>x.id===$('cap-trade-kind').value);
+ const heading=['類型','訊號確認日','實際買入日','買入價','投入金額','本次買入股數',
+  '累積股數','持股總成本','平均持股成本','當日持股市值','本次持股期末市值'];
+ const rows=[heading,...(current?.trades||[]).map(t=>[
+  t.type,t.confirmation,t.entry,t.price,t.amount,t.addedShares,t.shares,t.costBasis,t.avgCost,t.purchaseDayValue,t.lotEndValue])];
+ const csv='\ufeff'+rows.map(row=>row.map(v=>'"'+String(v??'').replaceAll('"','""')+'"').join(',')).join('\r\n');
+ const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+ const link=document.createElement('a');link.href=url;link.download='QTemp_'+latest.symbol+'_'+current.id+'_trades.csv';link.click();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+};
 function niceTick(value){const a=Math.abs(value);if(a>=1e9)return (value/1e9).toFixed(1)+'B';if(a>=1e6)return (value/1e6).toFixed(1)+'M';if(a>=1e3)return (value/1e3).toFixed(0)+'K';return value.toFixed(0)}
 function renderChart(data){
  const host=$('cap-chart');host.replaceChildren();
@@ -171,7 +208,7 @@ $('cap-run').onclick=async()=>{
   const result=await response.json();
   if(!response.ok||result.error)throw new Error(result.error||'資料回傳失敗');
   latest=result;mode='wealth';
-  fillMetrics(result);drawTable(result);renderChart(result);
+  fillMetrics(result);drawTable(result);renderChart(result);tradePage=0;drawTrades();
   $('cap-method').textContent=result.note;
   $('cap-results').hidden=false;
   status.textContent='回測完成 · '+result.symbol+' · '+result.start+' 至 '+result.end;
