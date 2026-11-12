@@ -75,6 +75,10 @@ def save_verified(symbol,frame,metadata,zone):
     allowed_meta={}
     for key in ["priceHint","currency","exchangeTimezoneName","exchangeName","fullExchangeName"]:
         val=metadata.get(key)
+        if isinstance(val,np.integer):
+            val=int(val)
+        elif isinstance(val,np.floating):
+            val=float(val)
         if isinstance(val,(str,int,float,bool)) and not (isinstance(val,float) and not np.isfinite(val)):
             allowed_meta[key]=val
     data={
