@@ -17,7 +17,7 @@ const header=document.createElement('header');
 header.className='qtopbar';
 const brand=document.createElement('a');
 brand.className='qbrand';brand.href='#overview';
-brand.innerHTML='<span class="qbrand-mark" aria-hidden="true">◈</span><span>QTemp <small>RESEARCH</small></span>';
+brand.innerHTML='<span class="qbrand-mark" aria-hidden="true">◈</span><span>QTemp技術指標分析</span>';
 header.append(brand);
 const nav=document.createElement('nav');nav.className='qtopnav';nav.setAttribute('aria-label','網站主導覽');
 routes.forEach(([id,label])=>{
@@ -34,7 +34,7 @@ mobileNav.append(mobileSelect);header.append(mobileNav);
 const status=document.createElement('span');status.className='qtopend';status.textContent='歷史資料研究平台';header.append(status);
 base.before(header);
 const hero=document.createElement('section');hero.className='qhero';
-hero.innerHTML='<div><div class="qeyebrow">QUANTITATIVE MARKET INTELLIGENCE</div><h1>以歷史數據，<br><em>看清市場溫度。</em></h1><p>QTemp 將估值、趨勢與動能訊號整合於同一個研究工作台。探索股票和 ETF 的技術結構、回測結果與歷史分布，不以猜測代替數據。</p><div class="qactions"><button type="button" class="primary" data-go="chart">查看行情圖表</button><button type="button" data-go="signals">研究歷史訊號</button></div></div><div class="qpreview"><div class="qpreview-top"><strong>研究工作台</strong><span>QTemp · 日 K</span></div><div class="qpreview-value" data-preview-score>—</div><div style="color:#8fa7c4;font-size:12px;margin-top:4px">目前選定標的的最新 QTemp 分數</div><svg viewBox="0 0 380 145" role="img" aria-label="示意性數據曲線，非實際股價"><defs><linearGradient id="qlinefill" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#387dda" stop-opacity=".36"/><stop offset="1" stop-color="#387dda" stop-opacity="0"/></linearGradient></defs><path d="M0 130 L0 94 29 101 55 76 87 83 117 56 145 67 181 30 209 48 236 41 266 59 299 31 324 38 351 18 380 24 L380 130Z" fill="url(#qlinefill)"/><path d="M0 94 29 101 55 76 87 83 117 56 145 67 181 30 209 48 236 41 266 59 299 31 324 38 351 18 380 24" fill="none" stroke="#70b4ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 125H380M0 76H380M0 27H380" stroke="#344b67" stroke-width="1" stroke-dasharray="3 6"/></svg><div class="qpreview-bottom"><span>示意線圖 · 非真實價格走勢</span><strong>資料驅動分析</strong></div></div>';
+hero.innerHTML='<div><div class="qeyebrow">QTEMP</div><h1>QTemp技術指標分析</h1><div class="qactions"><button type="button" class="primary" data-go="chart">查看行情圖表</button><button type="button" data-go="signals">研究歷史訊號</button></div></div><div class="qpreview"><div class="qpreview-top"><strong>研究工作台</strong><span>QTemp · 日 K</span></div><div class="qpreview-value" data-preview-score>—</div><div style="color:#8fa7c4;font-size:12px;margin-top:4px">目前選定標的的最新 QTemp 分數</div><svg viewBox="0 0 380 145" role="img" aria-label="示意性數據曲線，非實際股價"><defs><linearGradient id="qlinefill" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#387dda" stop-opacity=".36"/><stop offset="1" stop-color="#387dda" stop-opacity="0"/></linearGradient></defs><path d="M0 130 L0 94 29 101 55 76 87 83 117 56 145 67 181 30 209 48 236 41 266 59 299 31 324 38 351 18 380 24 L380 130Z" fill="url(#qlinefill)"/><path d="M0 94 29 101 55 76 87 83 117 56 145 67 181 30 209 48 236 41 266 59 299 31 324 38 351 18 380 24" fill="none" stroke="#70b4ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 125H380M0 76H380M0 27H380" stroke="#344b67" stroke-width="1" stroke-dasharray="3 6"/></svg><div class="qpreview-bottom"><span>示意線圖 · 非真實價格走勢</span><strong>資料驅動分析</strong></div></div>';
 base.before(hero);
 const shortcuts=document.createElement('div');shortcuts.className='qshortcut';
 for(const [route,icon,title,description] of [
@@ -58,7 +58,7 @@ intro.append(resourceInfo);
 const tabs=document.createElement('div');tabs.className='qsubnav';tabs.setAttribute('aria-label','研究子分頁');
 results.querySelector('.tabs').before(tabs);
 const footer=document.createElement('footer');footer.className='qdisclaimer';
-footer.innerHTML='<span>© QTemp Research · 指標與歷史回測僅供研究參考，不構成投資建議。</span><span>Yahoo Finance 資料可能延遲 · 回測採 Adj Close 還原與確認日 K</span>';
+footer.innerHTML='<span>© QTemp技術指標分析 · 指標與歷史回測僅供研究參考，不構成投資建議。</span><span>Yahoo Finance 資料可能延遲 · 回測採 Adj Close 還原與確認日 K</span>';
 root.append(footer);
 let current='',subSignal='study',subResource='formula';
 const originalTabs={chart:'chart',study:'study',annual:'annual',events:'events',details:'details',raw:'raw',audit:'compare'};
