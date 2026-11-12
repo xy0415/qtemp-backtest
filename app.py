@@ -27,6 +27,14 @@ def platform_theme():
 def platform_navigation():
     return send_file('platform_navigation.js', mimetype='application/javascript')
 
+@app.get('/capital_backtest_ui.js')
+def capital_backtest_ui():
+    return send_file('capital_backtest_ui.js', mimetype='application/javascript')
+
+@app.get('/capital_backtest.css')
+def capital_backtest_css():
+    return send_file('capital_backtest.css', mimetype='text/css')
+
 @app.get('/health')
 def health():
     return jsonify({'status': 'ok'})
