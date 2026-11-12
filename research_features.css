@@ -1,0 +1,34 @@
+/* QTemp add-on panels: deliberately restrained and responsive. */
+#qtemp_root .addons{margin:26px 0 30px;padding:0}
+#qtemp_root .addons-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin:0 0 16px}
+#qtemp_root .addons-head h2{font-size:22px}
+#qtemp_root .addons-head p{font-size:12px;color:var(--muted);margin:0}
+#qtemp_root .addons-nav{display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin-bottom:16px;padding-bottom:12px}
+#qtemp_root .addons-nav button{border:1px solid var(--line);border-radius:99px;padding:8px 14px;font-size:13px;color:#34516f}
+#qtemp_root .addons-nav button[aria-selected=true]{background:#203b60;color:#fff;border-color:#203b60}
+#qtemp_root .addons-panel{border:1px solid var(--line);border-radius:14px;padding:clamp(16px,2.2vw,25px);box-shadow:0 4px 16px #213b5c0a;background:#fff}
+#qtemp_root .addons-panel h3{font-size:17px;margin:0 0 8px}
+#qtemp_root .addons-panel p{color:var(--muted);font-size:12px;line-height:1.65;margin:0 0 15px}
+#qtemp_root .addons-control{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin:10px 0 18px}
+#qtemp_root .addons-control label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:5px}
+#qtemp_root .addons-control input{min-width:0;width:clamp(140px,20vw,235px);padding:9px}
+#qtemp_root .addons-control input[type=number]{width:105px}
+#qtemp_root .addons-control button{padding:9px 17px}
+#qtemp_root .addons-table{overflow-x:auto}
+#qtemp_root .addons-table table{min-width:640px}
+#qtemp_root .addons-error{color:#a52935!important;font-weight:600}
+#qtemp_root .addons-summary{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0 18px}
+#qtemp_root .addons-metric{flex:1 1 145px;border:1px solid var(--line);background:#f7faff;padding:13px;border-radius:10px}
+#qtemp_root .addons-metric span{font-size:11px;display:block;color:#59697b}
+#qtemp_root .addons-metric strong{font-size:21px;display:block;margin-top:5px;color:#1c3959;font-variant-numeric:tabular-nums}
+#qtemp_root .addons-svg{width:100%;height:auto;display:block;max-height:320px;border:1px solid #e4ebf3;border-radius:10px;background:linear-gradient(180deg,#fff,#f8fbff)}
+#qtemp_root .addons-legend{display:flex;flex-wrap:wrap;gap:13px;margin:10px 0;color:var(--muted);font-size:12px}
+#qtemp_root .addons-legend i{display:inline-block;width:12px;height:3px;vertical-align:middle;margin-right:5px}
+#qtemp_root .addons-watchlist{display:flex;gap:8px;flex-wrap:wrap;margin:15px 0}
+#qtemp_root .addons-tag{display:flex;gap:9px;align-items:center;border:1px solid #cfdce8;padding:6px 10px;border-radius:99px;background:#f6f9fd;font-size:13px}
+#qtemp_root .addons-tag button{border:0;background:transparent;padding:0;font-size:17px;line-height:1}
+#qtemp_root .addons-export{display:flex;gap:8px;flex-wrap:wrap;margin:13px 0}
+#qtemp_root .chart-extra{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:8px 0 12px;color:#4c5d70;font-size:12px}
+#qtemp_root .chart-extra label{display:flex;gap:5px;align-items:center;white-space:nowrap}
+#qtemp_root .chart-extra input{accent-color:#204f85}
+@media(max-width:650px){#qtemp_root .addons-control{align-items:stretch}#qtemp_root .addons-control input{width:100%}#qtemp_root .addons-control label{flex:1 1 135px}#qtemp_root .addons-metric{flex:1 1 130px}}
