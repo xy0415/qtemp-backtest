@@ -87,6 +87,20 @@
 #qtemp_root th{position:sticky;top:0;background:#edf3fa;color:#3f536d;font-size:12px;font-weight:700}
 #qtemp_root tbody tr:nth-child(even){background:#f8fafc}
 #qtemp_root tbody tr:hover{background:#edf4fb}
+#qtemp_root .study-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:6px 0 15px}
+#qtemp_root .study-controls label{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+#qtemp_root .study-note{color:var(--muted);font-size:12px;margin:10px 0;line-height:1.7}
+#qtemp_root .study-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0}
+#qtemp_root .study-kpi{padding:13px 14px;background:#f6f9fc;border:1px solid var(--line);border-radius:10px}
+#qtemp_root .study-kpi span{color:var(--muted);font-size:12px;display:block}
+#qtemp_root .study-kpi strong{font-size:22px;color:var(--navy);font-variant-numeric:tabular-nums;display:block;margin-top:4px}
+#qtemp_root .study-table{overflow-x:auto;margin:12px 0 8px}
+#qtemp_root .study-table table{min-width:690px}
+#qtemp_root .study-table tr[data-selected=true]{background:#eaf3ff}
+#qtemp_root .study-table td:first-child{text-align:left}
+#qtemp_root .study-table td,#qtemp_root .study-table th{padding:10px 11px}
+#qtemp_root .study-legend{display:flex;gap:12px;flex-wrap:wrap;align-items:center;color:var(--muted);font-size:12px}
+@media(max-width:650px){#qtemp_root .study-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
 #qtemp_root .summary-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:10px 0 16px}
 #qtemp_root .summary-item{padding:13px 15px;border:1px solid var(--line);border-radius:12px;background:#fff;min-width:0}
 #qtemp_root .summary-item span{display:block;color:var(--muted);font-size:12px}
@@ -183,13 +197,30 @@
     </div>
     <nav class="tabs" aria-label="分析分頁">
       <button data-tab="chart" type="button">行情與 QTemp</button><button data-tab="annual" type="button">年度統計</button>
-      <button data-tab="events" type="button">訊號明細</button><button data-tab="returns" type="button">歷史報酬</button>
+      <button data-tab="events" type="button">訊號明細</button><button data-tab="study" type="button">訊號歷史勝率</button><button data-tab="returns" type="button">歷史報酬</button>
       <button data-tab="details" type="button">行情與基本資料</button><button data-tab="raw" type="button">日線與公司行動</button><button data-tab="compare" type="button">TradingView 對照</button>
     </nav>
     <div class="panel">
       <div class="filters" data-q="filters" hidden>
         <label>訊號 <select data-q="signal"><option>低估值</option><option>高估值</option><option>底背離</option><option>頂背離</option></select></label>
         <label>近 <select data-q="years" aria-label="統計年數"></select> 年</label>
+      </div>
+      <div data-q="studytools" hidden>
+        <div class="study-controls">
+          <label>訊號類型 <select data-q="study-signal"><option>低估值</option><option>高估值</option><option>底背離</option><option>頂背離</option></select></label>
+          <label>持有期間 <select data-q="study-days"><option value="5">5 個交易日</option><option value="20">20 個交易日</option><option value="60">60 個交易日</option><option value="120">120 個交易日</option></select></label>
+        </div>
+        <div class="study-metrics">
+          <div class="study-kpi"><span>方向勝率</span><strong data-q="study-win">—</strong></div>
+          <div class="study-kpi"><span>平均方向報酬</span><strong data-q="study-avg">—</strong></div>
+          <div class="study-kpi"><span>平均最大不利波動</span><strong data-q="study-mae">—</strong></div>
+          <div class="study-kpi"><span>完整樣本數</span><strong data-q="study-count">—</strong></div>
+        </div>
+        <h3>不同持有期間績效</h3>
+        <div class="study-table" data-q="study-overview"></div>
+        <h3>逐筆訊號績效</h3>
+        <div class="study-table" data-q="study-details"></div>
+        <p class="study-note" data-q="study-note"></p>
       </div>
       <div data-q="charttools" hidden>
         <div class="filters chart-tools">
@@ -430,6 +461,52 @@
     });
     q('heatmap').replaceChildren(table);
   }
+  function renderStudy(){
+    const study=data?.forwardStudy;
+    if(!study){
+      q('study-note').textContent='無法取得訊號回測資料。';
+      return;
+    }
+    const signal=q('study-signal').value, days=Number(q('study-days').value);
+    const matched=study.rows.filter(row=>row.signal===signal);
+    const selected=matched.find(row=>row.days===days);
+    const percent=value=>value==null?'—':pct(value);
+    q('study-win').textContent=percent(selected?.winRate);
+    q('study-avg').textContent=percent(selected?.avgDirectional);
+    q('study-mae').textContent=percent(selected?.avgMAE);
+    q('study-count').textContent=selected?.count??'—';
+    const cols=['持有期間','樣本數','方向勝率','平均價格報酬','平均方向報酬','中位方向報酬','平均最大不利波動','平均最大有利波動'];
+    const table=document.createElement('table');
+    const head=table.createTHead().insertRow();
+    cols.forEach(name=>{const th=document.createElement('th');th.textContent=name;head.append(th);});
+    const body=table.createTBody();
+    matched.forEach(row=>{
+      const tr=body.insertRow();tr.dataset.selected=String(row.days===days);
+      const arr=[row.days+' 日',row.count,percent(row.winRate),percent(row.avgReturn),
+        percent(row.avgDirectional),percent(row.medianDirectional),percent(row.avgMAE),percent(row.avgMFE)];
+      arr.forEach((value,i)=>{const td=tr.insertCell();td.textContent=value;
+        if(i>=3 && i!==6 && i!==7 && typeof value==='string' && value.startsWith('-'))td.className='negative';
+      });
+    });
+    q('study-overview').replaceChildren(table);
+    const details=study.details.filter(row=>row.signal===signal&&row.horizon===days);
+    const detailTable=document.createElement('table');
+    const detailHeader=detailTable.createTHead().insertRow();
+    ['確認日','進場日','出場日','進場價','出場價','價格報酬','方向報酬','最大不利波動','最大有利波動'].forEach(name=>{
+      const th=document.createElement('th');th.textContent=name;detailHeader.append(th);
+    });
+    const detailBody=detailTable.createTBody();
+    details.forEach(row=>{
+      const tr=detailBody.insertRow();
+      [row.confirmation,row.entry,row.exit,num.format(row.entryPrice),num.format(row.exitPrice),
+       percent(row.return),percent(row.directionalReturn),percent(row.mae),percent(row.mfe)].forEach(value=>{
+         tr.insertCell().textContent=value;
+       });
+    });
+    if(details.length)q('study-details').replaceChildren(detailTable);
+    else q('study-details').textContent='目前沒有符合完整持有期間的已確認訊號。';
+    q('study-note').textContent=study.method+' 勝率：低估值／底背離計後續上漲；高估值／頂背離計後續下跌。勝率不代表實際可獲利率；未計手續費、滑價與放空成本。訊號可重疊，因此樣本不完全獨立。本表逐筆最多顯示最近 1,200 筆全部訊號／期間組合。';
+  }
   function render() {
     if (!data) return;
     for (const btn of tabs) btn.setAttribute('aria-pressed',String(btn.dataset.tab===active));
@@ -438,6 +515,12 @@
     plot.hidden=!chart; q('table').hidden=chart;
     q('filters').hidden=!['annual','events'].includes(active);
     q('charttools').hidden=!chart;
+    q('studytools').hidden=active!=='study';
+    if(active==='study'){
+      q('note').textContent='';
+      renderStudy();
+      return;
+    }
     q('comparetools').hidden=active!=='compare';
     if (chart) {
       q('note').textContent='滾輪縮放、按住拖曳 · 日 K 與訊號採已收盤資料 · '+data.basis;
@@ -548,6 +631,7 @@
   q('years').value='10';
   for(const button of tabs) button.onclick=()=>{active=button.dataset.tab;render();};
   ['years','signal'].forEach(key=>{q(key).onchange=render;});
+  ['study-signal','study-days'].forEach(key=>{q(key).onchange=()=>{if(active==='study')renderStudy();};});
   q('symbol').oninput=()=>{q('matches').replaceChildren();q('matches').hidden=true;};
   q('symbol').onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();/[^A-Z0-9.^=_\s-]/i.test(e.currentTarget.value)?search():load();}};
   q('search').onclick=search; q('load').onclick=load;
