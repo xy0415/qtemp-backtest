@@ -192,7 +192,7 @@
   const num = new Intl.NumberFormat('zh-TW', {maximumFractionDigits:2});
   const pct = x => (x>=0?'+':'')+(x*100).toFixed(2)+'%';
   let data, audit, active = 'chart', chartKey = '', busy = false;
-  let selectedRange='252', quoteInFlight=false, closedInFlight=false;
+  let selectedRange='252', quoteInFlight=false, closedInFlight=false, restoreView=null;
   const status = (value, error=false) => { q('status').textContent=value; q('status').classList.toggle('error',error); };
   const rpc = async (method,args) => {
     const controller = new AbortController();
@@ -299,6 +299,7 @@
     observer=new ResizeObserver(()=>{if(!plot.hidden&&plot.clientWidth)chart.resize(plot.clientWidth,plot.clientHeight);});
     observer.observe(plot);
     fitChart(selectedRange);
+    if(restoreView){try{chart.timeScale().setVisibleLogicalRange(restoreView);}catch(_){}restoreView=null;}
     q('reset-chart').onclick=()=>{
       chart.panes().forEach((_,i)=>chart.priceScale('right',i).applyOptions({autoScale:true}));
       fitChart('252');
@@ -384,6 +385,7 @@
     try {
       data=await rpc('analyze',[symbol]);
       chartKey=''; audit=null;
+      restoreView=oldSymbol===data.symbol ? oldView : null;
       if(oldSymbol!==data.symbol)selectedRange='252';
       q('title').textContent=data.symbol+' '+(data.name===data.symbol?'':data.name);
       q('subtitle').textContent=[data.market,data.currency,data.end].filter(Boolean).join(' · ');
@@ -393,10 +395,6 @@
       q('score').textContent=data.qtemp.toFixed(2);
       q('results').hidden=false; status(data.start+' 至 '+data.end+' · '+data.basis);
       render();
-      if(oldView && oldSymbol===data.symbol && active==='chart'){
-        await ensureChart();drawChart(data);chartKey=data.symbol;
-        try{chart.timeScale().setVisibleLogicalRange(oldView);}catch(_){}
-      }
       refreshQuote();
     } catch(error) { status(error.message,true); }
     finally { busy=false; q('load').disabled=false; q('search').disabled=false; }
