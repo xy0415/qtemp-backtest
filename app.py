@@ -47,7 +47,7 @@ def api(method):
     if not isinstance(payload, dict) or not isinstance(payload.get('args'), list):
         return jsonify({'error': '請求格式不正確'}), 400
     args = payload['args']
-    if (method in ('search','analyze','quote','closed_day','scan','compare_assets') and len(args) != 1) or (method == 'compare' and len(args) != 2) or (method == 'strategy' and len(args) != 5) or (method == 'capital_comparison' and len(args) != 9):
+    if (method in ('search','analyze','quote','closed_day','scan','compare_assets') and len(args) != 1) or (method == 'compare' and len(args) != 2) or (method == 'strategy' and len(args) != 5) or (method == 'capital_comparison' and len(args) != 10):
         return jsonify({'error': '參數數量不正確'}), 400
     if any(not isinstance(v, str) for v in args):
         return jsonify({'error': '參數必須為文字'}), 400
