@@ -229,7 +229,7 @@
           <label><input type="checkbox" data-q="indicator-ema"> EMA 55</label>
           <label><input type="checkbox" data-q="indicator-bb"> BB 20 / 2</label>
           <label><input type="checkbox" data-q="indicator-marks" checked> 訊號標記</label>
-          <button type="button" data-q="chart-expand">圖表全螢幕</button>
+          <button type="button" data-q="chart-expand">圖表全螢幕</button><button type="button" data-q="chart-png">匯出圖表 PNG</button>
         </div>
         <div class="filters chart-tools">
           <div class="range" role="group" aria-label="圖表顯示範圍">
@@ -654,6 +654,17 @@
   ['indicator-sma','indicator-ema','indicator-bb','indicator-marks'].forEach(name=>{
     q(name).onchange=()=>{if(!data||active!=='chart'||!globalThis.LightweightCharts)return;drawChart(data);chartKey=data.symbol;};
   });
+  q('chart-png').onclick=()=>{
+    if(!chart || !data || typeof chart.takeScreenshot!=='function') {status('圖表元件尚未載入，無法匯出 PNG。',true);return;}
+    try{
+      chart.takeScreenshot().toBlob(blob=>{
+        if(!blob){status('無法建立圖表圖片。',true);return;}
+        const url=URL.createObjectURL(blob),a=document.createElement('a');
+        a.href=url;a.download='QTemp_'+data.symbol+'_'+data.end+'.png';a.click();
+        setTimeout(()=>URL.revokeObjectURL(url),1000);
+      });
+    }catch(error){status('PNG 匯出失敗：'+error.message,true);}
+  };
   q('chart-expand').onclick=async()=>{
     const panel=q('plot').closest('.panel');
     if(document.fullscreenElement)await document.exitFullscreen();
@@ -684,6 +695,8 @@
     } catch(error) {status(error.message,true);}
     finally {busy=false;q('compare').disabled=false;}
   };
+  const sharedSymbol=new URLSearchParams(location.search).get('symbol');
+  if(sharedSymbol && /^[A-Z0-9.^=_-]{1,30}$/i.test(sharedSymbol))q('symbol').value=sharedSymbol.toUpperCase();
   await load();
 })();
 </script>
