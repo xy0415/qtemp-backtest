@@ -87,6 +87,32 @@
 #qtemp_root th{position:sticky;top:0;background:#edf3fa;color:#3f536d;font-size:12px;font-weight:700}
 #qtemp_root tbody tr:nth-child(even){background:#f8fafc}
 #qtemp_root tbody tr:hover{background:#edf4fb}
+#qtemp_root .summary-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:10px 0 16px}
+#qtemp_root .summary-item{padding:13px 15px;border:1px solid var(--line);border-radius:12px;background:#fff;min-width:0}
+#qtemp_root .summary-item span{display:block;color:var(--muted);font-size:12px}
+#qtemp_root .summary-item strong{display:block;font-size:19px;font-weight:720;margin-top:5px;font-variant-numeric:tabular-nums}
+#qtemp_root .insight-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0 20px}
+#qtemp_root .insight-panel{border:1px solid var(--line);border-radius:14px;background:#fff;padding:17px;min-width:0;box-shadow:0 4px 16px #213b5c08}
+#qtemp_root .insight-panel h3{font-size:17px;margin:0 0 5px}
+#qtemp_root .insight-hint{font-size:12px;color:var(--muted);margin:0 0 14px}
+#qtemp_root .insight-kpis{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px 18px;margin:12px 0}
+#qtemp_root .insight-kpis strong{font-size:24px;color:var(--navy);font-variant-numeric:tabular-nums}
+#qtemp_root .insight-kpis span{font-size:12px;color:var(--muted)}
+#qtemp_root .dist-plot{display:flex;gap:3px;height:126px;align-items:end;border-bottom:1px solid #b9c9d9;padding-top:6px}
+#qtemp_root .dist-bar{flex:1;min-width:2px;background:#a9bfd8;border-radius:4px 4px 0 0;position:relative}
+#qtemp_root .dist-bar.negative{background:#7ca7d2}
+#qtemp_root .dist-bar.positive{background:#dfb6a2}
+#qtemp_root .dist-bar.current{background:#174f8a}
+#qtemp_root .dist-axis{display:flex;justify-content:space-between;color:var(--muted);font-size:11px;margin:4px 0 9px}
+#qtemp_root .heatmap-scroll{overflow-x:auto;max-width:100%}
+#qtemp_root .heatmap-table{border-spacing:3px;width:100%;border-collapse:separate}
+#qtemp_root .heatmap-table th,#qtemp_root .heatmap-table td{padding:0;text-align:center!important;border:0;background:transparent;position:static;font-size:11px}
+#qtemp_root .heatmap-table th:first-child{min-width:57px;text-align:left!important}
+#qtemp_root .heatmap-table td{min-width:34px}
+#qtemp_root .heatmap-cell{display:block;padding:9px 2px;border-radius:5px;background:rgb(238,243,249);color:#3c536b;min-width:32px;font-variant-numeric:tabular-nums}
+#qtemp_root .heatmap-legend{display:flex;gap:7px;align-items:center;font-size:11px;color:var(--muted);margin-top:10px}
+#qtemp_root .heatmap-legend i{width:13px;height:13px;border-radius:3px;display:inline-block}
+@media(max-width:780px){#qtemp_root .insight-grid{grid-template-columns:1fr}#qtemp_root .summary-row{grid-template-columns:repeat(2,minmax(0,1fr))}}
 #qtemp_root .quote-meta{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:12px 0;font-size:12px;color:var(--muted)}
 #qtemp_root .formula{margin:28px 0;padding:24px;border:1px solid #d6e4f4;border-top:4px solid #286bb8;border-radius:14px;background:#f5f9ff}
 #qtemp_root .formula h2{color:#17558f;margin-bottom:12px}
@@ -130,7 +156,29 @@
       <div class="tile">回測還原收盤<strong data-q="close"></strong></div>
       <div class="tile qtemp">QTemp<strong data-q="score"></strong></div>
     </div>
+    <div class="summary-row" aria-label="價格及最新訊號">
+      <div class="summary-item"><span>52 週最高（還原）</span><strong data-q="high52">—</strong></div>
+      <div class="summary-item"><span>52 週最低（還原）</span><strong data-q="low52">—</strong></div>
+      <div class="summary-item"><span>距 52 週高點</span><strong data-q="drawdown52">—</strong></div>
+      <div class="summary-item"><span>最新 QTemp 訊號</span><strong data-q="latest-signal">—</strong><span data-q="latest-signal-day"></span></div>
+    </div>
     <div class="quote-meta"><span data-q="quote-time">最新行情尚未取得</span><span data-q="close-time"></span><button type="button" data-q="refresh">手動刷新</button></div>
+    <div class="insight-grid">
+      <section class="insight-panel" aria-labelledby="dist-title">
+        <h3 id="dist-title">QTemp 分數分布與歷史百分位</h3>
+        <p class="insight-hint">近 10 年已收盤日 K · 同標的歷史分布（非未來報酬預測）</p>
+        <div class="insight-kpis"><strong data-q="dist-rank">—</strong><span data-q="dist-summary"></span></div>
+        <div class="dist-plot" data-q="dist-plot" aria-label="QTemp 歷史分數直方圖" role="img"></div>
+        <div class="dist-axis"><span>−100</span><span>−50</span><span>0</span><span>+50</span><span>+100</span></div>
+        <p class="insight-hint" data-q="dist-footnote"></p>
+      </section>
+      <section class="insight-panel" aria-labelledby="heatmap-title">
+        <h3 id="heatmap-title">年度 QTemp 訊號熱力圖</h3>
+        <p class="insight-hint">近 10 年 · 訊號依確認日歸年，同類同日計 1 次</p>
+        <div class="heatmap-scroll" data-q="heatmap"></div>
+        <div class="heatmap-legend"><span>訊號次數</span><i style="background:#eef3f9"></i><span>0</span><i style="background:#91b8e3"></i><i style="background:#205c9b"></i><span>多</span></div>
+      </section>
+    </div>
     <nav class="tabs" aria-label="分析分頁">
       <button data-tab="chart" type="button">行情與 QTemp</button><button data-tab="annual" type="button">年度統計</button>
       <button data-tab="events" type="button">訊號明細</button><button data-tab="returns" type="button">歷史報酬</button>
@@ -327,6 +375,56 @@
     holder.append(table);
     return holder;
   }
+  function renderInsights(current) {
+    const a=current.analytics;
+    if(!a)return;
+    const price=a.price;
+    const display=(value)=>value==null?'—':num.format(value);
+    q('high52').textContent=display(price.high52);
+    q('low52').textContent=display(price.low52);
+    q('drawdown52').textContent=price.from52High==null?'—':pct(price.from52High);
+    q('drawdown52').className=price.from52High<0?'negative':'';
+    const latest=a.latestSignal;
+    q('latest-signal').textContent=latest?.type||'尚無訊號';
+    q('latest-signal-day').textContent=latest?latest.day+' 確認':'';
+    const dist=a.distribution;
+    q('dist-rank').textContent=dist.percentile==null?'—':dist.percentile.toFixed(1)+'%';
+    q('dist-summary').textContent='目前 QTemp '+num.format(current.qtemp)+' · 歷史分數百分位';
+    const counts=dist.counts||[], max=Math.max(1,...counts);
+    const bars=counts.map((count,i)=>{
+      const bar=document.createElement('span');
+      const mid=(dist.edges[i]+dist.edges[i+1])/2;
+      bar.className='dist-bar '+(mid<0?'negative':'positive')+
+        (current.qtemp>=dist.edges[i] && (current.qtemp<dist.edges[i+1] || i===counts.length-1)?' current':'');
+      bar.style.height=(count ? Math.max(3,100*count/max):0)+'%';
+      bar.title=dist.edges[i].toFixed(0)+' 至 '+dist.edges[i+1].toFixed(0)+'：'+count+' 日';
+      return bar;
+    });
+    q('dist-plot').replaceChildren(...bars);
+    q('dist-plot').setAttribute('aria-label','QTemp 歷史分布，樣本 '+dist.sample+' 日，現值 '+num.format(current.qtemp));
+    q('dist-footnote').textContent='樣本 '+dist.sample+' 日 · QTemp < −90：'+dist.belowNeg90+
+      ' 日 · QTemp > +90：'+dist.above90+' 日 · 最低 '+display(dist.min)+' / 最高 '+display(dist.max);
+    const hm=a.heatmap, table=document.createElement('table');
+    table.className='heatmap-table';
+    const header=table.createTHead().insertRow();
+    const first=document.createElement('th');first.textContent='訊號';header.append(first);
+    hm.years.forEach(y=>{const th=document.createElement('th');th.textContent=String(y).slice(-2);th.title=String(y);header.append(th);});
+    const body=table.createTBody();
+    ['低估值','高估值','底背離','頂背離'].forEach(name=>{
+      const row=body.insertRow(),th=document.createElement('th');th.scope='row';th.textContent=name;row.append(th);
+      hm.years.forEach(y=>{
+        const count=hm.signals[name]?.[String(y)]??0;
+        const td=row.insertCell(),cell=document.createElement('span');
+        cell.className='heatmap-cell';cell.textContent=count;
+        const frac=hm.maxCount?Math.sqrt(count/hm.maxCount):0;
+        cell.style.background=count?'rgb('+Math.round(224-192*frac)+','+Math.round(236-145*frac)+','+Math.round(248-93*frac)+')':'#eef3f9';
+        cell.style.color=frac>.65?'#fff':'#284563';
+        cell.title=y+' 年 '+name+'：'+count+' 次';
+        td.append(cell);
+      });
+    });
+    q('heatmap').replaceChildren(table);
+  }
   function render() {
     if (!data) return;
     for (const btn of tabs) btn.setAttribute('aria-pressed',String(btn.dataset.tab===active));
@@ -393,6 +491,7 @@
       q('market-price').textContent='—';q('market-change').textContent='—';
       q('close-time').textContent='回測收盤日：'+data.end;
       q('score').textContent=data.qtemp.toFixed(2);
+      renderInsights(data);
       q('results').hidden=false; status(data.start+' 至 '+data.end+' · '+data.basis);
       render();
       refreshQuote();
