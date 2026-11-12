@@ -425,12 +425,12 @@
     observer=new ResizeObserver(()=>{if(!plot.hidden&&plot.clientWidth)chart.resize(plot.clientWidth,plot.clientHeight);});
     observer.observe(plot);
     fitChart(selectedRange);
+    if(restoreView){try{chart.timeScale().setVisibleLogicalRange(restoreView);}catch(_){}restoreView=null;}
     if(globalThis.__qtempCalendarTarget){
       const day=globalThis.__qtempCalendarTarget;
       globalThis.__qtempCalendarTarget=null;
       focusChartDate(day);
     }
-    if(restoreView){try{chart.timeScale().setVisibleLogicalRange(restoreView);}catch(_){}restoreView=null;}
     q('reset-chart').onclick=()=>{
       chart.panes().forEach((_,i)=>chart.priceScale('right',i).applyOptions({autoScale:true}));
       fitChart('252');
