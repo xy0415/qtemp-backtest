@@ -161,3 +161,106 @@ body{font-family:Inter,"Noto Sans TC",system-ui,-apple-system,sans-serif!importa
 #qtemp_root[data-view=resources][data-resource=export] .formula{display:none!important}
 #qtemp_root[data-view=resources][data-resource=export] .addons{display:block!important}
 #qtemp_root[data-view=resources][data-resource=formula] .formula{display:block!important}
+
+/* QTemp gradient refinement — soft indigo / sky / lavender, clear financial data */
+html,body{
+ background:
+  radial-gradient(ellipse 760px 490px at 8% 7%,rgba(205,218,255,.36),transparent 72%),
+  radial-gradient(ellipse 720px 510px at 95% 0%,rgba(226,213,255,.32),transparent 70%),
+  #f8f9fc!important;
+}
+#qtemp_root{
+ background:
+  radial-gradient(ellipse 720px 480px at 97% 7%,rgba(224,224,255,.23),transparent 75%),
+  radial-gradient(ellipse 680px 380px at 0% 30%,rgba(223,237,255,.15),transparent 80%),
+  transparent!important;
+}
+#qtemp_root .qtopbar{
+ border-bottom:1px solid #e2e7f5;
+}
+#qtemp_root .qbrand-mark{
+ background:linear-gradient(140deg,#5557df 0%,#7277f5 56%,#5c9cf1 100%)!important;
+ box-shadow:0 5px 16px rgba(97,100,230,.22);
+}
+#qtemp_root .qhero{
+ background:
+  radial-gradient(ellipse 500px 380px at 94% 10%,rgba(207,220,255,.61),transparent 77%),
+  radial-gradient(ellipse 400px 270px at 48% 95%,rgba(235,223,255,.59),transparent 75%),
+  linear-gradient(115deg,#fff 5%,#f7f5ff 57%,#eef5ff 100%)!important;
+ border-color:#dfe5f5!important;
+ box-shadow:0 16px 40px rgba(71,82,148,.055);
+}
+#qtemp_root .qpreview{
+ background:linear-gradient(145deg,#fff 6%,#f8f8ff 62%,#eef6ff 100%)!important;
+ border-color:#e4e5f8!important;
+ box-shadow:0 12px 28px rgba(80,82,180,.07)!important;
+}
+#qtemp_root .qpreview-value{
+ color:#5c5fdc;
+}
+#qtemp_root .qtopnav button[aria-current=page],
+#qtemp_root .qsubnav button[aria-selected=true]{
+ background:linear-gradient(115deg,#f0efff,#eaf2ff)!important;
+ color:#5259d5!important;
+ border-color:#d7dcfa!important;
+}
+#qtemp_root button.primary,
+#qtemp_root .primary{
+ background:linear-gradient(115deg,#595ce2 0%,#6b6ff0 54%,#5c92ed 100%)!important;
+ border-color:#676cec!important;
+ box-shadow:0 5px 14px rgba(95,102,226,.17);
+}
+#qtemp_root button.primary:hover:not(:disabled){
+ background:linear-gradient(115deg,#5154d2,#6268e4 56%,#4f83db)!important;
+ box-shadow:0 7px 17px rgba(95,102,226,.22);
+}
+#qtemp_root .qshortcut button{
+ background:linear-gradient(145deg,#fff 10%,#fafaff 72%,#f5f8ff)!important;
+ border-color:#e3e7f4!important;
+ box-shadow:0 8px 23px rgba(66,82,136,.045)!important;
+ transition:border-color .18s,transform .18s,box-shadow .18s;
+}
+#qtemp_root .qshortcut button:hover{
+ border-color:#b5bbf5!important;
+ box-shadow:0 10px 26px rgba(87,97,182,.10)!important;
+ transform:translateY(-2px);
+}
+#qtemp_root .tile.qtemp{
+ background:linear-gradient(135deg,#f4f1ff 0%,#f0f3ff 58%,#eef8ff 100%)!important;
+ border-color:#dedff8!important;
+}
+#qtemp_root .tile:not(.qtemp),
+#qtemp_root .summary-item,
+#qtemp_root .study-kpi,
+#qtemp_root .addons-metric,
+#qtemp_root .capital-kpi,
+#qtemp_root .insights-quality-item{
+ background:linear-gradient(135deg,#fff 0%,#fafbff 100%)!important;
+}
+#qtemp_root .panel,
+#qtemp_root .addons-panel,
+#qtemp_root .insights-panel,
+#qtemp_root .formula{
+ background:#fff!important;
+ border-color:#e5e9f3!important;
+ box-shadow:0 5px 23px rgba(33,48,93,.035)!important;
+}
+#qtemp_root .query{
+ background:linear-gradient(110deg,#fff 45%,#f9faff 100%)!important;
+ border-color:#e2e7f1!important;
+}
+#qtemp_root .capital-chart-svg,
+#qtemp_root .insights-chart svg,
+#qtemp_root .plot,
+#qtemp_root table,
+#qtemp_root .ohlc{
+ filter:none!important;
+}
+@media(prefers-reduced-motion:reduce){
+ #qtemp_root .qshortcut button{transition:none!important;transform:none!important}
+}
+@media print{
+ html,body,#qtemp_root{background:#fff!important}
+ #qtemp_root .qshortcut button,#qtemp_root .qhero,#qtemp_root .qpreview,
+ #qtemp_root .query,#qtemp_root .tile{background:#fff!important;box-shadow:none!important}
+}
