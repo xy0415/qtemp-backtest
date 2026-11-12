@@ -206,8 +206,7 @@ def closed_cutoff(local_date, tz):
     except Exception:
         return datetime.combine(local_date, time(17,30), ZoneInfo(tz))
 
-@lru_cache(maxsize=12)
-def yahoo_history(symbol, refresh_slot):
+def _download_yahoo_history(symbol, refresh_slot):
     ticker = yf.Ticker(symbol)
     frame = ticker.history(period='max', interval='1d', auto_adjust=False, actions=True,
                            prepost=False, timeout=20, raise_errors=True)
@@ -238,6 +237,35 @@ def yahoo_history(symbol, refresh_slot):
     if len(frame)<20:
         raise ValueError(f'{symbol} 只有 {len(frame)} 根已收盤日 K，至少需要 20 根。')
     return frame,metadata,zone
+
+
+@lru_cache(maxsize=24)
+def yahoo_history(symbol, refresh_slot):
+    """Yahoo first, verified in-process/disk fallback second; immutable closed daily bars."""
+    import time as _time
+    from market_cache import load_verified, save_verified
+    # Short-lived verified cache prevents excessive outbound calls on free instances.
+    cached=load_verified(symbol,backup=False)
+    if cached is not None:
+        return cached
+    last_error=None
+    for attempt in range(2):
+        try:
+            frame,meta,zone=_download_yahoo_history(symbol,refresh_slot)
+            save_verified(symbol,frame,meta,zone)
+            meta=dict(meta)
+            meta["_qtemp_cache_status"]="yahoo_live"
+            meta["_qtemp_cache_saved_at"]=pd.Timestamp.now(tz="UTC").isoformat()
+            return frame,meta,zone
+        except Exception as error:
+            last_error=error
+            if attempt==0:
+                _time.sleep(1.0)
+    old=load_verified(symbol,backup=True)
+    if old is not None:
+        return old
+    raise RuntimeError("Yahoo Finance 目前無法提供行情，且沒有已驗證的歷史備份；請稍後重試。"
+                       f"（最後錯誤：{str(last_error)[:150]}）")
 
 def load_market(value):
     failures = []
