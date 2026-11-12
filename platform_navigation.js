@@ -71,7 +71,7 @@ function setSubnav(view){
  tabs.replaceChildren();tabs.className='qsubnav '+(view==='signals'?'qsignal-tabs':'qresource-tabs');
  let choices;
  if(view==='signals')choices=[['study','歷史勝率'],['annual','年度統計'],['events','訊號明細']];
- else if(view==='resources')choices=[['formula','指標計算公式'],['details','行情基本資料'],['raw','原始日線'],['audit','TradingView 對照']];
+ else if(view==='resources')choices=[['formula','指標公式'],['details','基本資料'],['raw','日線資料'],['audit','TradingView 對照'],['export','匯出與分享']];
  else{tabs.hidden=true;return}
  tabs.hidden=false;
  choices.forEach(([key,label])=>{
@@ -80,7 +80,7 @@ function setSubnav(view){
   btn.setAttribute('aria-selected',String(selected));
   btn.onclick=()=>{
    if(view==='signals'){subSignal=key;originalTab(key);}
-   else{subResource=key; if(key!=='formula')originalTab(originalTabs[key]);}
+   else{subResource=key; if(key!=='formula' && key!=='export')originalTab(originalTabs[key]);}
    root.dataset.resource=subResource;
    setSubnav(view);
   };
@@ -103,7 +103,7 @@ function go(route,updateHash=true){
  if(route==='signals')originalTab(subSignal);
  if(route==='resources'){
   extraTab('4');
-  if(subResource!=='formula')originalTab(originalTabs[subResource]);
+  if(subResource!=='formula' && subResource!=='export')originalTab(originalTabs[subResource]);
  }
  const mapping={strategy:'1',compare:'2',watchlist:'3'};
  if(mapping[route])extraTab(mapping[route]);
