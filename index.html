@@ -87,7 +87,7 @@
 #qtemp_root th{position:sticky;top:0;background:#edf3fa;color:#3f536d;font-size:12px;font-weight:700}
 #qtemp_root tbody tr:nth-child(even){background:#f8fafc}
 #qtemp_root tbody tr:hover{background:#edf4fb}
-#qtemp_root .summary-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:10px 0 16px}
+#qtemp_root .summary-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:10px 0 16px}
 #qtemp_root .summary-item{padding:13px 15px;border:1px solid var(--line);border-radius:12px;background:#fff;min-width:0}
 #qtemp_root .summary-item span{display:block;color:var(--muted);font-size:12px}
 #qtemp_root .summary-item strong{display:block;font-size:19px;font-weight:720;margin-top:5px;font-variant-numeric:tabular-nums}
@@ -160,6 +160,8 @@
       <div class="summary-item"><span>52 週最高（還原）</span><strong data-q="high52">—</strong></div>
       <div class="summary-item"><span>52 週最低（還原）</span><strong data-q="low52">—</strong></div>
       <div class="summary-item"><span>距 52 週高點</span><strong data-q="drawdown52">—</strong></div>
+      <div class="summary-item"><span>距歷史高點（還原）</span><strong data-q="drawdown-all">—</strong></div>
+      <div class="summary-item"><span>最近收盤成交量</span><strong data-q="dashboard-volume">—</strong></div>
       <div class="summary-item"><span>最新 QTemp 訊號</span><strong data-q="latest-signal">—</strong><span data-q="latest-signal-day"></span></div>
     </div>
     <div class="quote-meta"><span data-q="quote-time">最新行情尚未取得</span><span data-q="close-time"></span><button type="button" data-q="refresh">手動刷新</button></div>
@@ -384,6 +386,9 @@
     q('low52').textContent=display(price.low52);
     q('drawdown52').textContent=price.from52High==null?'—':pct(price.from52High);
     q('drawdown52').className=price.from52High<0?'negative':'';
+    q('drawdown-all').textContent=price.fromAllHigh==null?'—':pct(price.fromAllHigh);
+    q('drawdown-all').className=price.fromAllHigh<0?'negative':'';
+    q('dashboard-volume').textContent=display(price.volume);
     const latest=a.latestSignal;
     q('latest-signal').textContent=latest?.type||'尚無訊號';
     q('latest-signal-day').textContent=latest?latest.day+' 確認':'';
