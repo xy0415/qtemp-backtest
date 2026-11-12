@@ -264,3 +264,23 @@ html,body{
  #qtemp_root .qshortcut button,#qtemp_root .qhero,#qtemp_root .qpreview,
  #qtemp_root .query,#qtemp_root .tile{background:#fff!important;box-shadow:none!important}
 }
+
+/* QTemp Analytics logo — vector chart mark replaces old diamond glyph */
+#qtemp_root .qbrand-mark{
+ background:transparent!important;
+ box-shadow:none!important;
+ width:35px;height:35px;
+ flex:0 0 35px;
+ overflow:visible;
+ border-radius:10px;
+}
+#qtemp_root .qbrand-mark img{
+ display:block;
+ width:35px;height:35px;
+ border-radius:10px;
+ box-shadow:0 5px 16px rgba(93,100,225,.19);
+}
+@media(max-width:570px){
+ #qtemp_root .qbrand-mark{width:30px;height:30px;flex-basis:30px}
+ #qtemp_root .qbrand-mark img{width:30px;height:30px;border-radius:8px}
+}
