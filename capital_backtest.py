@@ -137,6 +137,7 @@ def capital_comparison(symbol, start, end, initial, periodic_amount, frequency,
             periodic[ix]=periodic.get(ix, 0.) + per_period
 
     signal_deposits={}
+    signal_confirmed={}
     selected=events.loc[
         events["類型"].eq("低估值") &
         (~events["暫算"].astype(bool))
@@ -152,6 +153,7 @@ def capital_comparison(symbol, start, end, initial, periodic_amount, frequency,
         ix=dates.searchsorted(target)
         if ix<len(dates) and dates[ix]==target:
             signal_deposits[ix]=signal_deposits.get(ix,0.)+signal_cash
+            signal_confirmed[ix]=full.index[position].strftime("%Y-%m-%d")
 
     initial_deposits={0:ia} if ia else {}
     lump_budget=ia + sum(periodic.values()) if lump_mode == "match_dca" else ia
@@ -179,6 +181,7 @@ def capital_comparison(symbol, start, end, initial, periodic_amount, frequency,
         peak=1.
         daily=[]
         purchase_count=0
+        trades=[]
         for i,(date,op,cl) in enumerate(zip(dates,opens,closes)):
             deposit=deposits.get(i,0.)
             prior=wealth[-1] if wealth else 0.
@@ -187,13 +190,32 @@ def capital_comparison(symbol, start, end, initial, periodic_amount, frequency,
                 flows.append((date,deposit))
                 initial_purchase=base.get(i,0.)
                 extra_purchase=source.get(i,0.)
+                purchases=[]
                 if initial_purchase>0:
-                    shares+=initial_purchase/op
-                    purchase_count+=1
+                    purchases.append(("期初投入", None, initial_purchase, op))
                 if extra_purchase>0:
                     execution_price=cl if kind=="dca" and timing=="end" else op
-                    shares+=extra_purchase/execution_price
+                    purchases.append((
+                        "低估值" if kind=="qtemp" else "定期定額",
+                        signal_confirmed.get(i) if kind=="qtemp" else None,
+                        extra_purchase, execution_price
+                    ))
+                for label_buy, confirm_day, amount, execution_price in purchases:
+                    added=amount/execution_price
+                    shares+=added
                     purchase_count+=1
+                    trades.append({
+                        "type":label_buy,
+                        "confirmation":confirm_day,
+                        "entry":date.strftime("%Y-%m-%d"),
+                        "price":float(execution_price),
+                        "amount":float(amount),
+                        "addedShares":float(added),
+                        "shares":float(shares),
+                        "costBasis":float(sum(item["amount"] for item in trades)+amount),
+                        "avgCost":float(sum(item["amount"] for item in trades)/shares+amount/shares),
+                        "purchaseDayValue":float(shares*cl)
+                    })
             end_value=shares*cl
             wealth.append(float(end_value))
             invested_curve.append(float(invested))
@@ -231,7 +253,9 @@ def capital_comparison(symbol, start, end, initial, periodic_amount, frequency,
             "xirr":irr,"cagr":cagr,"maxDrawdown":float(max_drawdown),
             "volatility":annual_vol,"sharpeZeroRf":sharpe,
             "purchaseCount":purchase_count,"extraCount":max(0,purchase_count-(1 if ia else 0)),
-            "points":points
+            "points":points,
+            "trades":trades[:2500],
+            "tradesTruncated":len(trades)>2500
         })
     return {
         "symbol":actual,"requestedStart":requested_start.date().isoformat(),
