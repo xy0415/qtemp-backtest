@@ -1,0 +1,44 @@
+/* Research expansion panels: match QTemp light / indigo platform. */
+#qtemp_root .research-insights{margin:0 0 15px}
+#qtemp_root .insights-panel{background:#fff;border:1px solid #e4e8f1;border-radius:13px;
+ padding:clamp(17px,2.6vw,28px);box-shadow:0 5px 19px #29375a07}
+#qtemp_root .insights-heading{display:flex;justify-content:space-between;align-items:center;
+ gap:14px;flex-wrap:wrap;margin-bottom:16px}
+#qtemp_root .insights-heading h3{font-size:18px;margin:0}
+#qtemp_root .insights-heading label{display:flex;align-items:center;gap:9px;color:#718097;font-size:12px}
+#qtemp_root .insights-heading select{padding:8px 10px}
+#qtemp_root .insights-meta{font-size:12px;color:#7b899d;margin:0 0 11px}
+#qtemp_root .insights-legend{display:flex;gap:12px 22px;flex-wrap:wrap;align-items:center;margin:8px 0 14px}
+#qtemp_root .insights-legend span{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#68768c}
+#qtemp_root .insights-legend i{width:13px;height:7px;display:inline-block;border-radius:3px}
+#qtemp_root .insights-chart{width:100%;min-height:120px;border:1px solid #e8edf5;border-radius:11px;overflow:hidden;padding:9px}
+#qtemp_root .insights-chart svg{display:block;width:100%;height:auto}
+#qtemp_root .insights-note{font-size:12px;color:#7d8a9d;margin:14px 0 0;line-height:1.8}
+#qtemp_root .insights-calendar-controls{display:flex;align-items:center;gap:10px}
+#qtemp_root .insights-calendar-controls button{width:34px;height:34px;padding:0;font-size:21px}
+#qtemp_root .insights-calendar-controls strong{font-size:14px;white-space:nowrap}
+#qtemp_root .insights-calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));
+ gap:6px;margin-top:17px}
+#qtemp_root .insights-weekday{text-align:center;color:#919eb1;font-size:12px;padding:5px}
+#qtemp_root .insights-day{min-height:68px;text-align:left;display:flex;align-items:stretch;
+ flex-direction:column;justify-content:space-between;padding:8px;border:1px solid #e6eaf1;
+ border-radius:9px;background:#fff;color:#324055;font-size:13px}
+#qtemp_root .insights-day:disabled{color:#bbc2cd;background:#fafbfd;border-color:#f0f2f6;cursor:default}
+#qtemp_root .insights-day:not(:disabled){border-color:#c7c9f5;background:#f9f9ff}
+#qtemp_root .insights-dots{display:flex;gap:4px;flex-wrap:wrap;margin-top:5px}
+#qtemp_root .insights-dots i{width:8px;height:8px;border-radius:50%}
+#qtemp_root .insights-quality-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+#qtemp_root .insights-quality-item{padding:13px 14px;border:1px solid #e8ebf4;border-radius:10px;background:#fafbff;min-width:0}
+#qtemp_root .insights-quality-item span{display:block;font-size:11px;color:#8190a3}
+#qtemp_root .insights-quality-item strong{display:block;font-size:13px;color:#26354d;margin-top:7px;overflow-wrap:anywhere;font-weight:680}
+#qtemp_root .insights-quality-notes{margin-top:18px;border-top:1px solid #e9edf5;padding-top:13px}
+#qtemp_root .insights-quality-notes p{font-size:12px;line-height:1.8;color:#728098;margin:7px 0}
+#qtemp_root .insights-quality-notes .insights-alert{color:#b06e22;background:#fff6e8;padding:9px 12px;border-radius:8px}
+#qtemp_root[data-view="signals"][data-insight="event"] .panel,
+#qtemp_root[data-view="signals"][data-insight="calendar"] .panel{display:none!important}
+#qtemp_root[data-view="resources"][data-insight="quality"] .panel,
+#qtemp_root[data-view="resources"][data-insight="quality"] .formula{display:none!important}
+#qtemp_root[data-view="resources"][data-insight="quality"] .addons{display:none!important}
+@media(max-width:800px){#qtemp_root .insights-quality-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:580px){#qtemp_root .insights-calendar{gap:3px}#qtemp_root .insights-day{min-height:52px;padding:5px;font-size:11px}
+#qtemp_root .insights-dots i{width:6px;height:6px}#qtemp_root .insights-quality-grid{grid-template-columns:1fr}}
