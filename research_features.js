@@ -14,7 +14,30 @@ shell.querySelectorAll('[data-addon-tab]').forEach(button=>button.onclick=()=>{s
 const pct=v=>v==null?'—':(100*v).toFixed(2)+'%';
 const num=v=>v==null?'—':Number(v).toLocaleString('zh-TW',{maximumFractionDigits:2});
 async function api(method,args){const abort=new AbortController();const timer=setTimeout(()=>abort.abort(),120000);try{const r=await fetch('/api/'+method,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({args}),signal:abort.signal});const data=await r.json();if(!r.ok||data.error)throw Error(data.error||'API 錯誤');return data}finally{clearTimeout(timer)}}
-function table(cols,rows){const wrap=document.createElement('div');wrap.className='addons-table';const t=document.createElement('table'),head=t.createTHead().insertRow();cols.forEach(x=>{const th=document.createElement('th');th.textContent=x;head.append(th)});const body=t.createTBody();rows.forEach(row=>{const tr=body.insertRow();row.forEach(value=>tr.insertCell().textContent=value==null?'—':String(value))});wrap.append(t);return wrap}
+function table(cols,rows){
+ const wrap=document.createElement('div');wrap.className='addons-table';
+ const t=document.createElement('table'),head=t.createTHead().insertRow();
+ cols.forEach(x=>{const th=document.createElement('th');th.textContent=x;head.append(th)});
+ const body=t.createTBody();wrap.append(t);
+ const pageSize=15,totalPages=Math.max(1,Math.ceil(rows.length/pageSize));let page=0;
+ const pager=document.createElement('div');pager.className='addons-pager';
+ const previous=document.createElement('button');previous.type='button';previous.textContent='上一頁';
+ const next=document.createElement('button');next.type='button';next.textContent='下一頁';
+ const state=document.createElement('span');
+ const draw=()=>{
+  body.replaceChildren();
+  rows.slice(page*pageSize,(page+1)*pageSize).forEach(row=>{
+   const tr=body.insertRow();
+   row.forEach(value=>tr.insertCell().textContent=value==null?'—':String(value))
+  });
+  previous.disabled=page===0;next.disabled=page>=totalPages-1;
+  state.textContent=(page+1)+' / '+totalPages+' 頁 · 共 '+rows.length+' 筆';
+ };
+ previous.onclick=()=>{page=Math.max(0,page-1);draw()};
+ next.onclick=()=>{page=Math.min(totalPages-1,page+1);draw()};
+ pager.append(previous,state,next);wrap.append(pager);draw();
+ return wrap;
+}
 function summary(items){const wrap=document.createElement('div');wrap.className='addons-summary';items.forEach(([title,value])=>{const item=document.createElement('div');item.className='addons-metric';const a=document.createElement('span');a.textContent=title;const b=document.createElement('strong');b.textContent=value;item.append(a,b);wrap.append(item)});return wrap}
 async function execute(btn,out,method,args,renderer){btn.disabled=true;out.textContent='資料計算中…';try{const res=await api(method,args);out.replaceChildren();renderer(res,out)}catch(e){out.textContent='讀取失敗：'+(e.message||e)}finally{btn.disabled=false}}
 el('extra-scan-go').onclick=()=>execute(el('extra-scan-go'),el('extra-scan-out'),'scan',[el('extra-scan').value],(r,o)=>{r.items.sort((a,b)=>(a.error?1:0)-(b.error?1:0)||(a.score??999)-(b.score??999));o.append(table(['代號','QTemp','還原收盤','距52週高點','近期訊號','日期／錯誤'],r.items.map(a=>[a.symbol,num(a.score),num(a.last),pct(a.highDrawdown),a.signal,a.error||a.signalDate])))});
