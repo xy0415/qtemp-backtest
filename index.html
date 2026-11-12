@@ -232,6 +232,28 @@
           </div>
           <div class="chart-actions"><button type="button" data-q="reset-chart">重設視圖</button><button type="button" data-q="chart-expand">全螢幕</button><button type="button" data-q="chart-png">匯出 PNG</button></div>
         </div>
+
+        <div class="chart-interactions">
+          <div class="chart-date-controls">
+            <label>起始日期 <input data-q="chart-from" type="date"></label>
+            <label>結束日期 <input data-q="chart-to" type="date"></label>
+            <button type="button" data-q="chart-apply">顯示期間</button>
+            <button type="button" data-q="chart-zoom-in">放大 +</button>
+            <button type="button" data-q="chart-zoom-out">縮小 −</button>
+          </div>
+          <div class="chart-line-toggles">
+            <label><input data-q="show-candles" type="checkbox" checked> K 線</label>
+            <label><input data-q="show-volume" type="checkbox" checked> 成交量</label>
+            <label><input data-q="show-score" type="checkbox" checked> QTemp</label>
+            <label><input data-q="show-divergence" type="checkbox" checked> 背離連線</label>
+            <label><input data-q="show-markers" type="checkbox" checked> 訊號箭頭</label>
+          </div>
+          <div class="chart-date-drag">
+            <label>日期起點 <input type="range" data-q="chart-left" min="0" max="99" value="70"></label>
+            <label>日期終點 <input type="range" data-q="chart-right" min="1" max="100" value="100"></label>
+          </div>
+          <div class="chart-tail" data-q="chart-tail"></div>
+        </div>
         <div class="signal-legend" aria-label="QTemp 訊號顏色">
           <span><i style="background:#5d6bea"></i>低估值 <b>▲</b></span>
           <span><i style="background:#e06887"></i>高估值 <b>▼</b></span>
@@ -302,7 +324,7 @@
       throw error;
     } finally { clearTimeout(timeout); }
   };
-  let chart, observer;
+  let chart, observer, chartSeries=null;
   const ensureChart = () => {
     if (globalThis.LightweightCharts) return Promise.resolve();
     const loadScript=source=>new Promise((resolve,reject)=>{
@@ -350,7 +372,7 @@
     const c=chart.addSeries(L.CandlestickSeries,{upColor:up,downColor:down,
       borderVisible:false,wickUpColor:up,wickDownColor:down},0);
     const v=chart.addSeries(L.HistogramSeries,{priceFormat:{type:'volume'},priceLineVisible:false},1);
-    const t=chart.addSeries(L.LineSeries,{color:gold,lineWidth:2,priceLineVisible:false,
+    const t=chart.addSeries(L.LineSeries,{color:gold,lineWidth:2,priceLineVisible:false,lastValueVisible:true,
       lineType:L.LineType.WithSteps,
       autoscaleInfoProvider:()=>({priceRange:{minValue:-105,maxValue:105}})},2);
     chart.panes().forEach((pane,i)=>pane.setStretchFactor([5,1.2,2.2][i]));
@@ -361,9 +383,10 @@
       {time,value:volume,color:close>=open?'#e16c8666':'#26a69a66'}));
     t.setData(candles.map(([time],i)=>({time,value:scores[i]})));
     [-90,0,90].forEach(price=>t.createPriceLine({price,color:'#c3c8d6',lineStyle:L.LineStyle.Dotted,axisLabelVisible:false}));
+    const overlayLines=[];
     // 訊號形狀保留方向，類型僅以顏色區分；對照文字置於圖表上方圖例。
     const markerStyle={buy:'#5d6bea',sell:'#e06887',bull:'#20a49b',bear:'#d99b49'};
-    L.createSeriesMarkers(c,current.figure.marks.map(([time,type])=>{
+    const markersPlugin=L.createSeriesMarkers(c,current.figure.marks.map(([time,type])=>{
       const low=type==='buy'||type==='bull';
       return {time,position:low?'belowBar':'aboveBar',shape:low?'arrowUp':'arrowDown',
               color:markerStyle[type],text:''};
@@ -374,8 +397,18 @@
         const line=chart.addSeries(L.LineSeries,{color,lineWidth:1,lineStyle:L.LineStyle.Dotted,
           lastValueVisible:false,priceLineVisible:false,crosshairMarkerVisible:false,autoscaleInfoProvider:()=>null},pane);
         line.setData([{time:start,value:y0},{time:end,value:y1}]);
+        overlayLines.push(line);
       }
     }
+    chartSeries={c,v,t,overlayLines,markersPlugin,candles,current};
+    applyChartVisibility();
+    const endCandle=candles[candles.length-1];
+    q('chart-tail').textContent='最新已確認收盤：'+endCandle[0]+' ｜ 收盤 '+num.format(endCandle[4])+
+      ' ｜ QTemp '+num.format(scores[scores.length-1]);
+    q('chart-from').value=q('chart-from').min=candles[0][0];
+    q('chart-from').max=candles[candles.length-1][0];
+    q('chart-to').value=q('chart-to').max=candles[candles.length-1][0];
+    q('chart-to').min=candles[0][0];
     const readouts=Array.from(q('ohlc').querySelectorAll('[data-value]'));
     const update=entry=>{
       if(!entry) return;
@@ -391,12 +424,62 @@
     observer=new ResizeObserver(()=>{if(!plot.hidden&&plot.clientWidth)chart.resize(plot.clientWidth,plot.clientHeight);});
     observer.observe(plot);
     fitChart(selectedRange);
+    if(globalThis.__qtempCalendarTarget){
+      const day=globalThis.__qtempCalendarTarget;
+      globalThis.__qtempCalendarTarget=null;
+      focusChartDate(day);
+    }
     if(restoreView){try{chart.timeScale().setVisibleLogicalRange(restoreView);}catch(_){}restoreView=null;}
     q('reset-chart').onclick=()=>{
       chart.panes().forEach((_,i)=>chart.priceScale('right',i).applyOptions({autoScale:true}));
       fitChart('252');
     };
   }
+  function applyChartVisibility(){
+    if(!chartSeries)return;
+    const show=key=>q(key).checked;
+    chartSeries.c.applyOptions({visible:show('show-candles'),lastValueVisible:true});
+    chartSeries.v.applyOptions({visible:show('show-volume')});
+    chartSeries.t.applyOptions({visible:show('show-score'),lastValueVisible:true});
+    chartSeries.overlayLines.forEach(line=>line.applyOptions({visible:show('show-divergence')}));
+    if(chartSeries.markersPlugin?.setMarkers){
+      const marks=chartSeries.current.figure.marks;
+      const colors={buy:'#5d6bea',sell:'#e06887',bull:'#20a49b',bear:'#d99b49'};
+      chartSeries.markersPlugin.setMarkers(show('show-markers')?marks.map(([time,type])=>({
+        time,position:['buy','bull'].includes(type)?'belowBar':'aboveBar',
+        shape:['buy','bull'].includes(type)?'arrowUp':'arrowDown',
+        color:colors[type],text:''
+      })):[]);
+    }
+  }
+  function selectLogical(from,to){
+    if(!chart||!chartSeries)return;
+    const n=chartSeries.candles.length;
+    const low=Math.max(0,Math.min(n-2,Math.floor(from)));
+    const high=Math.min(n+3,Math.max(low+1,Math.ceil(to)));
+    chart.timeScale().setVisibleLogicalRange({from:low,to:high});
+  }
+  function focusChartDate(day){
+    if(!chart||!chartSeries){globalThis.__qtempCalendarTarget=day;return false}
+    const candles=chartSeries.candles;
+    const idx=candles.findIndex(row=>row[0]===day);
+    if(idx<0)return false;
+    selectLogical(idx-34,idx+34);
+    return true;
+  }
+  globalThis.QTempChart={
+    jumpToDate:focusChartDate,
+    setDateRange:(from,to)=>{
+      const days=chartSeries?.candles||[];
+      if(!days.length)return false;
+      const a=days.findIndex(p=>p[0]>=from);
+      let b=days.findIndex(p=>p[0]>=to);
+      if(b<0)b=days.length-1;
+      if(a<0||a>=b)return false;
+      selectLogical(a,b);
+      return true;
+    }
+  };
   function createTable(payload) {
     const holder = document.createElement('div'); holder.className='table';
     if (!payload.rows.length) { holder.textContent='沒有符合條件的資料。'; return holder; }
@@ -635,6 +718,32 @@
     finally{closedInFlight=false;}
   }
   q('refresh').onclick=async()=>{await refreshQuote();await checkClosedDay();};
+  ['show-candles','show-volume','show-score','show-divergence','show-markers'].forEach(key=>{
+    q(key).onchange=applyChartVisibility;
+  });
+  q('chart-apply').onclick=()=>{
+    const from=q('chart-from').value,to=q('chart-to').value;
+    if(!from||!to||from>=to){status('日期區間必須包含至少兩個交易日',true);return;}
+    if(!globalThis.QTempChart.setDateRange(from,to))status('選取期間沒有足夠交易日',true);
+  };
+  const zoom=scale=>{
+    if(!chart||!chartSeries)return;
+    const range=chart.timeScale().getVisibleLogicalRange();
+    if(!range)return;
+    const middle=(range.from+range.to)/2,half=(range.to-range.from)*scale/2;
+    selectLogical(middle-half,middle+half);
+  };
+  q('chart-zoom-in').onclick=()=>zoom(.65);
+  q('chart-zoom-out').onclick=()=>zoom(1.5);
+  const sliderUpdate=()=>{
+    if(!chartSeries)return;
+    const n=chartSeries.candles.length;
+    const left=Number(q('chart-left').value),right=Number(q('chart-right').value);
+    if(left>=right){status('日期左界必須早於右界',true);return;}
+    selectLogical(n*left/100,n*right/100);
+  };
+  q('chart-left').oninput=sliderUpdate;
+  q('chart-right').oninput=sliderUpdate;
   q('chart-png').onclick=()=>{
     if(!chart || !data || typeof chart.takeScreenshot!=='function') {status('圖表元件尚未載入，無法匯出 PNG。',true);return;}
     try{
