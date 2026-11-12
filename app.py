@@ -36,6 +36,14 @@ def capital_backtest_ui():
 def capital_backtest_css():
     return send_file('capital_backtest.css', mimetype='text/css')
 
+@app.get('/research_insights_ui.js')
+def research_insights_ui():
+    return send_file('research_insights_ui.js', mimetype='application/javascript')
+
+@app.get('/research_insights.css')
+def research_insights_css():
+    return send_file('research_insights.css', mimetype='text/css')
+
 @app.get('/health')
 def health():
     return jsonify({'status': 'ok'})
