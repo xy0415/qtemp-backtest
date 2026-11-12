@@ -82,7 +82,7 @@ function renderChart(data){
  const points=data.strategies.map(s=>s.points);
  const all=points.flatMap(arr=>arr.map(p=>isReturn?(p[3]===null?0:p[3]*100):p[1]));
  const max=Math.max(0,...all),min=Math.min(0,...all);
- const left=85,top=22,width=950,height=330,right=36,bottom=39;
+ const left=85,top=22,width=950,height=330,right=112,bottom=39;
  const yLow=isReturn?Math.min(0,min):0;
  const yHigh=max===yLow?yLow+1:max*1.13+(isReturn?2:0);
  const xStart=new Date(data.start+'T00:00:00Z').getTime();
@@ -127,6 +127,8 @@ function renderChart(data){
   }
   const end=arr[arr.length-1];
   node('circle',{cx:x(end[0]),cy:y(value(end)),r:4.2,fill:colors[i],stroke:'#fff','stroke-width':2});
+  const label=isReturn?value(end).toFixed(1)+'%':niceTick(value(end));
+  node('text',{x:x(end[0])+10,y:y(value(end))+4,fill:colors[i],'font-size':13,'font-weight':750},label);
  });
  host.append(svg);
  $('cap-chart-note').textContent=isReturn?
