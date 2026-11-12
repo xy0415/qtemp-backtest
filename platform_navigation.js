@@ -25,6 +25,12 @@ routes.forEach(([id,label])=>{
  button.onclick=()=>go(id);nav.append(button);
 });
 header.append(nav);
+const mobileNav=document.createElement('label');mobileNav.className='qroute-switch';
+mobileNav.textContent='功能';
+const mobileSelect=document.createElement('select');mobileSelect.setAttribute('aria-label','切換功能頁面');
+routes.forEach(([id,label])=>mobileSelect.add(new Option(label,id)));
+mobileSelect.onchange=()=>go(mobileSelect.value);
+mobileNav.append(mobileSelect);header.append(mobileNav);
 const status=document.createElement('span');status.className='qtopend';status.textContent='歷史資料研究平台';header.append(status);
 base.before(header);
 const hero=document.createElement('section');hero.className='qhero';
@@ -44,8 +50,11 @@ for(const [route,icon,title,description] of [
 const results=root.querySelector('[data-q=results]');
 results.insertAdjacentElement('afterend',shortcuts);
 const intro=document.createElement('section');intro.className='qroute-intro';
-intro.innerHTML='<span class="qeyebrow">QTEMP WORKSPACE</span><h2></h2><p></p>';
+intro.innerHTML='<div class="qcrumb"><button type="button" data-go="overview">首頁</button><span>／</span><span data-crumb="current">—</span></div><span class="qeyebrow">QTEMP WORKSPACE</span><h2></h2><p></p>';
 hero.insertAdjacentElement('afterend',intro);
+const resourceInfo=document.createElement('span');resourceInfo.className='qfeature-note';resourceInfo.textContent='資料基礎｜Yahoo Finance · 調整收盤價';
+intro.append(resourceInfo);
+
 const tabs=document.createElement('div');tabs.className='qsubnav';tabs.setAttribute('aria-label','研究子分頁');
 results.querySelector('.tabs').before(tabs);
 const footer=document.createElement('footer');footer.className='qdisclaimer';
@@ -88,6 +97,8 @@ function go(route,updateHash=true){
  root.dataset.resource=subResource;
  nav.querySelectorAll('[data-route]').forEach(b=>b.setAttribute('aria-current',b.dataset.route===route?'page':'false'));
  const info=routes.find(r=>r[0]===route);
+ mobileSelect.value=route;
+ intro.querySelector('[data-crumb=current]').textContent=info[1];
  intro.querySelector('h2').textContent=info[2];intro.querySelector('p').textContent=info[3];
  setSubnav(route);
  if(route==='chart')originalTab('chart');
