@@ -16,7 +16,7 @@ const header=document.createElement('header');
 header.className='qtopbar';
 const brand=document.createElement('a');
 brand.className='qbrand';brand.href='#overview';
-brand.innerHTML='<span class="qbrand-mark" aria-hidden="true">◈</span><span>QTemp技術指標分析</span>';
+brand.innerHTML='<span class="qbrand-mark" aria-hidden="true"><img src="/favicon.svg?v=2" alt="" width="35" height="35"></span><span>QTemp Analytics</span>';
 header.append(brand);
 const nav=document.createElement('nav');nav.className='qtopnav';nav.setAttribute('aria-label','網站主導覽');
 routes.forEach(([id,label])=>{
@@ -33,7 +33,7 @@ mobileNav.append(mobileSelect);header.append(mobileNav);
 const status=document.createElement('span');status.className='qtopend';status.textContent='歷史資料研究平台';header.append(status);
 base.before(header);
 const hero=document.createElement('section');hero.className='qhero';
-hero.innerHTML='<div class="qhero-content"><span class="qeyebrow">QTEMP ANALYTICS</span><h1>QTemp技術指標分析</h1><div class="qactions"><button type="button" class="primary" data-go="chart">行情圖表</button><button type="button" data-go="signals">訊號研究</button></div></div><div class="qpreview"><div class="qpreview-top"><strong>QTemp 指標</strong><span>最近收盤資料</span></div><div class="qpreview-value" data-preview-score>—</div><div class="qpreview-bottom"><span>最新已確認日 K 的分數</span></div></div>';
+hero.innerHTML='<div class="qhero-content"><span class="qeyebrow">QTEMP ANALYTICS</span><h1>QTemp Analytics</h1><div class="qactions"><button type="button" class="primary" data-go="chart">行情圖表</button><button type="button" data-go="signals">訊號研究</button></div></div><div class="qpreview"><div class="qpreview-top"><strong>QTemp 指標</strong><span>最近收盤資料</span></div><div class="qpreview-value" data-preview-score>—</div><div class="qpreview-bottom"><span>最新已確認日 K 的分數</span></div></div>';
 base.before(hero);
 const shortcuts=document.createElement('div');shortcuts.className='qshortcut';
 for(const [route,icon,title,description] of [
@@ -55,7 +55,7 @@ hero.insertAdjacentElement('afterend',intro);
 const tabs=document.createElement('div');tabs.className='qsubnav';tabs.setAttribute('aria-label','研究子分頁');
 results.querySelector('.tabs').before(tabs);
 const footer=document.createElement('footer');footer.className='qdisclaimer';
-footer.innerHTML='<span>© QTemp技術指標分析 · 指標與歷史回測僅供研究參考，不構成投資建議。</span><span>Yahoo Finance 資料可能延遲 · 回測採 Adj Close 還原與確認日 K</span>';
+footer.innerHTML='<span>© QTemp Analytics · 指標與歷史回測僅供研究參考，不構成投資建議。</span><span>Yahoo Finance 資料可能延遲 · 回測採 Adj Close 還原與確認日 K</span>';
 root.append(footer);
 let current='',subSignal='study',subResource='formula';
 const originalTabs={chart:'chart',study:'study',annual:'annual',events:'events',details:'details',raw:'raw',audit:'compare'};
