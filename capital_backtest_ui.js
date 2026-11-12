@@ -13,6 +13,7 @@ panel.innerHTML='<div class="capital-head"><div><h3>長期投資策略回測</h3
 '<label>QTemp 每次低估值投入金額<input id="cap-signal" type="number" value="10000" min="0" step="1000"></label>'+
 '<label>定投時點<select id="cap-timing"><option value="begin">期初</option><option value="end" selected>期末</option></select></label>'+
 '<label>單邊費率（%）<input id="cap-fee" type="number" value="0.1" min="0" max="2" step="0.05"></label>'+
+'<label>單筆投入本金<select id="cap-lump"><option value="match_dca" selected>與定投整段總本金相同</option><option value="initial_only">僅投入期初 IA</option></select></label>'+
 '</div><div class="capital-action"><button type="button" class="primary" id="cap-run">執行三策略回測</button><span id="cap-status" role="status"></span></div>'+
 '<div id="cap-results" hidden><div class="capital-divider"></div><div class="capital-kpis" id="cap-kpis"></div>'+
 '<div class="capital-section"><div class="capital-section-head"><h3>策略報酬比較</h3><div class="capital-buttons"><button id="cap-wealth" type="button" aria-pressed="true">資產價值</button><button id="cap-return" type="button" aria-pressed="false">累積報酬率</button><button id="cap-png" type="button">匯出 PNG</button></div></div>'+
@@ -159,7 +160,7 @@ $('cap-png').onclick=()=>{
 };
 $('cap-run').onclick=async()=>{
  const button=$('cap-run'),status=$('cap-status');
- const args=['cap-symbol','cap-start','cap-end','cap-initial','cap-annual','cap-frequency','cap-signal','cap-timing','cap-fee'].map(id=>$(id).value);
+ const args=['cap-symbol','cap-start','cap-end','cap-initial','cap-annual','cap-frequency','cap-signal','cap-timing','cap-fee','cap-lump'].map(id=>$(id).value);
  if(args.some(x=>x.trim()==='')){status.textContent='所有欄位皆須填寫';return}
  button.disabled=true;status.textContent='歷史資料與三策略計算中…';$('cap-results').hidden=true;
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),120000);
