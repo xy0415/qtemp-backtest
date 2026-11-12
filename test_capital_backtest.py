@@ -35,7 +35,7 @@ class CapitalBacktestTest(unittest.TestCase):
     def run_backtest(self, timing="end", lump="match_dca"):
         return capital_backtest.capital_comparison(
             "SPY","2010-01-01","2013-12-31",
-            "1000","1200","monthly","500",timing,"0",lump)
+            "1000","100","monthly","500",timing,lump)
 
     def test_flat_prices_and_equal_budget(self):
         r=self.run_backtest()
@@ -69,13 +69,13 @@ class CapitalBacktestTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             capital_backtest.capital_comparison(
                 "SPY","2013-12-30","2010-01-01",
-                "1000","1200","monthly","500","end","0","match_dca")
+                "1000","100","monthly","500","end","match_dca")
 
     def test_no_listing_data_before_requested_start(self):
         with self.assertRaisesRegex(ValueError, "此標的資料從"):
             capital_backtest.capital_comparison(
                 "SPY","2005-01-01","2013-12-31",
-                "1000","1200","monthly","500","end","0","match_dca")
+                "1000","100","monthly","500","end","match_dca")
 
 
 if __name__=="__main__":
