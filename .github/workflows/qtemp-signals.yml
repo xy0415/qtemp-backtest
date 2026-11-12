@@ -2,7 +2,7 @@ name: QTemp confirmed daily signals
 on:
   schedule:
     # 07:30 Asia/Taipei, after US regular market close
-    - cron: '30 23 * * *'
+    - cron: '30 23 * * 0-4'
   workflow_dispatch:
 permissions:
   contents: read
