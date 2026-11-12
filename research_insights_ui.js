@@ -29,6 +29,7 @@ async function requestResearch(force=false){
    const response=await fetch('/api/research',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({args:[symbol]}),signal:controller.signal});
    const value=await response.json();
    if(!response.ok||value.error)throw Error(value.error||'查詢失敗');
+   if(dataset?.symbol!==value.symbol)month=value.quality.end.slice(0,7);
    dataset=value;if(!month)month=value.quality.end.slice(0,7);
    return value;
   }finally{clearTimeout(timeout);waiting=null}
