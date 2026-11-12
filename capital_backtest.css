@@ -1,0 +1,41 @@
+/* Long-term 3-strategy capital comparison */
+#qtemp_root .capital-head h3{font-size:20px;margin:0 0 4px}
+#qtemp_root .capital-head p{font-size:12px;color:#8190a4;margin:0 0 22px}
+#qtemp_root .capital-form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px 20px}
+#qtemp_root .capital-form label{display:flex;flex-direction:column;gap:7px;color:#53627c;font-size:12px;font-weight:640;min-width:0}
+#qtemp_root .capital-form label input,
+#qtemp_root .capital-form label select{width:100%;min-height:43px;padding:10px 12px;font-size:13px;border-radius:9px;background:#fff;color:#243148;border:1px solid #d8e0ed}
+#qtemp_root .capital-form label input:focus,
+#qtemp_root .capital-form label select:focus{border-color:#7376e5;outline:2px solid #e1e1ff}
+#qtemp_root .capital-action{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:22px 0 8px}
+#qtemp_root .capital-action button{min-height:42px;padding:10px 18px}
+#qtemp_root #cap-status{font-size:12px;color:#65758b}
+#qtemp_root .capital-divider{border-top:1px solid #e5e9f1;margin:29px 0 22px}
+#qtemp_root .capital-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:27px}
+#qtemp_root .capital-kpi{border-radius:12px;border:1px solid #e7ebf2;background:#f9faff;padding:13px 15px;min-width:0}
+#qtemp_root .capital-kpi span{font-size:11px;color:#7a879c;display:block}
+#qtemp_root .capital-kpi strong{display:block;color:#24324a;font-size:16px;font-weight:750;margin-top:7px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+#qtemp_root .capital-section{margin:24px 0 34px}
+#qtemp_root .capital-section h3{font-size:17px;font-weight:740;margin:0 0 15px}
+#qtemp_root .capital-section-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:13px}
+#qtemp_root .capital-section-head h3{margin:0}
+#qtemp_root .capital-buttons{display:flex;gap:6px;flex-wrap:wrap}
+#qtemp_root .capital-buttons button{padding:8px 12px;font-size:12px;border:1px solid #dfe4ef;border-radius:8px}
+#qtemp_root .capital-buttons button[aria-pressed=true]{background:#ececff;color:#575ce3;border-color:#aeb2f2}
+#qtemp_root .capital-legend{display:flex;gap:12px 22px;align-items:center;flex-wrap:wrap;margin:6px 0 10px}
+#qtemp_root .capital-legend span{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:#64728a}
+#qtemp_root .capital-legend i{display:inline-block;width:20px;height:3px;border-radius:3px}
+#qtemp_root .capital-svg-wrap{border:1px solid #e6eaf3;background:#fff;padding:5px;border-radius:12px;overflow:hidden}
+#qtemp_root .capital-chart-svg{display:block;width:100%;height:auto}
+#qtemp_root .capital-chart-note{font-size:12px;color:#8090a4;line-height:1.8;margin:12px 2px}
+#qtemp_root .capital-table-scroller{overflow:auto;border:1px solid #e1e6ef;border-radius:12px}
+#qtemp_root table.capital-performance{min-width:790px;border-collapse:collapse;width:100%;margin:0}
+#qtemp_root table.capital-performance th{padding:14px 16px;background:#f1f3fb;font-size:13px;text-align:right;color:#3d4d67;border-bottom:1px solid #dce2ef;white-space:nowrap}
+#qtemp_root table.capital-performance th:first-child{text-align:left}
+#qtemp_root table.capital-performance td{padding:13px 16px;font-size:13px;text-align:right;border-bottom:1px solid #edf0f6;font-variant-numeric:tabular-nums}
+#qtemp_root table.capital-performance tr:last-child td{border-bottom:0}
+#qtemp_root table.capital-performance td.capital-table-label{text-align:left;font-weight:630;color:#53627c;background:#f8f9fc;min-width:240px}
+#qtemp_root table.capital-performance td.capital-emphasis{font-size:18px;font-weight:800}
+#qtemp_root table.capital-performance td.capital-negative{color:#d65070}
+@media(max-width:950px){#qtemp_root .capital-form{grid-template-columns:repeat(2,minmax(0,1fr))}#qtemp_root .capital-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:570px){#qtemp_root .capital-form{grid-template-columns:1fr}#qtemp_root .capital-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}#qtemp_root .capital-section-head{align-items:start}#qtemp_root .capital-buttons button{padding:7px}}
