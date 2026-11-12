@@ -675,7 +675,11 @@
       q('close-time').textContent='回測收盤日：'+data.end;
       q('score').textContent=data.qtemp.toFixed(2);
       renderInsights(data);
-      q('results').hidden=false; status(data.start+' 至 '+data.end+' · '+data.basis);
+      q('results').hidden=false;
+      const isStale=data.dataSourceStatus==='stale_backup';
+      const sourceText=isStale?' · 使用歷史備份（不代表最新行情）':
+        data.dataSourceStatus==='verified_cache'?' · 已驗證短期快取':'';
+      status(data.start+' 至 '+data.end+' · '+data.basis+sourceText,isStale);
       render();
       refreshQuote();
     } catch(error) { status(error.message,true); }
