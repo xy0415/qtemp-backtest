@@ -91,7 +91,7 @@ def capital_comparison(symbol, start, end, initial, annual_dca, frequency,
         raise ValueError("開始與結束日期必須為 YYYY-MM-DD")
     if requested_end <= requested_start:
         raise ValueError("結束日期必須晚於開始日期")
-    if requested_end > pd.Timestamp.now(tz="UTC").tz_localize(None).normalize():
+    if requested_end > pd.Timestamp.now(tz="Asia/Taipei").tz_localize(None).normalize():
         raise ValueError("結束日期不可超過今天")
     if requested_end.year-requested_start.year > 45:
         raise ValueError("回測期間最多45年")
