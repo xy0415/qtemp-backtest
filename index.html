@@ -225,18 +225,17 @@
         <p class="study-note" data-q="study-note"></p>
       </div>
       <div data-q="charttools" hidden>
-        <div class="chart-extra" aria-label="圖表指標">
-          <label><input type="checkbox" data-q="indicator-sma" checked> SMA 20</label>
-          <label><input type="checkbox" data-q="indicator-ema"> EMA 55</label>
-          <label><input type="checkbox" data-q="indicator-bb"> BB 20 / 2</label>
-          <label><input type="checkbox" data-q="indicator-marks" checked> 訊號標記</label>
-          <button type="button" data-q="chart-expand">圖表全螢幕</button><button type="button" data-q="chart-png">匯出圖表 PNG</button>
-        </div>
         <div class="filters chart-tools">
           <div class="range" role="group" aria-label="圖表顯示範圍">
             <button type="button" data-range="5">1 週</button><button type="button" data-range="22">1 月</button><button type="button" data-range="66">3 月</button><button type="button" data-range="132">6 月</button><button type="button" data-range="252">1 年</button><button type="button" data-range="504">2 年</button><button type="button" data-range="756">3 年</button><button type="button" data-range="1260">5 年</button><button type="button" data-range="2520">10 年</button><button type="button" data-range="all">全部</button>
           </div>
-          <button type="button" data-q="reset-chart">重設視圖</button>
+          <div class="chart-actions"><button type="button" data-q="reset-chart">重設視圖</button><button type="button" data-q="chart-expand">全螢幕</button><button type="button" data-q="chart-png">匯出 PNG</button></div>
+        </div>
+        <div class="signal-legend" aria-label="QTemp 訊號顏色">
+          <span><i style="background:#5d6bea"></i>低估值 <b>▲</b></span>
+          <span><i style="background:#e06887"></i>高估值 <b>▼</b></span>
+          <span><i style="background:#20a49b"></i>底背離 <b>▲</b></span>
+          <span><i style="background:#d99b49"></i>頂背離 <b>▼</b></span>
         </div>
         <div class="ohlc" data-q="ohlc">
           <span><strong data-value="day"></strong></span>
@@ -331,15 +330,15 @@
   }
   function drawChart(current) {
     const L=globalThis.LightweightCharts, plot=q('plot');
-    const up='#e2798d', down='#48b89e', gold='#e1b56e', axis='#a0b4cd', border='#29405a', grid='#19283c';
-    const crosshair={color:'#6487ae',labelBackgroundColor:'#2c4669'};
+    const up='#e16c86', down='#26a69a', gold='#6c6af0', axis='#667087', border='#e0e5ef', grid='#eff2f8';
+    const crosshair={color:'#98a9c8',labelBackgroundColor:'#6468c9'};
     if (observer) observer.disconnect();
     if (chart) chart.remove();
     chart=L.createChart(plot,{
       width:Math.max(1,plot.clientWidth),height:plot.clientHeight,
       localization:{locale:'zh-TW'},
-      layout:{background:{color:'#101b2b'},textColor:axis,attributionLogo:true,
-              panes:{enableResize:true,separatorColor:border,separatorHoverColor:'#456b9a'}},
+      layout:{background:{color:'#ffffff'},textColor:axis,attributionLogo:true,
+              panes:{enableResize:true,separatorColor:border,separatorHoverColor:'#a7b4d4'}},
       grid:{vertLines:{color:grid},horzLines:{color:grid}},
       crosshair:{mode:L.CrosshairMode.Normal,vertLine:crosshair,horzLine:crosshair},
       rightPriceScale:{borderColor:border},
@@ -358,35 +357,18 @@
     const byDay=new Map(candles.map((row,i)=>[row[0],[row,scores[i]]]));
     c.setData(candles.map(([time,open,high,low,close])=>({time,open,high,low,close})));
     v.setData(candles.map(([time,open,high,low,close,volume])=>volume===null?{time}:
-      {time,value:volume,color:close>=open?'#e2798d80':'#48b89e80'}));
+      {time,value:volume,color:close>=open?'#e16c8666':'#26a69a66'}));
     t.setData(candles.map(([time],i)=>({time,value:scores[i]})));
-    [-90,0,90].forEach(price=>t.createPriceLine({price,color:'#55718d',lineStyle:L.LineStyle.Dotted,axisLabelVisible:false}));
-    // Overlay series only; QTemp scoring remains unchanged.
-    const closeSeries=candles.map(item=>item[4]);
-    const sma=closeSeries.map((_,i)=>i<19?null:closeSeries.slice(i-19,i+1).reduce((a,b)=>a+b,0)/20);
-    const ema=[];let prev=null;const alpha=2/56;
-    closeSeries.forEach((price,i)=>{prev=prev===null?price:prev*(1-alpha)+price*alpha;ema.push(prev);});
-    const addLine=(values,color,style=undefined)=>{
-      const options={color,lineWidth:1.5,priceLineVisible:false,lastValueVisible:false};
-      if(style!==undefined)options.lineStyle=style;
-      const line=chart.addSeries(L.LineSeries,options,0);
-      line.setData(candles.flatMap((row,i)=>Number.isFinite(values[i])?[{time:row[0],value:values[i]}]:[]));
-      return line;
-    };
-    if(q('indicator-sma').checked)addLine(sma,'#68aaff');
-    if(q('indicator-ema').checked)addLine(ema,'#e0a45f');
-    if(q('indicator-bb').checked){
-      const width=closeSeries.map((_,i)=>i<19?null:Math.sqrt(closeSeries.slice(i-19,i+1).reduce((sum,v)=>sum+(v-sma[i])**2,0)/20)*2);
-      addLine(sma.map((x,i)=>x===null?null:x+width[i]),'#7292b5',L.LineStyle.Dotted);
-      addLine(sma.map((x,i)=>x===null?null:x-width[i]),'#7292b5',L.LineStyle.Dotted);
-    }
-    const markerStyle={buy:['低','#235fbb'],sell:['高','#a73044'],bull:['底','#07745d'],bear:['頂','#925911']};
-    L.createSeriesMarkers(c,(q('indicator-marks').checked?current.figure.marks:[]).map(([time,type])=>{
-      const low=type==='buy'||type==='bull', [text,color]=markerStyle[type];
-      return {time,position:low?'belowBar':'aboveBar',shape:low?'arrowUp':'arrowDown',color,text};
+    [-90,0,90].forEach(price=>t.createPriceLine({price,color:'#c3c8d6',lineStyle:L.LineStyle.Dotted,axisLabelVisible:false}));
+    // 訊號形狀保留方向，類型僅以顏色區分；對照文字置於圖表上方圖例。
+    const markerStyle={buy:'#5d6bea',sell:'#e06887',bull:'#20a49b',bear:'#d99b49'};
+    L.createSeriesMarkers(c,current.figure.marks.map(([time,type])=>{
+      const low=type==='buy'||type==='bull';
+      return {time,position:low?'belowBar':'aboveBar',shape:low?'arrowUp':'arrowDown',
+              color:markerStyle[type],text:''};
     }));
     for(const [start,end,p0,p1,t0,t1,type] of current.figure.segments){
-      const color=markerStyle[type][1];
+      const color=markerStyle[type];
       for(const [pane,y0,y1] of [[0,p0,p1],[2,t0,t1]]){
         const line=chart.addSeries(L.LineSeries,{color,lineWidth:1,lineStyle:L.LineStyle.Dotted,
           lastValueVisible:false,priceLineVisible:false,crosshairMarkerVisible:false,autoscaleInfoProvider:()=>null},pane);
@@ -652,9 +634,6 @@
     finally{closedInFlight=false;}
   }
   q('refresh').onclick=async()=>{await refreshQuote();await checkClosedDay();};
-  ['indicator-sma','indicator-ema','indicator-bb','indicator-marks'].forEach(name=>{
-    q(name).onchange=()=>{if(!data||active!=='chart'||!globalThis.LightweightCharts)return;drawChart(data);chartKey=data.symbol;};
-  });
   q('chart-png').onclick=()=>{
     if(!chart || !data || typeof chart.takeScreenshot!=='function') {status('圖表元件尚未載入，無法匯出 PNG。',true);return;}
     try{
