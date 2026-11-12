@@ -497,6 +497,59 @@ def site_search(query):
     except Exception as error:
         return ({'error': f'Yahoo Finance 搜尋失敗：{error}'})
 
+
+def summary_analytics(frame, values, events, years=10):
+    """Historical QTemp descriptive statistics; never uses unfinished daily bars."""
+    end = frame.index[-1]
+    cutoff = end - pd.DateOffset(years=years)
+    recent = values.loc[values.index >= cutoff, 'QTemp']
+    clean = recent[np.isfinite(recent)].astype(float)
+    current = float(values.QTemp.iloc[-1])
+    edges = np.linspace(-100., 100., 21)
+    bins = np.histogram(np.clip(clean.to_numpy(), -100, 100), bins=edges)[0].tolist()
+    # The historical percentile measures the full displayed lookback, not the
+    # indicator's rolling percentile transformation used to create QTemp.
+    percentile = (100. * (np.count_nonzero(clean.to_numpy() < current)
+                    + 0.5 * np.count_nonzero(clean.to_numpy() == current)) / len(clean)) if len(clean) else None
+    closes = frame.Close
+    close = float(closes.iloc[-1])
+    peak = float(closes.max())
+    fiftytwo = closes.iloc[-252:]
+    recent_high = float(fiftytwo.max())
+    recent_low = float(fiftytwo.min())
+    dedup = events.drop_duplicates(['類型', '確認日'])
+    dedup = dedup.sort_values('確認日')
+    if not dedup.empty:
+        latest = dedup.iloc[-1]
+        signal = {'type': str(latest['類型']), 'day': latest['確認日'].date().isoformat(),
+                  'price': float(latest['確認收盤價'])}
+    else:
+        signal = None
+    firstyear = end.year - years + 1
+    years_list = list(range(firstyear, end.year + 1))
+    recent_events = dedup[dedup['確認日'].ge(pd.Timestamp(firstyear, 1, 1))]
+    yearly_counts = {label: {str(year): 0 for year in years_list} for label in SIGNALS.values()}
+    for (name, year), count in recent_events.groupby(['類型', recent_events['確認日'].dt.year]).size().items():
+        if name in yearly_counts and str(year) in yearly_counts[name]:
+            yearly_counts[name][str(year)] = int(count)
+    return {
+        'price': {'high52': recent_high, 'low52': recent_low, 'highAll': peak,
+                  'from52High': close/recent_high-1, 'fromAllHigh': close/peak-1,
+                  'volume': None if pd.isna(frame.Volume.iloc[-1]) else float(frame.Volume.iloc[-1])},
+        'latestSignal': signal,
+        'distribution': {'years': years, 'start': clean.index[0].date().isoformat() if len(clean) else None,
+                         'end': clean.index[-1].date().isoformat() if len(clean) else None,
+                         'sample': int(len(clean)), 'percentile': percentile,
+                         'min': float(clean.min()) if len(clean) else None,
+                         'max': float(clean.max()) if len(clean) else None,
+                         'mean': float(clean.mean()) if len(clean) else None,
+                         'belowNeg90': int((clean < -90).sum()),
+                         'above90': int((clean > 90).sum()),
+                         'edges': edges.tolist(), 'counts': bins},
+        'heatmap': {'years': years_list, 'signals': yearly_counts,
+                    'maxCount': max([c for row in yearly_counts.values() for c in row.values()] or [0])}
+    }
+
 def site_analyze(requested):
     try:
         requested = symbol_input(str(requested)[:100])
@@ -510,6 +563,7 @@ def site_analyze(requested):
         values, events = qtemp(frame, tick=tick)
         figure = chart_payload(frame, values, events)
         newest = values.iloc[-1]
+        analytics = summary_analytics(frame, values, events)
         annual = {name: records(annual_table(frame,events,10,name)) for name in SIGNALS.values()}
         event_rows = events[events['確認日'].ge(pd.Timestamp(frame.index[-1].year-9,1,1))].drop_duplicates(['類型','確認日'])
         recent = frame.drop(columns='Adj Close').join(values[['QTemp','RSI']]).tail(120).reset_index()
@@ -522,7 +576,7 @@ def site_analyze(requested):
             'last': float(frame.Close.iloc[-1]), 'change': float(frame.Close.iloc[-1] / frame.Close.iloc[-2] - 1),
             'volume': None if pd.isna(raw.Volume.iloc[-1]) else float(raw.Volume.iloc[-1]),
             'qtemp': float(newest.QTemp), 'basis': 'Adj Close 還原', 'infoMissing': bool(info_error),
-            'figure': figure,
+            'figure': figure, 'analytics': analytics,
             'annual': annual, 'returns': records(historical_returns(frame)),
             'events': records(event_rows[['類型','標記日','確認日','確認收盤價']].iloc[::-1]),
             'details': records(market_details(symbol,frame,info,meta,zone)),
