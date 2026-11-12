@@ -17,11 +17,13 @@ jobs:
           cache: 'pip'
       - run: pip install -r requirements.txt
       - name: Compile backend
-        run: python -m compileall -q app.py qtemp_core.py research_features.py capital_backtest.py qtemp_alerts.py test_capital_backtest.py
+        run: python -m compileall -q app.py qtemp_core.py research_features.py capital_backtest.py research_insights.py market_cache.py qtemp_alerts.py test_capital_backtest.py test_research_insights.py test_market_cache.py
       - name: Check JavaScript
         run: |
           node --check research_features.js
           node --check capital_backtest_ui.js
+          node --check research_insights_ui.js
+          node --check platform_navigation.js
           node - <<'JS'
           const fs=require('fs');
           const html=fs.readFileSync('index.html','utf8');
@@ -30,7 +32,7 @@ jobs:
           new Function(script[1]);
           JS
       - name: Capital backtest deterministic tests
-        run: python -m unittest -v test_capital_backtest
+        run: python -m unittest -v test_capital_backtest test_research_insights test_market_cache
       - name: Flask and input smoke test
         run: |
           python - <<'PY'
@@ -42,7 +44,9 @@ jobs:
           assert app.test_client().get('/research_features.css').status_code==200
           assert app.test_client().get('/capital_backtest_ui.js').status_code==200
           assert app.test_client().get('/capital_backtest.css').status_code==200
-          for route in ('scan','strategy','compare_assets','capital_comparison'):
+          assert app.test_client().get('/research_insights_ui.js').status_code==200
+          assert app.test_client().get('/research_insights.css').status_code==200
+          for route in ('scan','strategy','compare_assets','capital_comparison','research'):
               assert app.test_client().post('/api/'+route,json={'args':[]}).status_code==400
           print('All smoke checks passed')
           PY
