@@ -182,6 +182,7 @@ def capital_comparison(symbol, start, end, initial, periodic_amount, frequency,
         daily=[]
         purchase_count=0
         trades=[]
+        cost_basis=0.
         for i,(date,op,cl) in enumerate(zip(dates,opens,closes)):
             deposit=deposits.get(i,0.)
             prior=wealth[-1] if wealth else 0.
@@ -203,6 +204,7 @@ def capital_comparison(symbol, start, end, initial, periodic_amount, frequency,
                 for label_buy, confirm_day, amount, execution_price in purchases:
                     added=amount/execution_price
                     shares+=added
+                    cost_basis+=amount
                     purchase_count+=1
                     trades.append({
                         "type":label_buy,
@@ -212,8 +214,8 @@ def capital_comparison(symbol, start, end, initial, periodic_amount, frequency,
                         "amount":float(amount),
                         "addedShares":float(added),
                         "shares":float(shares),
-                        "costBasis":float(sum(item["amount"] for item in trades)+amount),
-                        "avgCost":float(sum(item["amount"] for item in trades)/shares+amount/shares),
+                        "costBasis":float(cost_basis),
+                        "avgCost":float(cost_basis/shares),
                         "purchaseDayValue":float(shares*cl)
                     })
             end_value=shares*cl
@@ -230,6 +232,9 @@ def capital_comparison(symbol, start, end, initial, periodic_amount, frequency,
                 max_drawdown=min(max_drawdown,nav/peak-1)
             nav_index.append(float(nav))
         final=wealth[-1]
+        for trade in trades:
+            trade["lotEndValue"]=float(trade["addedShares"]*closes[-1])
+            trade["positionEndValue"]=float(final)
         profit=final-invested
         datespan=max(1,(dates[-1]-dates[0]).days)/365.25
         std=float(np.std(daily,ddof=1)) if len(daily)>=2 else 0.
