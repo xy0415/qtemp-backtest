@@ -70,8 +70,8 @@ function extraTab(id){
 function setSubnav(view){
  tabs.replaceChildren();tabs.className='qsubnav '+(view==='signals'?'qsignal-tabs':'qresource-tabs');
  let choices;
- if(view==='signals')choices=[['study','歷史勝率'],['annual','年度統計'],['events','訊號明細']];
- else if(view==='resources')choices=[['formula','指標公式'],['details','基本資料'],['raw','日線資料'],['audit','TradingView 對照'],['export','匯出與分享']];
+ if(view==='signals')choices=[['study','歷史勝率'],['event','事件研究'],['calendar','訊號日曆'],['annual','年度統計'],['events','訊號明細']];
+ else if(view==='resources')choices=[['formula','指標公式'],['quality','資料品質'],['details','基本資料'],['raw','日線資料'],['audit','TradingView 對照'],['export','匯出與分享']];
  else{tabs.hidden=true;return}
  tabs.hidden=false;
  choices.forEach(([key,label])=>{
@@ -79,9 +79,16 @@ function setSubnav(view){
   const selected=view==='signals'?subSignal===key:subResource===key;
   btn.setAttribute('aria-selected',String(selected));
   btn.onclick=()=>{
-   if(view==='signals'){subSignal=key;originalTab(key);}
-   else{subResource=key; if(key!=='formula' && key!=='export')originalTab(originalTabs[key]);}
+   if(view==='signals'){
+     subSignal=key;
+     if(!['event','calendar'].includes(key))originalTab(key);
+   } else {
+     subResource=key;
+     if(!['formula','export','quality'].includes(key))originalTab(originalTabs[key]);
+   }
    root.dataset.resource=subResource;
+   root.dataset.insight=['event','calendar','quality'].includes(key)?key:'';
+   document.dispatchEvent(new CustomEvent('qtemp-insight-show',{detail:{tab:root.dataset.insight}}));
    setSubnav(view);
   };
   tabs.append(btn);
@@ -99,11 +106,15 @@ function go(route,updateHash=true){
  intro.querySelector('[data-crumb=current]').textContent=info[1];
  intro.querySelector('h2').textContent=info[2];intro.querySelector('p').textContent=info[3];
  setSubnav(route);
+ const insight=route==='signals' && ['event','calendar'].includes(subSignal)?subSignal:
+   route==='resources' && subResource==='quality'?'quality':'';
+ root.dataset.insight=insight;
+ document.dispatchEvent(new CustomEvent('qtemp-insight-show',{detail:{tab:insight}}));
  if(route==='chart')originalTab('chart');
- if(route==='signals')originalTab(subSignal);
+ if(route==='signals' && !['event','calendar'].includes(subSignal))originalTab(subSignal);
  if(route==='resources'){
   extraTab('4');
-  if(subResource!=='formula' && subResource!=='export')originalTab(originalTabs[subResource]);
+  if(!['formula','export','quality'].includes(subResource))originalTab(originalTabs[subResource]);
  }
  const mapping={strategy:'1',compare:'2',watchlist:'3'};
  if(mapping[route])extraTab(mapping[route]);
