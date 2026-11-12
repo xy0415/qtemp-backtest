@@ -59,6 +59,16 @@ GitHub 已加入 `.github/workflows/qtemp-signals.yml`，固定於台灣工作�
 - `.github/workflows/qtemp-ci.yml`：Python 編譯、JavaScript 語法、Flask API smoke tests。
 - 公開 Render 部署需另確認 Logs、Yahoo Finance 連線與實際回測數據；CI 通過不等於行情服務保證可用。
 
+## 深色分頁平台（2026-11-12）
+新增深色多分頁設計，版面參考金融資料平台的專業風格，保留 QTemp 實際分析功能：
+- `platform_theme.css`：深色視覺、資訊卡片、響應式布局與配色。
+- `platform_navigation.js`：Hash 路由導覽，使用 `#overview`、`#chart`、`#signals`、`#scanner`、`#strategy`、`#compare`、`#watchlist`、`#resources` 切換頁面。
+- 桌面版頁首選單，手機版下拉導覽，內頁麵包屑與研究子標籤頁；研究表格每頁 15 筆，避免無止境下滑。
+- 深色 TradingView 圖表、量化研究卡片與主題一致的功能按鈕。
+- 「研究資源」集中展示公式、行情資料、TradingView 對照與匯出功能。
+- 原有公開 API、QTemp 公式、歷史統計和訊號判斷均保留。頁面路由屬客戶端導航，網址不變。
+- 首頁的折線裝飾明確註明「示意線圖，非真實價格」；實際 QTemp 與行情卡片使用 Yahoo Finance 返回資料。沒有實際用戶帳號、資產託管、買賣交易或保證即時報價功能，不宣稱相關認證。
+
 ## 注意事項
 - 歷史資料使用 Yahoo Finance；顯示回測結果不能視為交易建議。
 - 原本 Colab 指標和 TradingView 分數差異並未在此次轉換中重新校準，計算核心未更改。
