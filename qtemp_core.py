@@ -550,6 +550,82 @@ def summary_analytics(frame, values, events, years=10):
                     'maxCount': max([c for row in yearly_counts.values() for c in row.values()] or [0])}
     }
 
+
+def signal_forward_study(frame, events, years=10, horizons=(5, 20, 60, 120)):
+    """Signal-confirmation-date forward study, using next session adjusted open.
+
+    Confirmation is a close-of-day event; a next-session open entry prevents a
+    same-bar trading assumption. All horizons require a full future window.
+    Duplicate same-type signals confirmed on the same date count only once.
+    """
+    end = frame.index[-1]
+    earliest = pd.Timestamp(end.year - years + 1, 1, 1)
+    selected = (events.loc[
+        events['確認日'].ge(earliest) & ~events['暫算'].astype(bool)
+    ].drop_duplicates(['類型', '確認日']).sort_values('確認日'))
+    opens = frame['Open'].to_numpy(dtype=float)
+    closes = frame['Close'].to_numpy(dtype=float)
+    lows = frame['Low'].to_numpy(dtype=float)
+    highs = frame['High'].to_numpy(dtype=float)
+    last_index = len(frame) - 1
+    rows = []
+    detail = []
+    bullish = {'低估值', '底背離'}
+    for label in SIGNALS.values():
+        subset = selected.loc[selected['類型'].eq(label)]
+        records_by_horizon = {h: [] for h in horizons}
+        available = len(subset)
+        for record in subset.itertuples(index=False):
+            confirmation = int(record.確認位置)
+            entry_index = confirmation + 1
+            if entry_index > last_index:
+                continue
+            entry = opens[entry_index]
+            if not np.isfinite(entry) or entry <= 0:
+                continue
+            direction = 1 if label in bullish else -1
+            for h in horizons:
+                exit_index = confirmation + h
+                if exit_index > last_index:
+                    continue
+                exit_price = closes[exit_index]
+                lo = np.min(lows[entry_index:exit_index+1])
+                hi = np.max(highs[entry_index:exit_index+1])
+                if not np.isfinite([exit_price, lo, hi]).all():
+                    continue
+                actual_return = float(exit_price / entry - 1.)
+                directional = float(direction * actual_return)
+                adverse = float(lo / entry - 1. if direction > 0 else 1. - hi / entry)
+                favorable = float(hi / entry - 1. if direction > 0 else 1. - lo / entry)
+                trade = {
+                    'signal': label, 'confirmation': record.確認日.date().isoformat(),
+                    'entry': frame.index[entry_index].date().isoformat(),
+                    'exit': frame.index[exit_index].date().isoformat(),
+                    'horizon': int(h), 'entryPrice': float(entry), 'exitPrice': float(exit_price),
+                    'return': actual_return, 'directionalReturn': directional,
+                    'mae': min(0., adverse), 'mfe': max(0., favorable)
+                }
+                records_by_horizon[h].append(trade)
+                detail.append(trade)
+        for h in horizons:
+            trades = records_by_horizon[h]
+            valid_count = len(trades)
+            dr = np.array([trade['directionalReturn'] for trade in trades], dtype=float)
+            rr = np.array([trade['return'] for trade in trades], dtype=float)
+            rows.append({
+                'signal': label, 'days': int(h), 'count': valid_count,
+                'signals': available, 'excluded': available - valid_count,
+                'winRate': float(np.mean(dr > 0)) if valid_count else None,
+                'avgReturn': float(rr.mean()) if valid_count else None,
+                'avgDirectional': float(dr.mean()) if valid_count else None,
+                'medianDirectional': float(np.median(dr)) if valid_count else None,
+                'avgMAE': float(np.mean([trade['mae'] for trade in trades])) if valid_count else None,
+                'avgMFE': float(np.mean([trade['mfe'] for trade in trades])) if valid_count else None
+            })
+    detail.sort(key=lambda trade: trade['confirmation'], reverse=True)
+    return {'years': years, 'horizons': list(horizons), 'rows': rows, 'details': detail[:1200],
+            'method': '確認日收盤形成訊號；下一交易日以還原開盤價進場；第 N 根後續交易日以還原收盤價計算；只有未來資料完整的樣本列入；排除暖機期訊號；同類同日去重。'}
+
 def site_analyze(requested):
     try:
         requested = symbol_input(str(requested)[:100])
@@ -564,6 +640,7 @@ def site_analyze(requested):
         figure = chart_payload(frame, values, events)
         newest = values.iloc[-1]
         analytics = summary_analytics(frame, values, events)
+        forward_study = signal_forward_study(frame, events)
         annual = {name: records(annual_table(frame,events,10,name)) for name in SIGNALS.values()}
         event_rows = events[events['確認日'].ge(pd.Timestamp(frame.index[-1].year-9,1,1))].drop_duplicates(['類型','確認日'])
         recent = frame.drop(columns='Adj Close').join(values[['QTemp','RSI']]).tail(120).reset_index()
@@ -576,7 +653,7 @@ def site_analyze(requested):
             'last': float(frame.Close.iloc[-1]), 'change': float(frame.Close.iloc[-1] / frame.Close.iloc[-2] - 1),
             'volume': None if pd.isna(raw.Volume.iloc[-1]) else float(raw.Volume.iloc[-1]),
             'qtemp': float(newest.QTemp), 'basis': 'Adj Close 還原', 'infoMissing': bool(info_error),
-            'figure': figure, 'analytics': analytics,
+            'figure': figure, 'analytics': analytics, 'forwardStudy': forward_study,
             'annual': annual, 'returns': records(historical_returns(frame)),
             'events': records(event_rows[['類型','標記日','確認日','確認收盤價']].iloc[::-1]),
             'details': records(market_details(symbol,frame,info,meta,zone)),
