@@ -87,6 +87,13 @@
 #qtemp_root th{position:sticky;top:0;background:#edf3fa;color:#3f536d;font-size:12px;font-weight:700}
 #qtemp_root tbody tr:nth-child(even){background:#f8fafc}
 #qtemp_root tbody tr:hover{background:#edf4fb}
+#qtemp_root .quote-meta{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:12px 0;font-size:12px;color:var(--muted)}
+#qtemp_root .formula{margin:28px 0;padding:24px;border:1px solid #d6e4f4;border-top:4px solid #286bb8;border-radius:14px;background:#f5f9ff}
+#qtemp_root .formula h2{color:#17558f;margin-bottom:12px}
+#qtemp_root .formula h3{color:#225c95;font-size:14px;margin:18px 0 8px}
+#qtemp_root .formula .math{display:block;padding:9px 12px;background:white;border:1px solid #e0eaf5;border-radius:8px;margin:7px 0;overflow-x:auto;white-space:nowrap;font:13px ui-monospace,monospace}
+#qtemp_root .formula p{font-size:12px;color:var(--muted)}
+#qtemp_root .range button[aria-pressed="true"]{background:#e9f2ff;border-color:#8db7e4;color:#17558f}
 #qtemp_root .note{color:var(--muted);margin:10px 1px 0;font-size:12px}
 #qtemp_root [hidden]{display:none!important}
 @media(max-width:650px){
@@ -118,11 +125,12 @@
   <div data-q="results" hidden>
     <div class="asset"><h2 data-q="title"></h2><span class="muted" data-q="subtitle"></span></div>
     <div class="tiles">
-      <div class="tile">最近收盤<strong data-q="close"></strong></div>
-      <div class="tile">日漲跌<strong data-q="change"></strong></div>
-      <div class="tile">成交量<strong data-q="volume"></strong></div>
+      <div class="tile">最新市場報價<strong data-q="market-price">—</strong></div>
+      <div class="tile">市場漲跌<strong data-q="market-change">—</strong></div>
+      <div class="tile">回測還原收盤<strong data-q="close"></strong></div>
       <div class="tile qtemp">QTemp<strong data-q="score"></strong></div>
     </div>
+    <div class="quote-meta"><span data-q="quote-time">最新行情尚未取得</span><span data-q="close-time"></span><button type="button" data-q="refresh">手動刷新</button></div>
     <nav class="tabs" aria-label="分析分頁">
       <button data-tab="chart" type="button">行情與 QTemp</button><button data-tab="annual" type="button">年度統計</button>
       <button data-tab="events" type="button">訊號明細</button><button data-tab="returns" type="button">歷史報酬</button>
@@ -136,8 +144,7 @@
       <div data-q="charttools" hidden>
         <div class="filters chart-tools">
           <div class="range" role="group" aria-label="圖表顯示範圍">
-            <button type="button" data-range="22">1 月</button><button type="button" data-range="132">6 月</button>
-            <button type="button" data-range="252">1 年</button><button type="button" data-range="all">全部</button>
+            <button type="button" data-range="5">1 週</button><button type="button" data-range="22">1 月</button><button type="button" data-range="66">3 月</button><button type="button" data-range="132">6 月</button><button type="button" data-range="252">1 年</button><button type="button" data-range="504">2 年</button><button type="button" data-range="756">3 年</button><button type="button" data-range="1260">5 年</button><button type="button" data-range="2520">10 年</button><button type="button" data-range="all">全部</button>
           </div>
           <button type="button" data-q="reset-chart">重設視圖</button>
         </div>
@@ -154,6 +161,28 @@
       <p class="note" data-q="note"></p>
     </div>
   </div>
+  <section class="formula" aria-label="QTemp 指標計算方法">
+  <h2>QTemp 指標計算方法</h2>
+  <h3>價格還原與技術指標</h3>
+  <span class="math">調整係數 = Adj Close / Close；還原 O/H/L = 原始 O/H/L × 調整係數</span>
+  <span class="math">RSI₁₄ = 100 − 100/(1 + Wilder平均漲幅 / Wilder平均跌幅)</span>
+  <span class="math">CCI₂₀ = [Close − SMA₂₀(Close)] / [0.015 × 平均絕對偏差₂₀(Close)]</span>
+  <span class="math">M = [1(RSI&gt;60) − 1(RSI&lt;40) + 1(CCI&gt;100) − 1(CCI&lt;−100)] / 有效指標數</span>
+  <h3>趨勢、量能與分位</h3>
+  <span class="math">EMAₙ(t) = [2/(n+1)]Close(t) + [1−2/(n+1)]EMAₙ(t−1)</span>
+  <span class="math">T = sgn(EMA₅₀−EMA₂₀₀)；F = sgn(EMA₂₁(累積方向成交量)的變化)</span>
+  <span class="math">C = [45T + 35 × 方向(M, ±0.25) + WᵥF] / [45 + 35 × 有效動能 + Wᵥ]；Wᵥ = 0 或 20</span>
+  <span class="math">D = ln(Close/EMA₂₀₀)；Pᴅ = MidRank(D, 過去504根)</span>
+  <span class="math">Pᴇ = MidRank(ln(Close/EPS), 過去756根)；未提供 EPS 時 P/E 權重 = 0</span>
+  <span class="math">W = 35 + (Pᴅ有效 ? 50 : 0) + Wₚ</span>
+  <span class="math">B = [35C + (Pᴅ有效 ? 50(2Pᴅ−1) : 0) + Wₚ(2Pᴇ−1)] / W</span>
+  <span class="math">S = EMA₃(B)；QTemp = clip[100 × (MidRank₅₀₄(S)−0.5)/0.45, −100, 100]</span>
+  <p>有效歷史分位樣本不足30筆時，QTemp = 100 × S；MidRank 對相同值計入中間名次。</p>
+  <h3>訊號判斷</h3>
+  <span class="math">低估值：RSI&lt;30 且 QTemp&lt;−90；高估值：RSI&gt;70 且 QTemp&gt;90</span>
+  <span class="math">底背離：價格低點更低、QTemp 低點更高；頂背離：價格高點更高、QTemp 高點更低</span>
+  <p>背離樞紐以左右各3根 K 棒確認，跨度12–90根，另檢查 K 棒方向、指標分數及連線有效性；僅採已確認收盤日 K。</p>
+  </section>
 </section>
 <script>
 (async () => {
@@ -163,6 +192,7 @@
   const num = new Intl.NumberFormat('zh-TW', {maximumFractionDigits:2});
   const pct = x => (x>=0?'+':'')+(x*100).toFixed(2)+'%';
   let data, audit, active = 'chart', chartKey = '', busy = false;
+  let selectedRange='252', quoteInFlight=false, closedInFlight=false;
   const status = (value, error=false) => { q('status').textContent=value; q('status').classList.toggle('error',error); };
   const rpc = async (method,args) => {
     const controller = new AbortController();
@@ -201,6 +231,8 @@
     return ensureChart.task;
   };
   function fitChart(range) {
+    selectedRange=String(range);
+    root.querySelectorAll('[data-range]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.range===selectedRange)));
     if (!chart || !data) return;
     const candles=data.figure.candles;
     if(range==='all') { chart.timeScale().fitContent(); return; }
@@ -266,7 +298,7 @@
     update(byDay.get(candles.at(-1)[0]));
     observer=new ResizeObserver(()=>{if(!plot.hidden&&plot.clientWidth)chart.resize(plot.clientWidth,plot.clientHeight);});
     observer.observe(plot);
-    fitChart('252');
+    fitChart(selectedRange);
     q('reset-chart').onclick=()=>{
       chart.panes().forEach((_,i)=>chart.priceScale('right',i).applyOptions({autoScale:true}));
       fitChart('252');
@@ -340,23 +372,32 @@
     }
     q('note').textContent=note;
   }
-  async function load() {
+  async function load({silent=false,preserveView=false}={}) {
     if (busy) return;
     const symbol=(q('matches').value || q('symbol').value).trim();
     if (!symbol) { status('請輸入標的。',true); return; }
     busy=true; q('load').disabled=true; q('search').disabled=true;
-    q('results').hidden=true; status('讀取 Yahoo Finance…');
+    const oldSymbol=data?.symbol;
+    const oldView=preserveView && chart && data ? chart.timeScale().getVisibleLogicalRange() : null;
+    if(!silent)q('results').hidden=true;
+    status(silent?'更新收盤日 K…':'讀取 Yahoo Finance…');
     try {
       data=await rpc('analyze',[symbol]);
       chartKey=''; audit=null;
+      if(oldSymbol!==data.symbol)selectedRange='252';
       q('title').textContent=data.symbol+' '+(data.name===data.symbol?'':data.name);
       q('subtitle').textContent=[data.market,data.currency,data.end].filter(Boolean).join(' · ');
       q('close').textContent=num.format(data.last);
-      q('change').textContent=pct(data.change); q('change').className=data.change>=0?'positive':'negative';
-      q('volume').textContent=data.volume==null?'—':num.format(data.volume);
+      q('market-price').textContent='—';q('market-change').textContent='—';
+      q('close-time').textContent='回測收盤日：'+data.end;
       q('score').textContent=data.qtemp.toFixed(2);
       q('results').hidden=false; status(data.start+' 至 '+data.end+' · '+data.basis);
       render();
+      if(oldView && oldSymbol===data.symbol && active==='chart'){
+        await ensureChart();drawChart(data);chartKey=data.symbol;
+        try{chart.timeScale().setVisibleLogicalRange(oldView);}catch(_){}
+      }
+      refreshQuote();
     } catch(error) { status(error.message,true); }
     finally { busy=false; q('load').disabled=false; q('search').disabled=false; }
   }
@@ -374,6 +415,33 @@
     } catch(error) { status(error.message,true); }
     finally { busy=false; q('search').disabled=false; q('load').disabled=false; }
   }
+  async function refreshQuote(){
+    if(!data||quoteInFlight)return;
+    const symbol=data.symbol;quoteInFlight=true;
+    try{
+      const result=await rpc('quote',[symbol]);
+      if(data?.symbol!==symbol)return;
+      q('market-price').textContent=num.format(result.price);
+      q('market-change').textContent=result.change==null?'—':pct(result.change);
+      q('market-change').className=result.change==null?'':result.change>=0?'positive':'negative';
+      q('quote-time').textContent='Yahoo 報價時間：'+result.time+'（可能延遲）';
+    }catch(error){
+      if(data?.symbol===symbol)q('quote-time').textContent='行情暫不可用：'+error.message+'；回測資料未受影響';
+    }finally{quoteInFlight=false;}
+  }
+  async function checkClosedDay(){
+    if(!data||busy||closedInFlight||document.hidden)return;
+    const symbol=data.symbol;closedInFlight=true;
+    try{
+      const result=await rpc('closed_day',[symbol]);
+      if(data?.symbol===symbol && result.end>data.end)await load({silent:true,preserveView:true});
+    }catch(error){if(data?.symbol===symbol)status('收盤日檢查失敗：'+error.message,true);}
+    finally{closedInFlight=false;}
+  }
+  q('refresh').onclick=async()=>{await refreshQuote();await checkClosedDay();};
+  setInterval(()=>{if(!document.hidden&&data)refreshQuote();},60000);
+  setInterval(()=>{if(!document.hidden&&data)checkClosedDay();},300000);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&data){refreshQuote();checkClosedDay();}});
   for(let i=1;i<=10;i++) q('years').add(new Option(i,i));
   q('years').value='10';
   for(const button of tabs) button.onclick=()=>{active=button.dataset.tab;render();};
