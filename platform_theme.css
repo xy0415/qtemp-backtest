@@ -138,3 +138,23 @@ padding:clamp(14px,2.7vw,40px)!important;min-height:100vh;line-height:1.55!impor
 @media(max-width:1100px){#qtemp_root .qtopbar{flex-wrap:wrap;gap:12px}#qtemp_root .qtopnav{order:3;width:100%}#qtemp_root .qhero{grid-template-columns:1fr 1fr}}
 @media(max-width:760px){#qtemp_root .qhero{grid-template-columns:1fr;padding:24px}#qtemp_root .qpreview{max-width:none}#qtemp_root .qshortcut{grid-template-columns:1fr}#qtemp_root .qtopend{display:none}#qtemp_root .qtopnav button{font-size:11px;padding:9px 11px}#qtemp_root .qbrand{font-size:18px}#qtemp_root .tile{min-height:88px}}
 @media print{html,body{background:#fff!important}#qtemp_root{background:#fff!important;color:#111!important}#qtemp_root .qtopbar,#qtemp_root .qhero,#qtemp_root .qroute-intro,#qtemp_root .qshortcut,#qtemp_root .qdisclaimer{display:none!important}}
+
+/* Route-specific controls and accessibility */
+#qtemp_root .qcrumb{display:flex;gap:8px;align-items:center;color:#7f95b0;font-size:11px;margin:0 0 13px}
+#qtemp_root .qcrumb span:last-child{color:#c1d7f1}
+#qtemp_root .qcrumb button{padding:0;border:0!important;background:transparent!important;color:#79a9ea!important;font-size:11px}
+#qtemp_root .qroute-intro .qcrumb{margin-bottom:15px}
+#qtemp_root[data-view=resources][data-resource=formula] .panel{display:none!important}
+#qtemp_root[data-view=resources]:not([data-resource=formula]) .formula{display:none!important}
+#qtemp_root .qroute-switch{display:none;gap:8px;align-items:center;color:#9eafc4;font-size:12px}
+#qtemp_root .qroute-switch select{max-width:225px;min-width:160px}
+#qtemp_root .qstepbar{display:flex;gap:12px;flex-wrap:wrap;color:#7897b9;font-size:11px;margin:8px 0 19px}
+#qtemp_root .qstepbar span{display:flex;align-items:center;gap:7px}
+#qtemp_root .qstepbar i{font-style:normal;display:grid;place-items:center;width:21px;height:21px;border-radius:50%;border:1px solid #3c658e;color:#a6ccff}
+#qtemp_root .addons-pager{display:flex;gap:8px;align-items:center;justify-content:end;margin:12px 0;color:#9eb5cc;font-size:12px}
+#qtemp_root .addons-pager button{padding:6px 12px}
+#qtemp_root .qfeature-note{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:50px;background:#1b3150;color:#94b8e5;font-size:11px;margin:0 0 11px}
+#qtemp_root .qfeature-note::before{content:"";width:6px;height:6px;border-radius:50%;background:#59b69f}
+#qtemp_root .qtopnav button[aria-current=page]{box-shadow:inset 0 0 0 1px #365a86}
+@media(max-width:570px){#qtemp_root .qtopnav{display:none!important}#qtemp_root .qroute-switch{display:flex}#qtemp_root .qtopbar{flex-wrap:nowrap}#qtemp_root .qtopend{display:none!important}#qtemp_root .qhero h1{font-size:33px!important}#qtemp_root .qhero{padding:22px}#qtemp_root .qshortcut{grid-template-columns:repeat(2,minmax(0,1fr))}#qtemp_root .qshortcut button{min-height:125px;padding:14px!important}}
+@media(max-width:410px){#qtemp_root .qshortcut{grid-template-columns:1fr}}
