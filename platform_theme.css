@@ -154,3 +154,10 @@ body{font-family:Inter,"Noto Sans TC",system-ui,-apple-system,sans-serif!importa
 @media(max-width:780px){#qtemp_root .qhero{grid-template-columns:1fr}#qtemp_root .qshortcut{grid-template-columns:repeat(2,minmax(0,1fr))}#qtemp_root .qtopend{display:none}#qtemp_root .qbrand{font-size:16px}}
 @media(max-width:570px){#qtemp_root .qtopnav{display:none!important}#qtemp_root .qroute-switch{display:flex}#qtemp_root .qtopbar{flex-wrap:nowrap}#qtemp_root .qshortcut{grid-template-columns:1fr}#qtemp_root .qhero{padding:23px}#qtemp_root .qbrand{font-size:14px}#qtemp_root .qbrand-mark{width:30px;height:30px}#qtemp_root .signal-legend{gap:7px 12px}}
 @media print{html,body,#qtemp_root{background:#fff!important;color:#182135!important}#qtemp_root .qtopbar,#qtemp_root .qhero,#qtemp_root .qshortcut,#qtemp_root .qdisclaimer{display:none!important}}
+
+/* Resources contain one subsection at a time, not a stacked multipanel view. */
+#qtemp_root[data-view=resources]:not([data-resource=export]) .addons{display:none!important}
+#qtemp_root[data-view=resources][data-resource=export] .panel,
+#qtemp_root[data-view=resources][data-resource=export] .formula{display:none!important}
+#qtemp_root[data-view=resources][data-resource=export] .addons{display:block!important}
+#qtemp_root[data-view=resources][data-resource=formula] .formula{display:block!important}
