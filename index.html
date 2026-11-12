@@ -331,15 +331,15 @@
   }
   function drawChart(current) {
     const L=globalThis.LightweightCharts, plot=q('plot');
-    const up='#bf3445', down='#148161', gold='#986717', axis='#54647a', border='#dce4ed', grid='#edf1f6';
-    const crosshair={color:'#8394ab',labelBackgroundColor:'#324d6e'};
+    const up='#e2798d', down='#48b89e', gold='#e1b56e', axis='#a0b4cd', border='#29405a', grid='#19283c';
+    const crosshair={color:'#6487ae',labelBackgroundColor:'#2c4669'};
     if (observer) observer.disconnect();
     if (chart) chart.remove();
     chart=L.createChart(plot,{
       width:Math.max(1,plot.clientWidth),height:plot.clientHeight,
       localization:{locale:'zh-TW'},
-      layout:{background:{color:'#ffffff'},textColor:axis,attributionLogo:true,
-              panes:{enableResize:true,separatorColor:border,separatorHoverColor:'#bac9da'}},
+      layout:{background:{color:'#101b2b'},textColor:axis,attributionLogo:true,
+              panes:{enableResize:true,separatorColor:border,separatorHoverColor:'#456b9a'}},
       grid:{vertLines:{color:grid},horzLines:{color:grid}},
       crosshair:{mode:L.CrosshairMode.Normal,vertLine:crosshair,horzLine:crosshair},
       rightPriceScale:{borderColor:border},
@@ -358,9 +358,9 @@
     const byDay=new Map(candles.map((row,i)=>[row[0],[row,scores[i]]]));
     c.setData(candles.map(([time,open,high,low,close])=>({time,open,high,low,close})));
     v.setData(candles.map(([time,open,high,low,close,volume])=>volume===null?{time}:
-      {time,value:volume,color:close>=open?'#bf344578':'#14816178'}));
+      {time,value:volume,color:close>=open?'#e2798d80':'#48b89e80'}));
     t.setData(candles.map(([time],i)=>({time,value:scores[i]})));
-    [-90,0,90].forEach(price=>t.createPriceLine({price,color:'#aebacf',lineStyle:L.LineStyle.Dotted,axisLabelVisible:false}));
+    [-90,0,90].forEach(price=>t.createPriceLine({price,color:'#55718d',lineStyle:L.LineStyle.Dotted,axisLabelVisible:false}));
     // Overlay series only; QTemp scoring remains unchanged.
     const closeSeries=candles.map(item=>item[4]);
     const sma=closeSeries.map((_,i)=>i<19?null:closeSeries.slice(i-19,i+1).reduce((a,b)=>a+b,0)/20);
@@ -373,12 +373,12 @@
       line.setData(candles.flatMap((row,i)=>Number.isFinite(values[i])?[{time:row[0],value:values[i]}]:[]));
       return line;
     };
-    if(q('indicator-sma').checked)addLine(sma,'#316fb1');
-    if(q('indicator-ema').checked)addLine(ema,'#bd8038');
+    if(q('indicator-sma').checked)addLine(sma,'#68aaff');
+    if(q('indicator-ema').checked)addLine(ema,'#e0a45f');
     if(q('indicator-bb').checked){
       const width=closeSeries.map((_,i)=>i<19?null:Math.sqrt(closeSeries.slice(i-19,i+1).reduce((sum,v)=>sum+(v-sma[i])**2,0)/20)*2);
-      addLine(sma.map((x,i)=>x===null?null:x+width[i]),'#8b9fbb',L.LineStyle.Dotted);
-      addLine(sma.map((x,i)=>x===null?null:x-width[i]),'#8b9fbb',L.LineStyle.Dotted);
+      addLine(sma.map((x,i)=>x===null?null:x+width[i]),'#7292b5',L.LineStyle.Dotted);
+      addLine(sma.map((x,i)=>x===null?null:x-width[i]),'#7292b5',L.LineStyle.Dotted);
     }
     const markerStyle={buy:['低','#235fbb'],sell:['高','#a73044'],bull:['底','#07745d'],bear:['頂','#925911']};
     L.createSeriesMarkers(c,(q('indicator-marks').checked?current.figure.marks:[]).map(([time,type])=>{
