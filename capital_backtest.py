@@ -82,7 +82,7 @@ def _schedule(start, end, mode, timing):
 
 
 def capital_comparison(symbol, start, end, initial, annual_dca, frequency,
-                       signal_amount, timing="end", fee_percent="0.1"):
+                       signal_amount, timing="end", fee_percent="0.1", lump_mode="match_dca"):
     symbol = symbols(str(symbol), 1)[0]
     try:
         requested_start = pd.Timestamp(start).normalize()
@@ -97,6 +97,8 @@ def capital_comparison(symbol, start, end, initial, annual_dca, frequency,
         raise ValueError("結束日期不可超過今天")
     if requested_end.year-requested_start.year > 45:
         raise ValueError("回測期間最多45年")
+    if lump_mode not in ("match_dca", "initial_only"):
+        raise ValueError("單筆投入模式設定不正確")
     if timing not in ("begin","end"):
         raise ValueError("投資時點應為期初或期末")
     ia = _money(initial, "期初金額")
@@ -155,10 +157,12 @@ def capital_comparison(symbol, start, end, initial, annual_dca, frequency,
             signal_deposits[ix]=signal_deposits.get(ix,0.)+signal_cash
 
     initial_deposits={0:ia} if ia else {}
+    lump_budget=ia + sum(periodic.values()) if lump_mode == "match_dca" else ia
+    lump_deposits={0:lump_budget} if lump_budget else {}
     strategies=[
         ("QTemp 低估值", {**initial_deposits}, "qtemp"),
         ("定期定額", {**initial_deposits}, "dca"),
-        ("單筆投入", {**initial_deposits}, "lump")
+        ("單筆投入", {**lump_deposits}, "lump")
     ]
     merged=[]
     for label, base, kind in strategies:
@@ -231,6 +235,6 @@ def capital_comparison(symbol, start, end, initial, annual_dca, frequency,
         "start":dates[0].strftime("%Y-%m-%d"),"end":dates[-1].strftime("%Y-%m-%d"),
         "days":len(dates),"frequency":frequency,"timing":timing,"fee":fee,
         "annualDca":cfa,"periodicAmount":per_period,"signalAmount":signal_cash,
-        "initialAmount":ia,"strategies":merged,
-        "note":"期初投入金額 IA 在三策略皆於首個交易日開盤買入；QTemp 策略僅於已確認「低估值」訊號的下一個交易日開盤追加指定金額，從不賣出；定投依日曆頻率將年度 CFA 平均分期，非交易日順延至下一交易日開盤；單筆策略不再追加資金。所有策略按 Yahoo Adj Close 比例還原 OHLC，允許小數股。總報酬率=期末資產/累積投入−1；年化 XIRR 依實際資金流日期；最大回撤與年化波動使用排除新增入金的日報酬近似值。不同策略投入本金不同，資產總額不宜直接視為績效高低；未含稅、滑價、無風險利率及交易限制。"
+        "initialAmount":ia,"lumpMode":lump_mode,"lumpBudget":lump_budget,"strategies":merged,
+        "note":"期初投入金額 IA 在三策略皆於首個交易日開盤買入；QTemp 策略僅於已確認「低估值」訊號的下一個交易日開盤追加指定金額，從不賣出；定投依日曆頻率將年度 CFA 平均分期，非交易日順延至下一交易日開盤；單筆策略預設於期初一次投入與定期定額整段期間相同的計畫總本金（屬期初已知未來定投計畫的假設），也可改為僅投入 IA；後續不追加資金。所有策略按 Yahoo Adj Close 比例還原 OHLC，允許小數股。總報酬率=期末資產/累積投入−1；年化 XIRR 依實際資金流日期；最大回撤與年化波動使用排除新增入金的日報酬近似值。不同策略投入本金不同，資產總額不宜直接視為績效高低；未含稅、滑價、無風險利率及交易限制。"
     }
