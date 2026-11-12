@@ -10,6 +10,14 @@ app.config['MAX_CONTENT_LENGTH'] = 3 * 1024 * 1024
 def index():
     return send_file('index.html')
 
+@app.get('/research_features.js')
+def extra_js():
+    return send_file('research_features.js', mimetype='application/javascript')
+
+@app.get('/research_features.css')
+def extra_css():
+    return send_file('research_features.css', mimetype='text/css')
+
 @app.get('/health')
 def health():
     return jsonify({'status': 'ok'})
