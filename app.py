@@ -18,6 +18,14 @@ def extra_js():
 def extra_css():
     return send_file('research_features.css', mimetype='text/css')
 
+@app.get('/platform_theme.css')
+def platform_theme():
+    return send_file('platform_theme.css', mimetype='text/css')
+
+@app.get('/platform_navigation.js')
+def platform_navigation():
+    return send_file('platform_navigation.js', mimetype='application/javascript')
+
 @app.get('/health')
 def health():
     return jsonify({'status': 'ok'})
