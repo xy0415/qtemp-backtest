@@ -39,3 +39,10 @@
 #qtemp_root table.capital-performance td.capital-negative{color:#d65070}
 @media(max-width:950px){#qtemp_root .capital-form{grid-template-columns:repeat(2,minmax(0,1fr))}#qtemp_root .capital-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:570px){#qtemp_root .capital-form{grid-template-columns:1fr}#qtemp_root .capital-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}#qtemp_root .capital-section-head{align-items:start}#qtemp_root .capital-buttons button{padding:7px}}
+
+#qtemp_root .capital-trade-pager{display:flex;justify-content:flex-end;align-items:center;gap:11px;margin:12px 0;color:#72829a;font-size:12px}
+#qtemp_root .capital-trade-pager button{font-size:12px;padding:7px 12px}
+#qtemp_root .capital-trades th{white-space:nowrap}
+#qtemp_root .capital-trades td{white-space:nowrap;font-size:12px}
+#qtemp_root .capital-section-head .capital-buttons label{font-size:12px;color:#64718a;display:inline-flex;align-items:center;gap:7px}
+#qtemp_root .capital-section-head .capital-buttons select{padding:7px 10px;font-size:12px}
