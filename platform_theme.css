@@ -1,160 +1,156 @@
-
-/* QTemp Research — dark investment workspace, route-scoped layout */
-html,body{margin:0!important;background:#090e18!important;color:#e8eef9!important}
+/* QTemp — clean light investment research interface, Nov 2026 */
+html,body{margin:0!important;background:#f8f9fc!important;color:#151b2c!important}
 body{font-family:Inter,"Noto Sans TC",system-ui,-apple-system,sans-serif!important}
 #qtemp_root{
---ink:#e8eef9!important;--muted:#96a9c2!important;--line:#27364b!important;
---surface:#141e2e!important;--navy:#377cdd!important;--gold:#e4ba77!important;
---up:#e97e91!important;--down:#46b8a1!important;
-background:#090e18!important;color:#e8eef9!important;max-width:1500px!important;
-padding:clamp(14px,2.7vw,40px)!important;min-height:100vh;line-height:1.55!important
+ --ink:#182135;--muted:#758095;--line:#e4e7ef;--surface:#f5f6fb;
+ --navy:#6163ef;--gold:#6b64db;--up:#db627d;--down:#18a391;
+ background:#f8f9fc!important;color:#182135!important;color-scheme:light!important;
+ width:100%;max-width:1430px;margin:auto;padding:clamp(14px,2.7vw,40px)!important;min-height:100vh;
+ font:14px/1.6 Inter,"Noto Sans TC",system-ui,sans-serif
 }
+#qtemp_root *{box-sizing:border-box}
 #qtemp_root [hidden]{display:none!important}
 #qtemp_root .head{display:none!important}
-#qtemp_root .qbrand{display:flex;gap:12px;align-items:center;white-space:nowrap;color:#f2f6ff;text-decoration:none;letter-spacing:-.02em;font-size:19px;font-weight:800}
-#qtemp_root .qbrand-mark{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:linear-gradient(135deg,#2f83f7,#173d86);box-shadow:0 4px 28px #226bde44;font-size:17px}
-#qtemp_root .qbrand small{font-size:10px;font-weight:600;letter-spacing:.16em;color:#759ad0;margin-left:3px}
-#qtemp_root .qtopbar{display:flex;align-items:center;gap:26px;justify-content:space-between;border-bottom:1px solid #203048;padding:0 0 18px;margin-bottom:24px}
-#qtemp_root .qtopnav{display:flex;gap:5px;align-items:center;overflow-x:auto;scrollbar-width:none;padding:3px}
+#qtemp_root h1,#qtemp_root h2,#qtemp_root h3{color:#1c263b}
+#qtemp_root .muted,#qtemp_root .note,#qtemp_root .study-note{color:#758095}
+#qtemp_root .qtopbar{
+ display:flex;align-items:center;gap:22px;justify-content:space-between;
+ padding:2px 0 20px;border-bottom:1px solid #e6e8f0;margin-bottom:27px
+}
+#qtemp_root .qbrand{display:flex;gap:10px;align-items:center;white-space:nowrap;
+ font-size:17px;font-weight:800;letter-spacing:-.025em;color:#1b2235;text-decoration:none}
+#qtemp_root .qbrand-mark{display:grid;place-items:center;width:35px;height:35px;
+ background:#6265ed;color:white;border-radius:10px;font-size:18px;box-shadow:0 4px 14px #6265ed25}
+#qtemp_root .qtopnav{display:flex;align-items:center;gap:3px;overflow-x:auto;scrollbar-width:none}
 #qtemp_root .qtopnav::-webkit-scrollbar{display:none}
-#qtemp_root .qtopnav button{white-space:nowrap;border:0!important;background:transparent!important;color:#98a9c3!important;font-size:12px;font-weight:650;padding:11px 13px;border-radius:10px}
-#qtemp_root .qtopnav button:hover{background:#182a43!important;color:#fff!important}
-#qtemp_root .qtopnav button[aria-current=page]{background:#1d3557!important;color:#b9d7ff!important}
-#qtemp_root .qtopend{font-size:11px;white-space:nowrap;color:#77d0a5;display:flex;align-items:center;gap:7px}
-#qtemp_root .qtopend::before{content:"";width:7px;height:7px;border-radius:50%;background:#48be8c;box-shadow:0 0 12px #48be8c88}
-#qtemp_root .qhero{background:radial-gradient(circle at 78% 40%,#17345b 0,#111d31 39%,#10192a 75%);border:1px solid #29405d;border-radius:22px;padding:clamp(24px,4.2vw,56px);margin-bottom:26px;display:grid;grid-template-columns:1.13fr .87fr;gap:34px;align-items:center;overflow:hidden;min-height:300px}
-#qtemp_root .qeyebrow{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#75aaff;font-weight:800}
-#qtemp_root .qhero h1{font-size:clamp(31px,4.5vw,57px)!important;color:#f3f7ff!important;line-height:1.18!important;margin:12px 0 16px;max-width:670px}
-#qtemp_root .qhero h1 em{font-style:normal;color:#78b4ff}
-#qtemp_root .qhero p{font-size:14px;color:#a9bbd3;max-width:590px;line-height:1.85;margin:0 0 24px}
+#qtemp_root .qtopnav button{flex:none;white-space:nowrap;border:0;background:transparent;
+ color:#7a8395;font-size:12px;padding:10px 12px;border-radius:10px}
+#qtemp_root .qtopnav button:hover{color:#4c50dc;background:#eeeefd;border:0}
+#qtemp_root .qtopnav button[aria-current=page]{color:#5b60e9;background:#eeefff;font-weight:750}
+#qtemp_root .qtopend{display:flex;align-items:center;gap:7px;color:#7b8494;white-space:nowrap;font-size:11px}
+#qtemp_root .qtopend::before{content:"";height:6px;width:6px;border-radius:100%;background:#5cbe9b}
+#qtemp_root .qhero{
+ display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,.7fr);align-items:center;
+ gap:clamp(20px,3vw,55px);padding:clamp(24px,4vw,50px);
+ background:linear-gradient(110deg,#fff 28%,#f4f3ff 100%);
+ border:1px solid #eaebf4;border-radius:19px;margin-bottom:23px;min-height:245px
+}
+#qtemp_root .qeyebrow{display:block;color:#686bed;font-size:10px;letter-spacing:.17em;font-weight:750}
+#qtemp_root .qhero h1{font-size:clamp(28px,3.2vw,46px);margin:9px 0 22px;line-height:1.26;letter-spacing:-.04em}
 #qtemp_root .qactions{display:flex;gap:10px;flex-wrap:wrap}
-#qtemp_root .qactions button{padding:12px 19px!important;font-size:13px}
-#qtemp_root .qpreview{background:#0d1727;border:1px solid #29405f;border-radius:16px;padding:22px;box-shadow:0 18px 70px #03091480}
-#qtemp_root .qpreview-top{display:flex;align-items:center;justify-content:space-between;color:#93a9c5;font-size:11px}
-#qtemp_root .qpreview-top strong{color:#e4efff;font-size:13px}
-#qtemp_root .qpreview-value{font-size:24px;color:#f1f7ff;font-weight:800;margin:13px 0 0}
-#qtemp_root .qpreview svg{display:block;width:100%;height:auto;margin-top:12px}
-#qtemp_root .qpreview-bottom{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:11px;color:#91a8c7;margin-top:10px}
-#qtemp_root .qpreview-bottom strong{color:#86caff}
-#qtemp_root .qroute-intro{margin:6px 0 24px}
-#qtemp_root .qroute-intro .qeyebrow{display:block;margin-bottom:7px}
-#qtemp_root .qroute-intro h2{font-size:clamp(25px,3vw,36px)!important;color:#f2f7ff!important;margin:0 0 8px}
-#qtemp_root .qroute-intro p{font-size:13px;color:#98abc4;margin:0;max-width:850px;line-height:1.8}
-#qtemp_root .qshortcut{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:25px 0}
-#qtemp_root .qshortcut button{background:#111e30!important;text-align:left;color:#e9f3ff!important;border:1px solid #29415e!important;padding:19px!important;min-height:115px;border-radius:14px!important;display:flex;flex-direction:column;gap:7px}
-#qtemp_root .qshortcut button:hover{border-color:#4d8cdd!important;background:#172a44!important}
-#qtemp_root .qshortcut strong{font-size:15px}
-#qtemp_root .qshortcut span{font-size:12px;color:#95acc7;line-height:1.55}
-#qtemp_root .qshortcut b{font-size:19px;color:#79b2ff}
-#qtemp_root .qsubnav{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 15px;padding:4px 0}
-#qtemp_root .qsubnav button{font-size:12px;padding:9px 15px;border-radius:10px!important;background:#142238!important;color:#96b0ce!important;border:1px solid #2c405b!important}
-#qtemp_root .qsubnav button[aria-selected=true]{background:#1d426c!important;color:#d7eaff!important;border-color:#3c72b3!important}
-#qtemp_root .qdisclaimer{border-top:1px solid #223148;padding:22px 0 6px;margin-top:35px;color:#6e87a7;font-size:11px;display:flex;gap:12px;justify-content:space-between;flex-wrap:wrap}
-#qtemp_root h1,#qtemp_root h2,#qtemp_root h3{color:#e8f0fe!important}
-#qtemp_root .query{background:#101b2c!important;border:1px solid #2b3c54!important;border-radius:14px!important;padding:16px!important;margin-bottom:14px}
-#qtemp_root button,#qtemp_root select,#qtemp_root input:not([type=checkbox]){background:#152236;color:#e2ecfc;border:1px solid #334762;border-radius:9px}
-#qtemp_root button:hover:not(:disabled){background:#233958;border-color:#507aaa}
-#qtemp_root button.primary,#qtemp_root .primary{background:#2873d3!important;color:#fff!important;border-color:#3783e2!important}
-#qtemp_root button.primary:hover{background:#3887e4!important}
-#qtemp_root input::placeholder{color:#748ba6}
-#qtemp_root .asset{margin:18px 0 17px}
-#qtemp_root .asset h2{font-size:clamp(18px,2.4vw,28px)!important;color:#f5f8ff!important}
-#qtemp_root .asset .muted,#qtemp_root .muted,#qtemp_root .note,#qtemp_root .study-note{color:#93a8c1!important}
-#qtemp_root .tile,#qtemp_root .summary-item,#qtemp_root .insight-panel,#qtemp_root .panel,#qtemp_root .addons-panel,#qtemp_root .addons-metric,#qtemp_root .study-kpi,#qtemp_root .formula{background:#111c2d!important;border:1px solid #2a3c55!important;box-shadow:none!important;border-radius:13px;color:#9bb0c9!important}
-#qtemp_root .tile strong,#qtemp_root .summary-item strong,#qtemp_root .insight-kpis strong,#qtemp_root .study-kpi strong,#qtemp_root .addons-metric strong{color:#f2f6ff!important}
-#qtemp_root .tile.qtemp{background:#1d2537!important;border-color:#6e593d!important}
-#qtemp_root .tile.qtemp strong{color:#f0c587!important}
-#qtemp_root .tile strong.positive,#qtemp_root strong.positive{color:#60d3ad!important}
-#qtemp_root .tile strong.negative,#qtemp_root strong.negative{color:#f18c9e!important}
-#qtemp_root .status.error,#qtemp_root .addons-error{color:#f18c9e!important}
-#qtemp_root .ohlc,#qtemp_root .dist-plot,#qtemp_root .formula .math{background:#0c1726!important;border-color:#2b3c54!important;color:#d6e7ff!important}
-#qtemp_root .ohlc span,#qtemp_root .insight-hint{color:#93a8c1!important}
-#qtemp_root .ohlc strong{color:#e5f1ff!important}
-#qtemp_root .formula{border-top:3px solid #4f95ee!important;padding:clamp(18px,3vw,30px)!important}
-#qtemp_root .formula h2,#qtemp_root .formula h3{color:#a2cdff!important}
-#qtemp_root .formula p{color:#93a8c1!important}
-#qtemp_root .heatmap-cell{background:#1a2d45;color:#d4e7ff}
-#qtemp_root .heatmap-table th,#qtemp_root .heatmap-table td{background:transparent!important;color:#b9cee8!important;border:0}
-#qtemp_root .heatmap-table .heatmap-cell{filter:saturate(.8)}
-#qtemp_root table th{background:#1a2c43;color:#a9c2df;border-color:#293b51}
-#qtemp_root table td{border-color:#24364c;color:#d8e5f7}
-#qtemp_root tbody tr:nth-child(even){background:#142238}
-#qtemp_root tbody tr:hover{background:#20344f}
-#qtemp_root .tabs{border-color:#2d405a}
-#qtemp_root .tabs button[aria-pressed=true]{color:#91c1ff;border-color:#649be4}
-#qtemp_root .chart-extra{color:#a9bbd3}
-#qtemp_root .addons{margin:0!important;padding:0!important}
+#qtemp_root .qactions button{padding:11px 18px;font-size:13px}
+#qtemp_root .qpreview{border:1px solid #e5e4f6;background:#fff;border-radius:15px;
+ padding:22px 25px;box-shadow:0 10px 30px #4545a00b}
+#qtemp_root .qpreview-top{display:flex;align-items:center;justify-content:space-between;
+ font-size:12px;color:#8991a3;gap:10px}
+#qtemp_root .qpreview-top strong{color:#262c41;font-size:13px}
+#qtemp_root .qpreview-value{color:#5d60e5;font-weight:790;font-size:clamp(29px,4vw,49px);
+ font-variant-numeric:tabular-nums;margin:9px 0 8px;line-height:1.15}
+#qtemp_root .qpreview-bottom{color:#8d95a5;font-size:11px}
+#qtemp_root .qroute-intro{margin:7px 0 21px}
+#qtemp_root .qroute-intro .qeyebrow{margin:0 0 5px}
+#qtemp_root .qroute-intro h2{font-size:clamp(22px,2.5vw,30px);margin:0;color:#1e273a}
+#qtemp_root .qroute-intro p:empty{display:none}
+#qtemp_root .qcrumb{display:flex;align-items:center;gap:8px;margin:0 0 15px;color:#959bad;font-size:11px}
+#qtemp_root .qcrumb span:last-child{color:#5b5ed7}
+#qtemp_root .qcrumb button{border:0!important;padding:0!important;background:none!important;color:#7b8499!important;font-size:11px}
+#qtemp_root .qshortcut{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:21px 0}
+#qtemp_root .qshortcut button{display:flex;flex-direction:column;align-items:flex-start;gap:5px;min-height:110px;
+ border:1px solid #e3e6ef;background:#fff;text-align:left;padding:18px;border-radius:13px;
+ box-shadow:0 5px 15px #24305207}
+#qtemp_root .qshortcut button:hover{border-color:#adaff8;background:#f9f9ff}
+#qtemp_root .qshortcut b{color:#696bed;font-size:20px}
+#qtemp_root .qshortcut strong{font-size:14px;color:#1e273b}
+#qtemp_root .qshortcut span{font-size:12px;color:#8790a1}
+#qtemp_root .qdisclaimer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
+ padding:19px 0;margin:35px 0 0;border-top:1px solid #e5e8f0;color:#929bad;font-size:11px}
+#qtemp_root button,#qtemp_root input:not([type=checkbox]),#qtemp_root select{
+ font-family:inherit;color:#293248;background:#fff;border:1px solid #dfe3ee;border-radius:9px}
+#qtemp_root button:hover:not(:disabled){background:#f4f4ff;border-color:#bdc0f9}
+#qtemp_root button.primary,#qtemp_root .primary{background:#6265ed!important;color:#fff!important;border-color:#6265ed!important}
+#qtemp_root button.primary:hover:not(:disabled){background:#5358d8!important}
+#qtemp_root button:focus-visible,#qtemp_root input:focus-visible,#qtemp_root select:focus-visible{outline:2px solid #7476f1;outline-offset:2px}
+#qtemp_root input::placeholder{color:#949bab}
+#qtemp_root .query{border:1px solid #e2e6f0;background:#fff;border-radius:13px;padding:14px;margin-bottom:14px}
+#qtemp_root .status{color:#788398;font-size:12px;min-height:18px}
+#qtemp_root .status.error,.addons-error{color:#c94b69!important}
+#qtemp_root .asset{margin:17px 0 13px}
+#qtemp_root .asset h2{color:#1e2638;font-weight:760}
+#qtemp_root .tile,#qtemp_root .summary-item,#qtemp_root .insight-panel,#qtemp_root .panel,
+#qtemp_root .addons-panel,#qtemp_root .study-kpi,#qtemp_root .addons-metric{
+ background:#fff!important;border:1px solid #e4e7f0!important;
+ box-shadow:0 4px 19px #25345f06!important;border-radius:13px!important}
+#qtemp_root .tile strong,#qtemp_root .summary-item strong,#qtemp_root .insight-kpis strong,
+#qtemp_root .study-kpi strong,#qtemp_root .addons-metric strong{color:#263149}
+#qtemp_root .tile.qtemp{background:#f5f4ff!important;border-color:#e3e1fc!important;color:#6264e9!important}
+#qtemp_root .tile.qtemp strong{color:#5d5edc!important}
+#qtemp_root .tile strong.positive,#qtemp_root strong.positive{color:#169d89}
+#qtemp_root .tile strong.negative,#qtemp_root strong.negative{color:#d95b77}
+#qtemp_root .ohlc{background:#f5f6fb;color:#748097;border-radius:9px}
+#qtemp_root .ohlc strong{color:#293c57}
+#qtemp_root .insight-hint,#qtemp_root .addons-panel p,#qtemp_root .addons-control label{color:#7e899d}
+#qtemp_root .addons{padding:0!important;margin:0!important}
 #qtemp_root .addons-head,#qtemp_root .addons-nav{display:none!important}
-#qtemp_root .addons-panel{padding:clamp(18px,3vw,28px)!important}
-#qtemp_root .addons-panel p,#qtemp_root .addons-control label{color:#98abc6!important}
-#qtemp_root .addons-table table{background:#111c2d}
-#qtemp_root .addons-legend{color:#8ea6c4}
-#qtemp_root .addons-tag{background:#1a304c!important;border-color:#375270!important;color:#d9e9ff!important}
-#qtemp_root .addons-svg{background:#0b1524;border-color:#2a3b50}
-#qtemp_root .dist-bar.negative{background:#4b7eb6}
-#qtemp_root .dist-bar.positive{background:#a87763}
-#qtemp_root .dist-bar.current{background:#5ca5ff}
-#qtemp_root .qtopnav button:focus-visible,#qtemp_root .qshortcut button:focus-visible{outline:2px solid #67a9ff!important}
-#qtemp_root[data-view=overview] .tabs,#qtemp_root[data-view=overview] .panel,
-#qtemp_root[data-view=overview] .addons,
-#qtemp_root[data-view=overview] .formula{display:none!important}
-#qtemp_root:not([data-view=overview]) .qhero,
-#qtemp_root:not([data-view=overview]) .qshortcut,
-#qtemp_root:not([data-view=overview]) .summary-row,
-#qtemp_root:not([data-view=overview]) .insight-grid,
+#qtemp_root .addons-panel{padding:clamp(19px,3vw,29px)!important}
+#qtemp_root .addons-tag{background:#f6f5ff;border-color:#e0dffc;color:#585bc9}
+#qtemp_root .addons-svg{background:#fff;border-color:#e6eaf3}
+#qtemp_root .addons-legend{color:#6f7f91}
+#qtemp_root .addons-pager{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-top:11px;font-size:12px;color:#758095}
+#qtemp_root .addons-pager button{padding:6px 10px}
+#qtemp_root .formula{background:#fff!important;border:1px solid #e4e7f0!important;border-top:3px solid #6f70ed!important;
+ padding:clamp(18px,3vw,28px);border-radius:13px!important}
+#qtemp_root .formula h2,#qtemp_root .formula h3{color:#5b5dcf}
+#qtemp_root .formula .math{background:#f8f9fd!important;border-color:#e7eaf4!important;color:#28344f}
+#qtemp_root table th{background:#f1f3fb;color:#66748b;border-color:#e6e9f1}
+#qtemp_root table td{border-color:#e7e9f0;color:#27324a}
+#qtemp_root tbody tr:nth-child(even){background:#fafbfe}
+#qtemp_root tbody tr:hover{background:#f4f4ff}
+#qtemp_root .heatmap-table td,#qtemp_root .heatmap-table th{background:transparent!important;border:0}
+#qtemp_root .heatmap-cell{font-variant-numeric:tabular-nums}
+#qtemp_root .dist-bar.current{background:#6565e9}
+#qtemp_root .qsubnav{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+#qtemp_root .qsubnav button{border:1px solid #e2e5f0;color:#68758d;font-size:12px;padding:9px 13px;background:#fff;border-radius:9px}
+#qtemp_root .qsubnav button[aria-selected=true]{background:#f0f0ff;color:#5b5ddb;border-color:#bbbbf5}
+#qtemp_root .signal-legend{display:flex;gap:10px 20px;align-items:center;flex-wrap:wrap;margin:8px 0 12px;
+ padding:10px 12px;border:1px solid #edf0f5;background:#fbfbfe;border-radius:9px}
+#qtemp_root .signal-legend span{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:#606e87;white-space:nowrap}
+#qtemp_root .signal-legend i{display:inline-block;width:9px;height:9px;border-radius:50%}
+#qtemp_root .signal-legend b{font-size:11px;color:#7f8da1}
+#qtemp_root .chart-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+#qtemp_root .chart-tools{gap:10px}
+#qtemp_root .chart-tools button{padding:7px 10px}
+#qtemp_root .qroute-switch{display:none;gap:7px;align-items:center;color:#737e94;font-size:12px}
+#qtemp_root .qroute-switch select{max-width:220px;min-width:150px;padding:8px}
+#qtemp_root .qtopend{font-size:11px}
+#qtemp_root .tabs{display:none!important}
+/* Route visibility: only one functional content area per page. */
+#qtemp_root[data-view=overview] .panel,#qtemp_root[data-view=overview] .addons,#qtemp_root[data-view=overview] .formula,#qtemp_root[data-view=overview] .qroute-intro{display:none!important}
+#qtemp_root:not([data-view=overview]) .qhero,#qtemp_root:not([data-view=overview]) .qshortcut,
+#qtemp_root:not([data-view=overview]) .summary-row,#qtemp_root:not([data-view=overview]) .insight-grid,
 #qtemp_root:not([data-view=overview]) .tiles{display:none!important}
-#qtemp_root:not([data-view=overview]) .asset{margin:7px 0 8px}
+#qtemp_root:not([data-view=overview]) .asset{margin:7px 0 9px}
 #qtemp_root:not([data-view=overview]) .quote-meta{margin:0 0 18px}
-#qtemp_root[data-view=overview] .qroute-intro{display:none}
-#qtemp_root[data-view=chart] .tabs,#qtemp_root[data-view=signals] .tabs,#qtemp_root[data-view=resources] .tabs{display:none!important}
-#qtemp_root[data-view=chart] .addons,#qtemp_root[data-view=signals] .addons,#qtemp_root[data-view=chart] .formula,#qtemp_root[data-view=signals] .formula{display:none!important}
-#qtemp_root[data-view=chart] .qsubnav,#qtemp_root[data-view=chart] .qresource-tabs{display:none!important}
+#qtemp_root[data-view=chart] .qsubnav,#qtemp_root[data-view=chart] .addons,#qtemp_root[data-view=chart] .formula{display:none!important}
+#qtemp_root[data-view=signals] .addons,#qtemp_root[data-view=signals] .formula{display:none!important}
 #qtemp_root[data-view=signals] .qresource-tabs{display:none!important}
 #qtemp_root[data-view=resources] .qsignal-tabs{display:none!important}
-#qtemp_root[data-view=resources] .addons{margin-top:20px!important}
-#qtemp_root[data-view=resources] .formula{display:block}
-#qtemp_root[data-view=resources] .addons-panel[data-addon="4"]{display:block}
-#qtemp_root[data-view=signals] .formula{display:none}
-#qtemp_root[data-view=scanner] .panel,#qtemp_root[data-view=strategy] .panel,
-#qtemp_root[data-view=compare] .panel,#qtemp_root[data-view=watchlist] .panel{display:none!important}
-#qtemp_root[data-view=scanner] .formula,#qtemp_root[data-view=strategy] .formula,
-#qtemp_root[data-view=compare] .formula,#qtemp_root[data-view=watchlist] .formula{display:none!important}
-#qtemp_root[data-view=scanner] .qsubnav,#qtemp_root[data-view=strategy] .qsubnav,
-#qtemp_root[data-view=compare] .qsubnav,#qtemp_root[data-view=watchlist] .qsubnav{display:none!important}
+#qtemp_root[data-view=resources][data-resource=formula] .panel{display:none!important}
+#qtemp_root[data-view=resources]:not([data-resource=formula]) .formula{display:none!important}
 #qtemp_root[data-view=resources] .addons-panel:not([data-addon="4"]){display:none!important}
-#qtemp_root[data-view=scanner] .addons-panel:not([data-addon="0"]),
+#qtemp_root[data-view=resources] .query,#qtemp_root[data-view=resources] .asset,
+#qtemp_root[data-view=resources] .quote-meta,#qtemp_root[data-view=resources] .status{display:none!important}
+#qtemp_root[data-view=strategy] .panel,#qtemp_root[data-view=compare] .panel,#qtemp_root[data-view=watchlist] .panel,
+#qtemp_root[data-view=strategy] .formula,#qtemp_root[data-view=compare] .formula,#qtemp_root[data-view=watchlist] .formula,
+#qtemp_root[data-view=strategy] .qsubnav,#qtemp_root[data-view=compare] .qsubnav,#qtemp_root[data-view=watchlist] .qsubnav,
+#qtemp_root[data-view=strategy] .query,#qtemp_root[data-view=compare] .query,#qtemp_root[data-view=watchlist] .query,
+#qtemp_root[data-view=strategy] .asset,#qtemp_root[data-view=compare] .asset,#qtemp_root[data-view=watchlist] .asset,
+#qtemp_root[data-view=strategy] .quote-meta,#qtemp_root[data-view=compare] .quote-meta,#qtemp_root[data-view=watchlist] .quote-meta,
+#qtemp_root[data-view=strategy] .status,#qtemp_root[data-view=compare] .status,#qtemp_root[data-view=watchlist] .status{display:none!important}
 #qtemp_root[data-view=strategy] .addons-panel:not([data-addon="1"]),
 #qtemp_root[data-view=compare] .addons-panel:not([data-addon="2"]),
 #qtemp_root[data-view=watchlist] .addons-panel:not([data-addon="3"]){display:none!important}
-#qtemp_root[data-view=resources] .query,#qtemp_root[data-view=resources] .asset,
-#qtemp_root[data-view=resources] .quote-meta,#qtemp_root[data-view=scanner] .query,
-#qtemp_root[data-view=strategy] .query,#qtemp_root[data-view=compare] .query,
-#qtemp_root[data-view=watchlist] .query{display:none!important}
-#qtemp_root[data-view=scanner] .asset,#qtemp_root[data-view=scanner] .quote-meta,
-#qtemp_root[data-view=strategy] .asset,#qtemp_root[data-view=strategy] .quote-meta,
-#qtemp_root[data-view=compare] .asset,#qtemp_root[data-view=compare] .quote-meta,
-#qtemp_root[data-view=watchlist] .asset,#qtemp_root[data-view=watchlist] .quote-meta{display:none!important}
-#qtemp_root .qroute-intro + .query{margin-top:15px}
-@media(max-width:1100px){#qtemp_root .qtopbar{flex-wrap:wrap;gap:12px}#qtemp_root .qtopnav{order:3;width:100%}#qtemp_root .qhero{grid-template-columns:1fr 1fr}}
-@media(max-width:760px){#qtemp_root .qhero{grid-template-columns:1fr;padding:24px}#qtemp_root .qpreview{max-width:none}#qtemp_root .qshortcut{grid-template-columns:1fr}#qtemp_root .qtopend{display:none}#qtemp_root .qtopnav button{font-size:11px;padding:9px 11px}#qtemp_root .qbrand{font-size:18px}#qtemp_root .tile{min-height:88px}}
-@media print{html,body{background:#fff!important}#qtemp_root{background:#fff!important;color:#111!important}#qtemp_root .qtopbar,#qtemp_root .qhero,#qtemp_root .qroute-intro,#qtemp_root .qshortcut,#qtemp_root .qdisclaimer{display:none!important}}
-
-/* Route-specific controls and accessibility */
-#qtemp_root .qcrumb{display:flex;gap:8px;align-items:center;color:#7f95b0;font-size:11px;margin:0 0 13px}
-#qtemp_root .qcrumb span:last-child{color:#c1d7f1}
-#qtemp_root .qcrumb button{padding:0;border:0!important;background:transparent!important;color:#79a9ea!important;font-size:11px}
-#qtemp_root .qroute-intro .qcrumb{margin-bottom:15px}
-#qtemp_root[data-view=resources][data-resource=formula] .panel{display:none!important}
-#qtemp_root[data-view=resources]:not([data-resource=formula]) .formula{display:none!important}
-#qtemp_root .qroute-switch{display:none;gap:8px;align-items:center;color:#9eafc4;font-size:12px}
-#qtemp_root .qroute-switch select{max-width:225px;min-width:160px}
-#qtemp_root .qstepbar{display:flex;gap:12px;flex-wrap:wrap;color:#7897b9;font-size:11px;margin:8px 0 19px}
-#qtemp_root .qstepbar span{display:flex;align-items:center;gap:7px}
-#qtemp_root .qstepbar i{font-style:normal;display:grid;place-items:center;width:21px;height:21px;border-radius:50%;border:1px solid #3c658e;color:#a6ccff}
-#qtemp_root .addons-pager{display:flex;gap:8px;align-items:center;justify-content:end;margin:12px 0;color:#9eb5cc;font-size:12px}
-#qtemp_root .addons-pager button{padding:6px 12px}
-#qtemp_root .qfeature-note{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:50px;background:#1b3150;color:#94b8e5;font-size:11px;margin:0 0 11px}
-#qtemp_root .qfeature-note::before{content:"";width:6px;height:6px;border-radius:50%;background:#59b69f}
-#qtemp_root .qtopnav button[aria-current=page]{box-shadow:inset 0 0 0 1px #365a86}
-@media(max-width:570px){#qtemp_root .qtopnav{display:none!important}#qtemp_root .qroute-switch{display:flex}#qtemp_root .qtopbar{flex-wrap:nowrap}#qtemp_root .qtopend{display:none!important}#qtemp_root .qhero h1{font-size:33px!important}#qtemp_root .qhero{padding:22px}#qtemp_root .qshortcut{grid-template-columns:repeat(2,minmax(0,1fr))}#qtemp_root .qshortcut button{min-height:125px;padding:14px!important}}
-@media(max-width:410px){#qtemp_root .qshortcut{grid-template-columns:1fr}}
+@media(min-width:1080px){#qtemp_root .qtopbar{gap:30px}}
+@media(max-width:1150px){#qtemp_root .qtopbar{flex-wrap:wrap}#qtemp_root .qtopnav{order:3;width:100%;justify-content:space-between}}
+@media(max-width:780px){#qtemp_root .qhero{grid-template-columns:1fr}#qtemp_root .qshortcut{grid-template-columns:repeat(2,minmax(0,1fr))}#qtemp_root .qtopend{display:none}#qtemp_root .qbrand{font-size:16px}}
+@media(max-width:570px){#qtemp_root .qtopnav{display:none!important}#qtemp_root .qroute-switch{display:flex}#qtemp_root .qtopbar{flex-wrap:nowrap}#qtemp_root .qshortcut{grid-template-columns:1fr}#qtemp_root .qhero{padding:23px}#qtemp_root .qbrand{font-size:14px}#qtemp_root .qbrand-mark{width:30px;height:30px}#qtemp_root .signal-legend{gap:7px 12px}}
+@media print{html,body,#qtemp_root{background:#fff!important;color:#182135!important}#qtemp_root .qtopbar,#qtemp_root .qhero,#qtemp_root .qshortcut,#qtemp_root .qdisclaimer{display:none!important}}
