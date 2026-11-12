@@ -431,6 +431,66 @@ def records(frame):
         "rows": json.loads(frame.to_json(orient='values', date_format='iso', double_precision=10)),
     }
 
+
+# 報價與回測資料分開：報價可能盤中變動，QTemp 只計算確認收盤的日線。
+@lru_cache(maxsize=48)
+def yahoo_quote(symbol, refresh_slot):
+    ticker = yf.Ticker(symbol)
+    quote = ticker.history(period='5d', interval='1m', auto_adjust=False,
+                           prepost=False, timeout=15)
+    if quote.empty:
+        raise ValueError('Yahoo 尚未提供可用的分鐘報價')
+    valid = quote[['Close']].dropna()
+    if valid.empty:
+        raise ValueError('Yahoo 分鐘報價缺少收盤價格')
+    latest = valid.iloc[-1]
+    stamp = valid.index[-1]
+    zone = str(getattr(quote.index, 'tz', '') or ('Asia/Taipei' if symbol.endswith(('.TW','.TWO')) else 'America/New_York'))
+    if getattr(stamp, 'tzinfo', None) is not None:
+        local_time = stamp.tz_convert(zone)
+    else:
+        local_time = stamp.tz_localize(zone)
+    last_price = float(latest.Close)
+    # Yahoo regular session minute bar provides raw, unadjusted market prices.
+    daily = ticker.history(period='7d', interval='1d', auto_adjust=False,
+                           prepost=False, timeout=15)
+    prev_close = None
+    if not daily.empty:
+        daily = daily.dropna(subset=['Close'])
+        day = local_time.date()
+        earlier = daily[pd.DatetimeIndex(daily.index).date < day]
+        if not earlier.empty:
+            prev_close = float(earlier.Close.iloc[-1])
+        elif len(daily) > 1:
+            prev_close = float(daily.Close.iloc[-2])
+    change = last_price / prev_close - 1 if prev_close and prev_close > 0 else None
+    volume = latest.get('Volume')
+    return {'symbol': symbol, 'price': last_price, 'change': change,
+            'volume': None if pd.isna(volume) else float(volume),
+            'time': local_time.strftime('%Y-%m-%d %H:%M %Z'),
+            'timestamp': int(local_time.timestamp()),
+            'zone': zone, 'source': 'Yahoo Finance（分鐘行情，可能延遲）'}
+
+def site_quote(requested):
+    try:
+        symbol = symbol_input(str(requested)[:100])
+        if not re.fullmatch(r'[A-Z0-9.^=_-]{1,30}', symbol):
+            raise ValueError('無效的股票代號')
+        slot = int(pd.Timestamp.now(tz='UTC').timestamp() // 60)
+        return yahoo_quote(symbol, slot)
+    except Exception as error:
+        return {'error': f'最新報價暫不可用：{error}'}
+
+def site_closed_day(requested):
+    try:
+        symbol = symbol_input(str(requested)[:100])
+        if not re.fullmatch(r'[A-Z0-9.^=_-]{1,30}', symbol):
+            raise ValueError('無效的股票代號')
+        _, frame, _, _ = load_market(symbol)
+        return {'end': frame.index[-1].date().isoformat()}
+    except Exception as error:
+        return {'error': f'確認收盤日失敗：{error}'}
+
 def site_search(query):
     try:
         return ({'choices': search_yahoo(str(query)[:100])})
