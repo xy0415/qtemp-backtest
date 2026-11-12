@@ -44,6 +44,10 @@ def research_insights_ui():
 def research_insights_css():
     return send_file('research_insights.css', mimetype='text/css')
 
+@app.get('/favicon.svg')
+def site_favicon():
+    return send_file('favicon.svg', mimetype='image/svg+xml')
+
 @app.get('/health')
 def health():
     return jsonify({'status': 'ok'})
