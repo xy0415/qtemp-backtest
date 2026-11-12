@@ -8,11 +8,10 @@ panel.innerHTML='<div class="capital-head"><div><h3>長期投資策略回測</h3
 '<label>開始日期<input id="cap-start" type="date" value="2010-01-01"></label>'+
 '<label>結束日期<input id="cap-end" type="date" value="2026-11-12"></label>'+
 '<label>期初金額（IA）<input id="cap-initial" type="number" value="100000" min="0" step="1000"></label>'+
-'<label>定期定額年金額（CFA）<input id="cap-annual" type="number" value="120000" min="0" step="1000"></label>'+
+'<label>每期定額金額<input id="cap-periodic" type="number" value="10000" min="0" step="1000"></label>'+
 '<label>投資頻率<select id="cap-frequency"><option value="weekly">每週</option><option value="monthly" selected>每月</option><option value="quarterly">每季</option><option value="semiannual">每半年</option><option value="annual">每年</option></select></label>'+
 '<label>QTemp 每次低估值投入金額<input id="cap-signal" type="number" value="10000" min="0" step="1000"></label>'+
 '<label>定投時點<select id="cap-timing"><option value="begin">期初</option><option value="end" selected>期末</option></select></label>'+
-'<label>單邊費率（%）<input id="cap-fee" type="number" value="0.1" min="0" max="2" step="0.05"></label>'+
 '<label>單筆投入本金<select id="cap-lump"><option value="match_dca" selected>與定投整段總本金相同</option><option value="initial_only">僅投入期初 IA</option></select></label>'+
 '</div><div class="capital-action"><button type="button" class="primary" id="cap-run">執行三策略回測</button><span id="cap-status" role="status"></span></div>'+
 '<div id="cap-results" hidden><div class="capital-divider"></div><div class="capital-kpis" id="cap-kpis"></div>'+
@@ -162,7 +161,7 @@ $('cap-png').onclick=()=>{
 };
 $('cap-run').onclick=async()=>{
  const button=$('cap-run'),status=$('cap-status');
- const args=['cap-symbol','cap-start','cap-end','cap-initial','cap-annual','cap-frequency','cap-signal','cap-timing','cap-fee','cap-lump'].map(id=>$(id).value);
+ const args=['cap-symbol','cap-start','cap-end','cap-initial','cap-periodic','cap-frequency','cap-signal','cap-timing','cap-lump'].map(id=>$(id).value);
  if(args.some(x=>x.trim()==='')){status.textContent='所有欄位皆須填寫';return}
  button.disabled=true;status.textContent='歷史資料與三策略計算中…';$('cap-results').hidden=true;
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),120000);
