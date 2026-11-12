@@ -3,7 +3,7 @@ import json
 import os
 import re
 import urllib.request
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import pandas as pd
 from qtemp_core import load_market, apply_price_basis, qtemp
 
@@ -25,6 +25,14 @@ def main():
             frame=apply_price_basis(raw)
             _,events=qtemp(frame,tick=10**(-int(meta.get("priceHint") or 2)))
             last=frame.index[-1]
+            # Scheduled Sunday UTC run covers Friday US/TW trading sessions;
+            # other runs require a recently closed trading date, to avoid
+            # repeated holiday/weekend notifications for an old signal.
+            utc_today=datetime.now(timezone.utc).date()
+            max_age=3 if utc_today.weekday()==6 else 2
+            if (utc_today-last.date()).days > max_age:
+                print(symbol,"no fresh confirmed session",last.date().isoformat())
+                continue
             selected=events.loc[
                 events["確認日"].eq(last) & events["類型"].isin(allowed)
             ].drop_duplicates(["類型","確認日"])
