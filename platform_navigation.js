@@ -118,8 +118,13 @@ function go(route,updateHash=true){
  }
  const mapping={strategy:'1',compare:'2',watchlist:'3'};
  if(mapping[route])extraTab(mapping[route]);
+ // Market analysis is loaded only when the selected route needs symbol-level history.
+ if(['overview','chart','signals','resources'].includes(route) && results.hidden){
+   const load=root.querySelector('[data-q="load"]');
+   if(load&&!load.disabled)load.click();
+ }
  if(updateHash&&location.hash!=='#'+route)history.pushState(null,'','#'+route);
- window.scrollTo({top:0,behavior:'instant'});
+ window.scrollTo({top:0,behavior:'auto'});
  if(route==='chart')requestAnimationFrame(()=>window.dispatchEvent(new Event('resize')));
 }
 root.addEventListener('click',event=>{
