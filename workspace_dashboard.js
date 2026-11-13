@@ -94,6 +94,22 @@ hoverTargets.forEach(el=>el.addEventListener('pointermove',e=>{
   raf=0;
  });
 },{passive:true}));
+const chartTools=root.querySelector('[data-q="charttools"]');
+const interaction=chartTools?.querySelector('.chart-interactions');
+if(chartTools&&interaction){
+ const toggle=document.createElement('button');toggle.type='button';
+ toggle.className='qa-mobile-chart-toggle';toggle.setAttribute('aria-expanded','false');
+ toggle.textContent='顯示更多圖表設定 ▾';
+ const controls=chartTools.querySelector('.signal-legend');
+ if(controls)controls.before(toggle);else chartTools.prepend(toggle);
+ const setCollapsed=isCollapsed=>{
+  interaction.dataset.mobileCollapsed=String(isCollapsed);
+  toggle.setAttribute('aria-expanded',String(!isCollapsed));
+  toggle.textContent=isCollapsed?'顯示更多圖表設定 ▾':'收合圖表設定 ▴';
+ };
+ setCollapsed(true);
+ toggle.onclick=()=>setCollapsed(interaction.dataset.mobileCollapsed!=='true');
+}
 refreshOverview();health();
 setInterval(()=>{if(root.dataset.view==='overview')health()},60000);
 })();
