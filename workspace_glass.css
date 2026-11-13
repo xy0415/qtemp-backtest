@@ -57,3 +57,27 @@ html,body{background:radial-gradient(ellipse 54vw 46vw at 8% 2%,rgba(163,193,255
 @media(prefers-reduced-motion:reduce){#qtemp_root *{animation:none!important;transition:none!important}}
 @supports not (backdrop-filter:blur(1px)){#qtemp_root .qtopbar,#qtemp_root .qpreview,#qtemp_root .query{background:#fff!important}}
 @media print{#qtemp_root .qa-monitor,#qtemp_root .qa-watch-controls{display:none!important}#qtemp_root .qtopbar,#qtemp_root .qhero{background:white!important;backdrop-filter:none!important}}
+
+/* Show operational dashboard only on overview, no duplicated sections on other routes. */
+#qtemp_root:not([data-view="overview"]) .qa-dashboard{display:none!important}
+#qtemp_root[data-view="overview"] .qshortcut{margin-top:10px}
+#qtemp_root[data-view="overview"] .summary-row,
+#qtemp_root[data-view="overview"] .insight-grid{margin-top:18px}
+#qtemp_root[data-view="overview"] .tiles{display:none!important}
+#qtemp_root[data-view="overview"] .asset{margin:12px 0!important}
+#qtemp_root .qa-dashboard{margin:18px 0 25px}
+#qtemp_root .qa-watch-import{border:1px solid #dde4f1;border-radius:9px;padding:8px 11px;background:#fff;color:#526480;font-size:12px;cursor:pointer}
+#qtemp_root .qa-watch-import:hover{background:#f3f4ff}
+#qtemp_root .qa-watch-toolbar label{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:#61718c}
+#qtemp_root .qa-watch-toolbar #qa-watch-search{flex:1 1 150px}
+#qtemp_root .qa-monitor-card,#qtemp_root .qa-metric,#qtemp_root .qa-watch-table{box-shadow:inset 0 1px #ffffffb3,0 8px 22px #313f7108}
+#qtemp_root .qa-mobile-chart-toggle{display:none}
+@media(max-width:600px){
+ #qtemp_root .qa-mobile-chart-toggle{display:flex;align-items:center;justify-content:space-between;width:100%;padding:10px 12px;font-size:12px;color:#4d5f7d}
+ #qtemp_root .chart-interactions[data-mobile-collapsed="true"]{display:none!important}
+ #qtemp_root .chart-interactions{margin-top:7px}
+ #qtemp_root .chart-tools .range{display:flex;flex-wrap:nowrap;overflow-x:auto;max-width:100%;scrollbar-width:thin;padding-bottom:5px}
+ #qtemp_root .chart-tools .range button{white-space:nowrap;flex:none}
+ #qtemp_root .chart-actions{display:flex;flex-wrap:wrap}
+ #qtemp_root .plot{min-height:380px}
+}
