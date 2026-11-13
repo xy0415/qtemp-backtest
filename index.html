@@ -796,7 +796,7 @@
   };
   const sharedSymbol=new URLSearchParams(location.search).get('symbol');
   if(sharedSymbol && /^[A-Z0-9.^=_-]{1,30}$/i.test(sharedSymbol))q('symbol').value=sharedSymbol.toUpperCase();
-  if(!['strategy','compare','watchlist'].includes(location.hash.slice(1))) await load();
+  if(!['strategy','compare','watchlist','zones'].includes(location.hash.slice(1))) await load();
 })();
 </script>
 <script src="/research_features.js?v=20261112c" defer></script>
