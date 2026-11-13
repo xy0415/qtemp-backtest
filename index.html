@@ -393,7 +393,8 @@
       return {time,position:low?'belowBar':'aboveBar',shape:low?'arrowUp':'arrowDown',
               color:markerStyle[type],text:''};
     }));
-    for(const [start,end,p0,p1,t0,t1,type] of current.figure.segments){
+    // Keep all signal arrows, but cap costly separate divergence-line series for chart responsiveness.
+    for(const [start,end,p0,p1,t0,t1,type] of current.figure.segments.slice(-60)){
       const color=markerStyle[type];
       for(const [pane,y0,y1] of [[0,p0,p1],[2,t0,t1]]){
         const line=chart.addSeries(L.LineSeries,{color,lineWidth:1,lineStyle:L.LineStyle.Dotted,
@@ -682,7 +683,7 @@
         data.dataSourceStatus==='verified_cache'?' · 已驗證短期快取':'';
       status(data.start+' 至 '+data.end+' · '+data.basis+sourceText,isStale);
       render();
-      refreshQuote();
+      if(!root.dataset.view||['overview','chart'].includes(root.dataset.view))refreshQuote();
     } catch(error) { status(error.message,true); }
     finally { busy=false; q('load').disabled=false; q('search').disabled=false; }
   }
@@ -793,7 +794,7 @@
   };
   const sharedSymbol=new URLSearchParams(location.search).get('symbol');
   if(sharedSymbol && /^[A-Z0-9.^=_-]{1,30}$/i.test(sharedSymbol))q('symbol').value=sharedSymbol.toUpperCase();
-  await load();
+  if(!['strategy','compare','watchlist'].includes(location.hash.slice(1))) await load();
 })();
 </script>
 <script src="/research_features.js?v=20261112c" defer></script>
