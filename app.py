@@ -20,7 +20,7 @@ def _monitor_result(error=None, source=None):
         _monitor["requests"]+=1
         if error:
             _monitor["errors"]+=1
-            _monitor["lastError"]=str(error)[:160]
+            _monitor["lastError"]="資料來源或 API 請求異常"
             _monitor["lastErrorAt"]=now
         else:
             _monitor["lastSuccessfulApi"]=now
