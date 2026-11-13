@@ -24,6 +24,8 @@ jobs:
           node --check capital_backtest_ui.js
           node --check research_insights_ui.js
           node --check platform_navigation.js
+          node --check workspace_dashboard.js
+          node --check workspace_watchlist.js
           node - <<'JS'
           const fs=require('fs');
           const html=fs.readFileSync('index.html','utf8');
@@ -46,6 +48,12 @@ jobs:
           assert app.test_client().get('/capital_backtest.css').status_code==200
           assert app.test_client().get('/research_insights_ui.js').status_code==200
           assert app.test_client().get('/research_insights.css').status_code==200
+          assert app.test_client().get('/workspace_dashboard.js').status_code==200
+          assert app.test_client().get('/workspace_watchlist.js').status_code==200
+          assert app.test_client().get('/workspace_glass.css').status_code==200
+          diag=app.test_client().get('/api/diagnostics')
+          assert diag.status_code==200
+          assert 'uptimeSeconds' in diag.json and 'errors' in diag.json
           for route in ('scan','strategy','compare_assets','capital_comparison','research'):
               assert app.test_client().post('/api/'+route,json={'args':[]}).status_code==400
           print('All smoke checks passed')
