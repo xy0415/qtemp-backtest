@@ -42,8 +42,9 @@ function refreshOverview(){
  if(Number.isFinite(scoreValue)){
   text('signal',zoneName(scoreValue));
   const signal=lastAnalysis?.analytics?.latestSignal;
-  if(scoreValue< -95 && signal?.day===d && lastAnalysis?.symbol===symbol){
-   text('zone-detail','已確認 '+signal.type+'｜抄底參考價 '+num(signal.price)+'（還原收盤）');
+  if(scoreValue< -95 && signal?.day===d && lastAnalysis?.end===d){
+   const raw=lastAnalysis?.rawLatestClose;
+   text('zone-detail','當日已確認 '+signal.type+'｜抄底參考價 '+num(raw??signal.price)+(raw==null?'（還原收盤）':'（實際收盤價）'));
   }else if(scoreValue< -95){
    text('zone-detail','目前屬抄底區；今日未確認新的抄底訊號');
   }else{
