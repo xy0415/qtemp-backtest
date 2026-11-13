@@ -81,3 +81,18 @@ html,body{background:radial-gradient(ellipse 54vw 46vw at 8% 2%,rgba(163,193,255
  #qtemp_root .chart-actions{display:flex;flex-wrap:wrap}
  #qtemp_root .plot{min-height:380px}
 }
+
+/* Lean dashboard composition: show one source of truth for QTemp, not repeated KPI boxes. */
+#qtemp_root[data-view="overview"] .qhero{grid-template-columns:1fr;min-height:142px;padding:25px 31px!important;margin-bottom:16px}
+#qtemp_root[data-view="overview"] .qhero h1{font-size:clamp(28px,3vw,39px);margin:6px 0}
+#qtemp_root[data-view="overview"] .qhero .qactions,
+#qtemp_root[data-view="overview"] .qhero .qpreview,
+#qtemp_root[data-view="overview"] .qshortcut{display:none!important}
+#qtemp_root[data-view="overview"] .qa-dashboard{margin:14px 0 20px}
+@media(max-width:600px){
+ #qtemp_root[data-view="overview"] .qhero{padding:18px 20px!important;min-height:112px}
+ #qtemp_root .qshortcut button,#qtemp_root .summary-item,#qtemp_root .tile,
+ #qtemp_root .insight-panel,#qtemp_root .capital-kpi{
+  backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+ }
+}
