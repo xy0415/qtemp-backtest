@@ -1,5 +1,8 @@
 """Production WSGI entrypoint: gunicorn app:app"""
 from flask import Flask, jsonify, request, send_file
+from datetime import datetime, timezone
+from threading import Lock
+from time import monotonic
 from qtemp_core import site_analyze, site_compare, site_search, site_quote, site_closed_day
 from research_features import scan, compare as compare_assets, strategy
 from capital_backtest import capital_comparison
@@ -7,6 +10,43 @@ from research_insights import site_research
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 3 * 1024 * 1024
+_monitor_lock=Lock()
+_monitor_started=monotonic()
+_monitor={"requests":0,"errors":0,"lastError":None,"lastErrorAt":None,"lastSuccessfulApi":None,"sourceStatus":None}
+
+def _monitor_result(error=None, source=None):
+    now=datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+    with _monitor_lock:
+        _monitor["requests"]+=1
+        if error:
+            _monitor["errors"]+=1
+            _monitor["lastError"]=str(error)[:160]
+            _monitor["lastErrorAt"]=now
+        else:
+            _monitor["lastSuccessfulApi"]=now
+        if source:
+            _monitor["sourceStatus"]=source
+
+@app.get('/api/diagnostics')
+def diagnostics():
+    with _monitor_lock:
+        result=dict(_monitor)
+    result["uptimeSeconds"]=int(monotonic()-_monitor_started)
+    result["checkedAt"]=datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+    return jsonify(result)
+
+@app.get('/workspace_glass.css')
+def workspace_glass_css():
+    return send_file('workspace_glass.css',mimetype='text/css')
+
+@app.get('/workspace_dashboard.js')
+def workspace_dashboard_js():
+    return send_file('workspace_dashboard.js',mimetype='application/javascript')
+
+@app.get('/workspace_watchlist.js')
+def workspace_watchlist_js():
+    return send_file('workspace_watchlist.js',mimetype='application/javascript')
+
 
 @app.get('/')
 def index():
@@ -70,13 +110,20 @@ def api(method):
         return jsonify({'error': '搜尋內容過長'}), 400
     try:
         result = {'search': site_search, 'analyze': site_analyze, 'compare': site_compare, 'quote': site_quote, 'closed_day': site_closed_day, 'scan': scan, 'compare_assets': compare_assets, 'strategy': strategy, 'capital_comparison': capital_comparison, 'research': site_research}[method](*args)
+        if isinstance(result,dict):
+            _monitor_result(result.get('error'),result.get('dataSourceStatus') or result.get('quality',{}).get('dataStatus'))
+        else:
+            _monitor_result()
         return jsonify(result)
     except ValueError as error:
+        _monitor_result(error)
         return jsonify({'error': str(error)[:300]}), 400
     except RuntimeError as error:
+        _monitor_result(error)
         app.logger.warning('Market data temporarily unavailable: %s', str(error)[:150])
         return jsonify({'error': 'Yahoo 歷史行情暫時無法取得：' + str(error)[:240]}), 503
     except Exception:
+        _monitor_result('內部伺服器錯誤')
         app.logger.exception('API request failed')
         return jsonify({'error': '伺服器處理發生錯誤，請稍後重試'}), 500
 
