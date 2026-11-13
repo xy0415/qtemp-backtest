@@ -16,7 +16,12 @@ section.innerHTML='<div class="qa-section-heading"><h3>研究總覽</h3><span cl
 '<div class="qa-monitor-card"><h3>行情資料狀態</h3><div class="qa-monitor-rows"><span>資料來源</span><strong data-qa-source>Yahoo Finance</strong><span>最後收盤日</span><strong data-qa-close-day>—</strong><span>歷史資料</span><strong data-qa-range>—</strong><span>更新狀態</span><strong data-qa-cache>等待資料</strong></div><p class="qa-monitor-note">行情資料不等於即時成交報價，使用的還原日線以已收盤資料為準。</p></div>'+
 '<div class="qa-monitor-card"><h3>系統檢查</h3><div class="qa-monitor-rows"><span>服務狀態</span><strong data-qa-service>檢查中</strong><span>API 錯誤</span><strong data-qa-errors>—</strong><span>最近異常</span><strong data-qa-last-error>—</strong><span>服務啟動</span><strong data-qa-uptime>—</strong></div><p class="qa-monitor-note" data-qa-service-note>僅監控本服務接收到的 API 請求，不代表外部 Yahoo Finance 的整體健康度。</p></div></div>';
 query.insertAdjacentElement('afterend',section);
-const $=q=>section.querySelector('[data-qa-'+q+']');
+// The diagnostics are an overview footer section, below all research cards and charts.
+const monitor=section.querySelector('.qa-monitor');
+monitor.classList.add('qa-monitor-bottom');
+const footer=root.querySelector('.qdisclaimer');
+if(footer)footer.before(monitor);else root.append(monitor);
+const $=q=>root.querySelector('[data-qa-'+q+']');
 const text=(k,v)=>{const el=$(k);if(el)el.textContent=v==null?'—':String(v)};
 const num=x=>x==null||!Number.isFinite(+x)?'—':Number(x).toLocaleString('zh-TW',{maximumFractionDigits:2});
 const dateStatus=(d)=>{
