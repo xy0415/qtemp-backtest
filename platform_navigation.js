@@ -6,6 +6,7 @@ const routes=[
 ['overview','總覽','市場概覽','集中展示報價、QTemp 分數、歷史百分位與訊號熱力圖。'],
 ['chart','行情圖表','行情與技術圖表','已確認日 K、QTemp 指標、時間範圍與趨勢線整合。'],
 ['signals','訊號研究','QTemp 訊號研究','觀察歷史勝率、年度統計與逐筆訊號紀錄。'],
+['zones','區間統計','QTemp 區間統計','分析歷史分數分布、年度區間熱力圖與目前所在位置。'],
 ['strategy','策略回測','策略回測','設定 QTemp 進出門檻，研究資金曲線與風險。'],
 ['compare','標的比較','相對績效比較','以共同交易日期比較報酬、波動與最大回撤。'],
 ['watchlist','自選股','自選股觀察','在你的瀏覽器管理觀察清單及訊號提醒。'],
@@ -118,6 +119,7 @@ function go(route,updateHash=true){
  }
  const mapping={strategy:'1',compare:'2',watchlist:'3'};
  if(mapping[route])extraTab(mapping[route]);
+ document.dispatchEvent(new CustomEvent('qtemp-zones-show',{detail:{active:route==='zones'}}));
  // Market analysis is loaded only when the selected route needs symbol-level history.
  if(['overview','chart','signals','resources'].includes(route) && results.hidden){
    const load=root.querySelector('[data-q="load"]');
