@@ -108,8 +108,10 @@ function display(data){
  signal.replaceChildren();signal.hidden=!confirmation;
  if(confirmation){
   const title=document.createElement('strong');title.textContent='當日已確認抄底訊號 · '+confirmation.signalNames.join('、');
-  const value=document.createElement('b');value.textContent=fmt(confirmation.confirmedPrice);
-  const note=document.createElement('p');note.textContent=confirmation.day+' · 還原收盤參考價格。'+confirmation.executionNote;
+  const value=document.createElement('b');value.textContent=fmt(confirmation.rawClose??confirmation.confirmedPrice);
+  const note=document.createElement('p');note.textContent=confirmation.day+
+    ' · 原始收盤參考價 '+fmt(confirmation.rawClose??confirmation.confirmedPrice)+
+    '；Adj Close 還原收盤 '+fmt(confirmation.confirmedPrice)+'。'+confirmation.executionNote;
   signal.append(title,value,note);
  }
  plotHistogram(data);heatmap(data);dayCards(data);
