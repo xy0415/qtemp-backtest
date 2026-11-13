@@ -12,6 +12,7 @@ panel.innerHTML='<div class="qa-workspace"><div class="qa-section-heading"><h3>�
 '<label>排序 <select id="qa-watch-sort"><option value="manual">自訂順序</option><option value="symbol">代號 A–Z</option><option value="updated">最近更新</option><option value="score">QTemp 分數</option></select></label>'+
 '<input id="qa-watch-search" type="search" placeholder="搜尋標的或備註" aria-label="搜尋自選股">'+
 '<button type="button" id="qa-watch-check">更新可見標的（最多6檔）</button>'+
+'<label>QTemp 提醒門檻 <input type="number" id="qa-watch-threshold" min="-100" max="0" step="5" value="-90" style="width:74px"></label>'+
 '<button type="button" id="qa-watch-notify">啟用瀏覽器通知</button>'+
 '<button type="button" id="qa-watch-export">匯出 JSON</button>'+
 '<label class="qa-watch-import">匯入 JSON <input id="qa-watch-import" type="file" accept=".json,application/json" hidden></label></div>'+
@@ -19,6 +20,8 @@ panel.innerHTML='<div class="qa-workspace"><div class="qa-section-heading"><h3>�
 '<div class="qa-watch-table" id="qa-watch-table"></div></div>';
 const $=id=>document.getElementById(id);
 const KEY='qtemp_watchspace_v2',LEGACY='qtemp_watchlist_v1';
+const thresholdKey='qtemp_watch_threshold_v2';
+try{const n=Number(localStorage.getItem(thresholdKey));if(Number.isFinite(n)&&n>=-100&&n<=0)$('qa-watch-threshold').value=String(n)}catch{}
 const symbolOK=s=>/^[A-Z0-9.^=_-]{1,30}$/.test(s);
 const tidy=s=>String(s??'').trim().slice(0,180);
 let items=[],quotes=new Map(),busy=false;
@@ -113,6 +116,7 @@ $('qa-watch-add').onclick=()=>{
 $('qa-watch-filter').onchange=render;
 $('qa-watch-sort').onchange=render;
 $('qa-watch-search').oninput=render;
+$('qa-watch-threshold').onchange=()=>{const t=Number($('qa-watch-threshold').value);if(!Number.isFinite(t)||t>0||t< -100){message('門檻應介於 -100 至 0');return}try{localStorage.setItem(thresholdKey,String(t))}catch{}};
 $('qa-watch-notify').onclick=async()=>{
  if(!('Notification' in window)){message('目前瀏覽器不支援通知');return}
  const granted=await Notification.requestPermission();
@@ -137,7 +141,7 @@ $('qa-watch-check').onclick=async()=>{
   message('查詢完成 '+result.items.length+' 檔'+(failures.length?'；資料不可用：'+failures.map(x=>x.symbol).join('、'):'')+'。數值使用最新已確認收盤日 K，並非即時報價。');
   if('Notification' in window&&Notification.permission==='granted'){
    for(const r of result.items){
-    if(r.error||r.score>-90||!r.end)continue;
+    if(r.error||r.score>Number($('qa-watch-threshold').value)||!r.end)continue;
     const key='qtemp_watch_alert_'+r.symbol,seen=localStorage.getItem(key);
     if(seen===r.end)continue;
     new Notification('QTemp 低估值觀察 '+r.symbol,{body:'已確認日 K '+r.end+' · QTemp '+Number(r.score).toFixed(2)});
