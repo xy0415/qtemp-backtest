@@ -72,4 +72,13 @@ def zone_analytics(frame,values,events,years=10):
 def site_zones(requested):
     symbol=symbols(requested,1)[0]
     actual,frame,values,events=snapshot(symbol,int(datetime.now(timezone.utc).timestamp()//900))
-    return {"symbol":actual,**zone_analytics(frame,values,events)}
+    result=zone_analytics(frame,values,events)
+    if result["current"]["confirmation"] is not None:
+        from qtemp_core import load_market
+        _,raw,_,_=load_market(actual)
+        record=raw.loc[frame.index[-1]]
+        result["current"]["confirmation"]["rawClose"]=float(record["Close"])
+        result["current"]["confirmation"]["executionNote"]=(
+            "顯示當日原始收盤參考價及還原價，不代表已在該價格成交；"
+            "回測使用下一交易日還原開盤價。")
+    return {"symbol":actual,**result}
