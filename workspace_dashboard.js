@@ -9,7 +9,7 @@ section.innerHTML='<div class="qa-section-heading"><h3>研究總覽</h3><span cl
 '<div class="qa-metric"><span>分析標的</span><strong data-qa-symbol>—</strong></div>'+
 '<div class="qa-metric"><span>QTemp 分數</span><strong data-qa-score>—</strong></div>'+
 '<div class="qa-metric"><span>歷史百分位</span><strong data-qa-percentile>—</strong></div>'+
-'<div class="qa-metric"><span>最新已確認訊號</span><strong data-qa-signal>—</strong></div>'+
+'<div class="qa-metric"><span>最新狀態</span><strong data-qa-signal>—</strong><small data-qa-zone-detail>—</small></div>'+
 '</div>'+
 '<div class="qa-action-bar"><button data-qa-action="chart" type="button">行情圖表</button><button data-qa-action="signals" type="button">訊號研究</button><button data-qa-action="strategy" type="button">策略回測</button><button data-qa-action="watchlist" type="button">自選股</button></div>'+
 '<div class="qa-monitor">'+
@@ -25,6 +25,8 @@ const dateStatus=(d)=>{
  return d+(age>5?' · 超過五天':'');
 };
 let lastSymbol='',lastEnd='',prevScore='',pending=false;
+const zoneName=value=>value< -95?'抄底區':value< -75?'定投區間':value>95?'高估值區間':value===95?'95 臨界值':value>75?'趨勢極強':'中性區間';
+let lastAnalysis=null;
 const sourceMap={yahoo_live:'Yahoo 最新擷取',verified_cache:'已驗證短期快取',stale_backup:'舊版歷史備援，可能過時'};
 function refreshOverview(){
  const symbol=root.querySelector('[data-q="symbol"]')?.value?.trim()||'—';
@@ -36,7 +38,18 @@ function refreshOverview(){
  text('symbol',title.split(/\s+/).slice(0,2).join(' '));
  text('score',score);
  text('percentile',root.querySelector('[data-q="dist-rank"]')?.textContent?.trim()||'—');
- text('signal',root.querySelector('[data-q="latest-signal"]')?.textContent?.trim()||'—');
+ const scoreValue=Number(score);
+ if(Number.isFinite(scoreValue)){
+  text('signal',zoneName(scoreValue));
+  const signal=lastAnalysis?.analytics?.latestSignal;
+  if(scoreValue< -95 && signal?.day===d && lastAnalysis?.symbol===symbol){
+   text('zone-detail','已確認 '+signal.type+'｜抄底參考價 '+num(signal.price)+'（還原收盤）');
+  }else if(scoreValue< -95){
+   text('zone-detail','目前屬抄底區；今日未確認新的抄底訊號');
+  }else{
+   text('zone-detail','最新已確認日 K：'+d);
+  }
+ }else{text('signal','—');text('zone-detail','等待有效 QTemp 分數')}
  text('close-day',dateStatus(d));
  text('range',root.querySelector('[data-q="status"]')?.textContent?.split(' · ')[0]||'—');
  lastSymbol=symbol;lastEnd=d;prevScore=score;
@@ -110,6 +123,10 @@ if(chartTools&&interaction){
  setCollapsed(true);
  toggle.onclick=()=>setCollapsed(interaction.dataset.mobileCollapsed!=='true');
 }
+root.addEventListener('qtemp-analysis-ready',event=>{
+ lastAnalysis=event.detail?.data||null;
+ refreshOverview();
+});
 refreshOverview();health();
 setInterval(()=>{if(root.dataset.view==='overview')health()},60000);
 })();
