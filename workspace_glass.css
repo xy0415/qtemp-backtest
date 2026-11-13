@@ -1,0 +1,59 @@
+/* QTemp Analytics — light glass design system, readable financial content */
+:root{--qa-ink:#202d47;--qa-muted:#71809a;--qa-stroke:rgba(255,255,255,.82);--qa-glass:rgba(255,255,255,.72);--qa-indigo:#6067e8}
+html,body{background:radial-gradient(ellipse 54vw 46vw at 8% 2%,rgba(163,193,255,.24),transparent 82%),radial-gradient(ellipse 50vw 48vw at 95% 4%,rgba(203,176,253,.23),transparent 78%),#f7f9ff!important}
+#qtemp_root{position:relative;background:transparent!important}
+#qtemp_root .qtopbar{position:relative;z-index:10;background:rgba(255,255,255,.56);backdrop-filter:blur(24px) saturate(150%);-webkit-backdrop-filter:blur(24px) saturate(150%);border:1px solid rgba(255,255,255,.8);border-radius:17px;padding:12px 17px;margin-bottom:22px;box-shadow:0 12px 35px rgba(78,88,151,.07),inset 0 1px rgba(255,255,255,.8)}
+#qtemp_root .qhero{position:relative;isolation:isolate;overflow:hidden;background:radial-gradient(ellipse 70% 160% at 80% 2%,rgba(188,214,255,.62),transparent 75%),linear-gradient(125deg,rgba(255,255,255,.88),rgba(235,233,255,.75) 57%,rgba(222,237,255,.75))!important;box-shadow:0 23px 50px rgba(79,98,164,.08),inset 0 1px 1px rgba(255,255,255,.93)!important;border:1px solid rgba(255,255,255,.86)!important}
+#qtemp_root .qhero:before{content:"";position:absolute;z-index:-1;width:300px;height:300px;border:1px solid rgba(255,255,255,.45);border-radius:50%;background:radial-gradient(circle at 35% 25%,rgba(255,255,255,.7),rgba(132,166,255,.1) 50%,transparent 70%);top:-165px;right:15%;filter:blur(1px);pointer-events:none}
+#qtemp_root .qpreview{background:linear-gradient(115deg,rgba(255,255,255,.79),rgba(250,252,255,.55))!important;backdrop-filter:blur(22px) saturate(170%);-webkit-backdrop-filter:blur(22px) saturate(170%);border:1px solid rgba(255,255,255,.85)!important;box-shadow:inset 0 1px rgba(255,255,255,.98),0 12px 24px rgba(72,83,155,.08)!important}
+#qtemp_root .qshortcut button,#qtemp_root .summary-item,#qtemp_root .tile,#qtemp_root .insight-panel,#qtemp_root .capital-kpi{background:linear-gradient(130deg,rgba(255,255,255,.9),rgba(247,249,255,.7))!important;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(224,230,247,.95)!important;box-shadow:inset 0 1px rgba(255,255,255,.94),0 9px 24px rgba(57,74,143,.045)!important}
+#qtemp_root .qshortcut button{position:relative;overflow:hidden;transition:transform .18s,box-shadow .18s}
+#qtemp_root .qshortcut button:before,#qtemp_root .qhero:after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(320px circle at var(--glass-x,60%) var(--glass-y,0%),rgba(255,255,255,.55),transparent 70%);opacity:.68}
+#qtemp_root button.primary,#qtemp_root .primary{background:linear-gradient(115deg,#565ad8,#7075f2 55%,#5e96ed)!important;box-shadow:0 6px 15px rgba(94,101,228,.19),inset 0 1px rgba(255,255,255,.25)!important}
+#qtemp_root .query{background:rgba(255,255,255,.66)!important;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(224,231,248,.92)!important}
+#qtemp_root .panel,#qtemp_root .addons-panel,#qtemp_root .insights-panel,#qtemp_root .formula{background:rgba(255,255,255,.94)!important;backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);border:1px solid #e2e8f3!important}
+#qtemp_root input,#qtemp_root select,#qtemp_root textarea{max-width:100%}
+#qtemp_root input:focus-visible,#qtemp_root select:focus-visible,#qtemp_root textarea:focus-visible,#qtemp_root button:focus-visible{outline:2px solid #7a82eb!important;outline-offset:2px}
+#qtemp_root .plot,#qtemp_root .capital-svg-wrap,#qtemp_root .insights-chart,#qtemp_root table{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+#qtemp_root .qa-section-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:6px 0 14px}
+#qtemp_root .qa-section-heading h3{margin:0;font-size:16px;color:#29344f}
+#qtemp_root .qa-live{display:inline-flex;align-items:center;gap:7px;font-size:11px;color:#63748c}
+#qtemp_root .qa-live:before{content:"";width:7px;height:7px;border-radius:50%;background:#52b69b}
+#qtemp_root .qa-live[data-state=warn]:before{background:#dfa346}
+#qtemp_root .qa-live[data-state=error]:before{background:#d86783}
+#qtemp_root .qa-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:14px 0 18px}
+#qtemp_root .qa-metric{padding:17px 18px;background:linear-gradient(130deg,rgba(255,255,255,.91),rgba(242,245,255,.78));border:1px solid #e0e6f5;border-radius:14px;min-width:0;box-shadow:0 8px 22px rgba(56,70,133,.045)}
+#qtemp_root .qa-metric span{display:block;font-size:12px;color:#7c899d}
+#qtemp_root .qa-metric strong{display:block;font-size:clamp(17px,2vw,23px);color:#323b59;margin-top:8px;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+#qtemp_root .qa-action-bar{display:flex;flex-wrap:wrap;gap:10px;margin:15px 0}
+#qtemp_root .qa-action-bar button{font-size:12px;padding:10px 14px}
+#qtemp_root .qa-monitor{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(250px,1fr);gap:13px;margin:13px 0 20px}
+#qtemp_root .qa-monitor-card{padding:17px;border-radius:15px;background:rgba(255,255,255,.78);border:1px solid #e1e7f5}
+#qtemp_root .qa-monitor-card h3{font-size:14px;margin:0 0 12px}
+#qtemp_root .qa-monitor-rows{display:grid;grid-template-columns:110px minmax(0,1fr);gap:7px 14px;font-size:12px}
+#qtemp_root .qa-monitor-rows span{color:#7a879d}
+#qtemp_root .qa-monitor-rows strong{color:#36435f;overflow-wrap:anywhere}
+#qtemp_root .qa-monitor-note{font-size:11px;color:#8895a8;margin-top:12px}
+#qtemp_root .qa-loading{border-radius:10px;background:linear-gradient(100deg,#eef0fc 20%,#fbfbff 50%,#eef0fc 80%);background-size:210% 100%;animation:qa-shimmer 1.6s linear infinite;min-height:70px}
+@keyframes qa-shimmer{to{background-position-x:-210%}}
+#qtemp_root .qa-workspace{display:grid;gap:15px}
+#qtemp_root .qa-watch-controls{display:flex;flex-wrap:wrap;align-items:end;gap:10px}
+#qtemp_root .qa-watch-controls label{display:grid;gap:5px;font-size:12px;color:#677792;flex:1 1 135px}
+#qtemp_root .qa-watch-controls input,#qtemp_root .qa-watch-controls select{height:39px;padding:7px 10px}
+#qtemp_root .qa-watch-controls button{padding:9px 13px}
+#qtemp_root .qa-watch-table{width:100%;overflow:auto;border:1px solid #e5eaf5;border-radius:12px}
+#qtemp_root .qa-watch-table table{width:100%;min-width:730px;border-collapse:collapse}
+#qtemp_root .qa-watch-table th,#qtemp_root .qa-watch-table td{padding:12px;font-size:12px;text-align:left}
+#qtemp_root .qa-watch-table th{background:#f3f5ff;color:#5e6c86}
+#qtemp_root .qa-watch-table td{border-bottom:1px solid #eef0f7}
+#qtemp_root .qa-watch-table button{font-size:11px;padding:6px 8px}
+#qtemp_root .qa-watch-table input{padding:6px 8px;min-width:115px;width:100%}
+#qtemp_root .qa-watch-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#qtemp_root .qa-watch-toolbar select,#qtemp_root .qa-watch-toolbar input{padding:7px 9px;font-size:12px}
+#qtemp_root .qa-watch-message{font-size:12px;color:#7d8ba0}
+#qtemp_root .qa-watch-empty{padding:25px;text-align:center;color:#7a88a0}
+@media(max-width:900px){#qtemp_root .qa-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}#qtemp_root .qa-monitor{grid-template-columns:1fr}}
+@media(max-width:600px){#qtemp_root{padding:12px!important}#qtemp_root .qtopbar{padding:12px;gap:8px;margin-bottom:15px}#qtemp_root .qtopbar .qbrand{min-width:0;font-size:13px}#qtemp_root .qtopbar .qroute-switch{margin-left:auto}#qtemp_root .qroute-switch select{min-width:100px;max-width:145px}#qtemp_root .qhero{padding:19px!important;border-radius:15px;min-height:auto}#qtemp_root .qhero h1{font-size:28px}#qtemp_root .qpreview{padding:15px}#qtemp_root .qa-metrics{gap:8px}#qtemp_root .qa-metric{padding:11px}#qtemp_root .qa-metric strong{font-size:18px}#qtemp_root .qa-monitor-rows{grid-template-columns:85px 1fr}#qtemp_root .qsubnav{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none}#qtemp_root .qsubnav button{white-space:nowrap;flex:none}#qtemp_root .chart-date-controls{gap:7px}#qtemp_root .chart-date-controls label{flex-basis:100%}#qtemp_root .chart-interactions{padding:10px}}
+@media(prefers-reduced-motion:reduce){#qtemp_root *{animation:none!important;transition:none!important}}
+@supports not (backdrop-filter:blur(1px)){#qtemp_root .qtopbar,#qtemp_root .qpreview,#qtemp_root .query{background:#fff!important}}
+@media print{#qtemp_root .qa-monitor,#qtemp_root .qa-watch-controls{display:none!important}#qtemp_root .qtopbar,#qtemp_root .qhero{background:white!important;backdrop-filter:none!important}}
