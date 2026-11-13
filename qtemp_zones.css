@@ -1,0 +1,50 @@
+/* Confirmed QTemp score temperature zones — empirical research view */
+#qtemp_root .qz-page{padding:3px 0 32px}
+#qtemp_root[data-view=zones] [data-q=results],
+#qtemp_root[data-view=zones] .query,
+#qtemp_root[data-view=zones] .status,
+#qtemp_root[data-view=zones] .addons,
+#qtemp_root[data-view=zones] .formula,
+#qtemp_root[data-view=zones] .qa-dashboard,
+#qtemp_root[data-view=zones] .qshortcut{display:none!important}
+#qtemp_root .qz-header{display:flex;justify-content:space-between;gap:18px;align-items:center;flex-wrap:wrap;padding:24px 26px;margin-bottom:15px;border:1px solid rgba(255,255,255,.94);border-radius:18px;background:linear-gradient(120deg,rgba(255,255,255,.85),rgba(234,235,255,.72) 56%,rgba(221,238,255,.65));backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+#qtemp_root .qz-kicker{color:#676de0;font-size:10px;letter-spacing:.13em;font-weight:700}
+#qtemp_root .qz-header h2{margin:6px 0;font-size:24px}
+#qtemp_root .qz-header p,#qtemp_root .qz-card-head p{font-size:12px;color:#8390a5;margin:5px 0}
+#qtemp_root .qz-query{display:flex;align-items:end;gap:10px;flex-wrap:wrap}
+#qtemp_root .qz-query label{display:grid;gap:6px;font-size:12px;color:#68778f}
+#qtemp_root .qz-query input{padding:10px 12px;min-height:41px;border:1px solid #d8dff1;border-radius:9px;background:#fff;width:190px}
+#qtemp_root .qz-query button{min-height:41px}
+#qtemp_root #qz-status{color:#78879e;font-size:12px;margin:10px 0 14px}
+#qtemp_root .qz-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:12px 0 17px}
+#qtemp_root .qz-metric{background:linear-gradient(125deg,rgba(255,255,255,.93),rgba(242,245,255,.83));padding:17px 18px;border:1px solid #e2e7f5;border-radius:14px}
+#qtemp_root .qz-metric span{font-size:12px;color:#7f8ca2;display:block}
+#qtemp_root .qz-metric strong{font-size:clamp(17px,2.1vw,23px);color:#323d5c;display:block;margin-top:8px;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+#qtemp_root .qz-card{background:rgba(255,255,255,.95);border:1px solid #e2e8f4;border-radius:15px;padding:19px 22px;margin:13px 0;box-shadow:0 7px 23px rgba(44,63,114,.045)}
+#qtemp_root .qz-card-head{margin-bottom:15px}
+#qtemp_root .qz-card-head h3{margin:0;font-size:16px}
+#qtemp_root .qz-chart{width:100%;overflow:hidden}
+#qtemp_root .qz-chart svg{width:100%;height:auto;display:block}
+#qtemp_root .qz-overflow{width:100%;overflow-x:auto;border-radius:11px}
+#qtemp_root .qz-grid{border-collapse:separate;border-spacing:5px;width:100%;min-width:690px}
+#qtemp_root .qz-grid th,#qtemp_root .qz-grid td{font-size:11px;text-align:center;border:0!important;border-radius:6px;padding:11px 6px;min-width:42px;white-space:nowrap}
+#qtemp_root .qz-grid td:first-child,#qtemp_root .qz-grid th:first-child{position:sticky;left:0;z-index:2;min-width:115px;text-align:left;background:#f6f8ff!important;color:#3b4a67;opacity:1!important}
+#qtemp_root .qz-grid th{background:#f4f6fd;color:#718098}
+#qtemp_root .qz-grid td:last-child,#qtemp_root .qz-grid th:last-child{font-weight:700;color:#384663;background:#f7f8fc!important;opacity:1!important}
+#qtemp_root .qz-dot{width:8px;height:8px;display:inline-block;border-radius:50%;margin-right:4px}
+#qtemp_root .qz-daycards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+#qtemp_root .qz-daycard{padding:14px;border-radius:12px;border:1px solid #e3e8f5;background:#fafbff}
+#qtemp_root .qz-daycard.current{border-color:#aab2f3;background:#f6f5ff;box-shadow:0 0 0 2px rgba(108,115,231,.09)}
+#qtemp_root .qz-daycard span{display:block;font-size:12px;font-weight:700}
+#qtemp_root .qz-daycard strong{display:block;font-size:20px;margin:6px 0;color:#35435e}
+#qtemp_root .qz-daycard small{display:block;font-size:11px;color:#76849b}
+#qtemp_root .qz-bar{height:5px;background:#ebeff8;border-radius:20px;overflow:hidden;margin-top:13px}
+#qtemp_root .qz-bar i{height:100%;display:block;border-radius:20px}
+#qtemp_root .qz-signal{border:1px solid #b4befa;border-radius:13px;padding:14px 18px;background:linear-gradient(110deg,#f1efff,#eaf4ff);margin:14px 0}
+#qtemp_root .qz-signal strong{display:block;color:#515bd1;font-size:12px}
+#qtemp_root .qz-signal b{display:block;font-size:27px;color:#2e3c6a;margin:4px 0}
+#qtemp_root .qz-signal p{color:#7583a1;font-size:12px;margin:4px 0}
+#qtemp_root .qz-note{font-size:12px;line-height:1.8;color:#8190a7;margin:15px 0}
+#qtemp_root .qa-metric small{display:block;margin-top:5px;font-size:10px;color:#75839c;line-height:1.5}
+@media(max-width:780px){#qtemp_root .qz-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}#qtemp_root .qz-daycards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:550px){#qtemp_root .qz-header{padding:16px}#qtemp_root .qz-header h2{font-size:21px}#qtemp_root .qz-query{width:100%}#qtemp_root .qz-query label{flex:1}#qtemp_root .qz-query input{width:100%}#qtemp_root .qz-card{padding:13px}#qtemp_root .qz-daycards{gap:8px}#qtemp_root .qz-daycard{padding:11px}}
