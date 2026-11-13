@@ -9,13 +9,15 @@ ZONES=[
  ("dca","定投區間","−95 ≤ QTemp < −75","#6193df"),
  ("neutral","中性區間","−75 ≤ QTemp ≤ 75","#9ba9bd"),
  ("strong","趨勢極強","75 < QTemp < 95","#24a79c"),
- ("overvalued","高估值區間","QTemp > 95","#d86b87")
+ ("overvalued","高估值區間","QTemp > 95","#d86b87"),
+ ("boundary","95 臨界值","QTemp = 95","#b77bad")
 ]
 
 def classify(v):
     if v < -95: return "bottom"
     if v < -75: return "dca"
     if v > 95: return "overvalued"
+    if v == 95: return "boundary"
     if v > 75: return "strong"
     return "neutral"
 
@@ -64,7 +66,7 @@ def zone_analytics(frame,values,events,years=10):
                  "days":len(groups[key]),"percent":100*len(groups[key])/sample if sample else 0}
                 for key,label,bounds,color in ZONES],
        "annual":by_year,"histogram":{"edges":edges.tolist(),"counts":counts},
-       "note":"依最新已確認日 K 的 QTemp 分數分類；排除暫算及無效暖機樣本，同一交易日僅計一次。恰為 −95、−75、75、95 的數值歸入相鄰區間規則：−95 屬定投、−75 與 75 屬中性、95 屬中性之外的邊界（為保持使用者指定嚴格大於95/小於95，95 顯示中性邊界）。鐘形圖為歷史分數的實際直方圖與平滑密度線，不假設一定服從常態分布。"
+       "note":"依最新已確認日 K 的 QTemp 分數分類；排除暫算及無效暖機樣本，同一交易日僅計一次。恰為 −95、−75、75、95 的數值歸入相鄰區間規則：−95 屬定投、−75 與 75 屬中性、95 單獨列為臨界值，不與大於 95 的高估值區間混淆。鐘形圖為歷史分數的實際直方圖與平滑密度線，不假設一定服從常態分布。"
     }
 
 def site_zones(requested):
