@@ -85,6 +85,14 @@ def research_insights_ui():
 def research_insights_css():
     return send_file('research_insights.css', mimetype='text/css')
 
+@app.get('/qtemp_zones.css')
+def qtemp_zones_css():
+    return send_file('qtemp_zones.css',mimetype='text/css')
+
+@app.get('/qtemp_zones_ui.js')
+def qtemp_zones_js():
+    return send_file('qtemp_zones_ui.js',mimetype='application/javascript')
+
 @app.get('/favicon.svg')
 def site_favicon():
     return send_file('favicon.svg', mimetype='image/svg+xml')
