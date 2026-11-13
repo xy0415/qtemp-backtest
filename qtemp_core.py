@@ -680,6 +680,7 @@ def site_analyze(requested):
             'start': frame.index[0].date().isoformat(), 'end': frame.index[-1].date().isoformat(),
             'last': float(frame.Close.iloc[-1]), 'change': float(frame.Close.iloc[-1] / frame.Close.iloc[-2] - 1),
             'volume': None if pd.isna(raw.Volume.iloc[-1]) else float(raw.Volume.iloc[-1]),
+            'rawLatestClose': float(raw.Close.iloc[-1]),
             'qtemp': float(newest.QTemp), 'basis': 'Adj Close 還原', 'infoMissing': bool(info_error),
             'dataSourceStatus': meta.get('_qtemp_cache_status','unknown'),
             'dataSavedAt': meta.get('_qtemp_cache_saved_at'),
