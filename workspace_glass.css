@@ -100,3 +100,7 @@ html,body{background:radial-gradient(ellipse 54vw 46vw at 8% 2%,rgba(163,193,255
 /* Market data source and system diagnostics stay at the bottom of Overview. */
 #qtemp_root:not([data-view="overview"]) .qa-monitor-bottom{display:none!important}
 #qtemp_root .qa-monitor-bottom{margin:30px 0 22px;clear:both}
+
+/* Dashboard shows concise current metrics; charts live in Signal Research / Intervals. */
+#qtemp_root[data-view="overview"] .insight-grid{display:none!important}
+#qtemp_root[data-view="overview"] .qshortcut{display:none!important}
