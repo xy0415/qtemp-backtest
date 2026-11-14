@@ -14,7 +14,7 @@ section.innerHTML='<div class="qa-section-heading"><h3>研究總覽</h3><span cl
 '<div class="qa-action-bar"><button data-qa-action="chart" type="button">行情圖表</button><button data-qa-action="signals" type="button">訊號研究</button><button data-qa-action="strategy" type="button">策略回測</button><button data-qa-action="watchlist" type="button">自選股</button></div>'+
 '<div class="qa-monitor">'+
 '<div class="qa-monitor-card"><h3>行情資料狀態</h3><div class="qa-monitor-rows"><span>資料來源</span><strong data-qa-source>Yahoo Finance</strong><span>最後收盤日</span><strong data-qa-close-day>—</strong><span>歷史資料</span><strong data-qa-range>—</strong><span>更新狀態</span><strong data-qa-cache>等待資料</strong></div><p class="qa-monitor-note">行情資料不等於即時成交報價，使用的還原日線以已收盤資料為準。</p></div>'+
-'<div class="qa-monitor-card"><h3>系統檢查</h3><div class="qa-monitor-rows"><span>服務狀態</span><strong data-qa-service>檢查中</strong><span>API 錯誤</span><strong data-qa-errors>—</strong><span>最近異常</span><strong data-qa-last-error>—</strong><span>服務啟動</span><strong data-qa-uptime>—</strong></div><p class="qa-monitor-note" data-qa-service-note>僅監控本服務接收到的 API 請求，不代表外部 Yahoo Finance 的整體健康度。</p></div></div>';
+'<div class="qa-monitor-card"><h3>目前程序診斷</h3><div class="qa-monitor-rows"><span>服務狀態</span><strong data-qa-service>檢查中</strong><span>程序 API 錯誤</span><strong data-qa-errors>—</strong><span>最近異常</span><strong data-qa-last-error>—</strong><span>程序運行時間</span><strong data-qa-uptime>—</strong></div><p class="qa-monitor-note" data-qa-service-note>統計僅限回應這次查詢的伺服器程序，自啟動後計算；不代表全站、其他程序或 Yahoo Finance。</p></div></div>';
 query.insertAdjacentElement('afterend',section);
 // The diagnostics are an overview footer section, below all research cards and charts.
 const monitor=section.querySelector('.qa-monitor');
@@ -74,10 +74,10 @@ async function health(){
    if(!response.ok)throw Error('HTTP '+response.status);
    const r=await response.json();
    text('service','正常運作');
-   text('errors',r.errors+' 次 / '+r.requests+' 次 API 請求');
+   text('errors',r.errors+' / '+r.requests+' 次（目前程序）');
    text('last-error',r.lastError||'沒有已記錄的異常');
    text('uptime',Math.floor(r.uptimeSeconds/60)+' 分鐘');
-   $('service-note').textContent='診斷更新 '+r.checkedAt+' UTC · 僅統計目前服務程序啟動後的請求';
+   $('service-note').textContent='診斷更新 '+r.checkedAt+' UTC · 目前程序自啟動後數據，部署或重啟即重置';
   }finally{clearTimeout(timer)}
  }catch(error){
   text('service','狀態未確認');
