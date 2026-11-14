@@ -23,12 +23,12 @@ class FinanceAuditTests(unittest.TestCase):
     def test_cash_flow_timing(self):
         # A $100 position increases 10%, while a separate $100 deposits at close:
         # TWR must remain 10%, not 5%.
-        self.assertAlmostEqual(_time_weighted_period_return(100,110,0,100),.10)
+        self.assertAlmostEqual(_time_weighted_period_return(100,210,0,100),.10)
         # $100 deposit at open buys a position that rises from $100 to $110:
         self.assertAlmostEqual(_time_weighted_period_return(100,220,100,0),.10)
         self.assertEqual(_time_weighted_period_return(0,100,0,100),0.)
     def test_no_future_cash_at_close(self):
-        self.assertAlmostEqual(_time_weighted_period_return(100,95,0,100),-.05)
+        self.assertAlmostEqual(_time_weighted_period_return(100,195,0,100),-.05)
 
 if __name__=="__main__":
     unittest.main()
