@@ -120,13 +120,22 @@ function performance(){
  const panel=$('dc-panel');panel.replaceChildren();
  const basic=section('完整績效對照','時間範圍內所有標的與基準使用相同交易日；年化指標採 252 交易日。');
  const columns=['指標',...data.assets.map(x=>x.symbol),data.benchmark+'（基準）'];
- const keys=['totalReturn','cagr','volatility','maxDrawdown','sharpe','sortino','calmar','winRate',
-             'bestYear','worstYear','maxUnderwaterDays','recoveryDays','beta','alpha','trackingError','informationRatio'];
+ const keys=['totalReturn','cagr','volatility','maxDrawdown','sharpe'];
+ const advanced=['sortino','calmar','winRate','bestYear','worstYear','maxUnderwaterDays','recoveryDays','beta','alpha','trackingError','informationRatio'];
  const bm=data.benchmarkMetrics;
  const rows=keys.map(k=>[names[k],...data.assets.map(x=>metric(k,x.metrics[k])),
    ['beta','alpha','trackingError','informationRatio'].includes(k)?'—':metric(k,bm[k])]);
  rows.push(['最新 QTemp（該標的最近確認日 K）',...data.assets.map(x=>x.qtemp==null?'—':fmt(x.qtemp)),'—']);
  basic.append(table(columns,rows));panel.append(basic);
+ const extra=document.createElement('details');extra.className='dc-advanced';
+ const heading=document.createElement('summary');heading.textContent='進階統計：Sortino、Calmar、Alpha、Beta 及年度極端報酬';
+ extra.append(heading);
+ const advancedRows=advanced.map(k=>[names[k],...data.assets.map(x=>metric(k,x.metrics[k])),
+  ['beta','alpha','trackingError','informationRatio'].includes(k)?'—':metric(k,bm[k])]);
+ extra.append(table(columns,advancedRows));
+ const note=document.createElement('p');note.className='dc-minor';
+ note.textContent='最佳／最差年度只採用涵蓋年初、年末且有效交易日充足的曆年；不足一個完整年度時顯示 —。';
+ extra.append(note);panel.append(extra);
  const span=section('標的歷史資料範圍','共同交易日以所有比較標的及選定基準的交集決定，不補齊缺失資料。');
  span.append(table(['代號','最早資料','最新收盤','歷史日 K'],Object.entries(data.listed).map(([sym,x])=>[sym,x.first,x.last,fmt(x.bars,0)])));
  panel.append(span);
@@ -205,7 +214,11 @@ function portfolio(){
    {name:data.benchmark,points:data.benchmarkSeries.nav,color:'#6a7791'}],'標準化淨值（起始 = 100）'));
   panel.append(chart);
   const card=section('組合風險與報酬');
-  card.append(table(['指標','投資組合'],['totalReturn','cagr','volatility','maxDrawdown','sharpe','sortino','calmar'].map(k=>[names[k],metric(k,portfolioSeries.metrics[k])])));
+  card.append(table(['指標','投資組合'],['totalReturn','cagr','volatility','maxDrawdown','sharpe'].map(k=>[names[k],metric(k,portfolioSeries.metrics[k])])));
+  const advancedBox=document.createElement('details');advancedBox.className='dc-advanced';
+  const caption=document.createElement('summary');caption.textContent='進階比率（Sortino、Calmar）';
+  advancedBox.append(caption,table(['指標','投資組合'],['sortino','calmar'].map(k=>[names[k],metric(k,portfolioSeries.metrics[k])])));
+  card.append(advancedBox);
   panel.append(card);
  }
 }
