@@ -4,7 +4,8 @@ No artificial fallbacks, no assumed real-time prices, and no silent synthetic ob
 The public site must confirm appropriate market-data display/republication rights before scale-up.
 """
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timezone
+from datetime import datetime, timezone, time as walltime, timedelta
+from zoneinfo import ZoneInfo
 from email.utils import parsedate_to_datetime
 from functools import lru_cache
 from urllib.request import Request, urlopen
@@ -70,6 +71,23 @@ def _history(ticker,period="1y"):
     if prices.empty:raise ValueError("沒有有效日線")
     prices.index=prices.index.tz_localize(None).normalize() if prices.index.tz is None else prices.index.tz_localize(None).normalize()
     prices=prices[~prices.index.duplicated(keep="last")].sort_index()
+    if ticker in ("BTC-USD","ETH-USD"):
+        # Crypto trades continuously: only include completed UTC calendar dates.
+        current_utc=datetime.now(timezone.utc).date()
+        prices=prices[prices.index.date<current_utc]
+    else:
+        # Conservative market close + buffer; never publish an intraday partial candle as a completed daily close.
+        region=("TW" if ticker in ("^TWII","TWD=X") else
+                "JP" if ticker=="^N225" else "US")
+        zone,cutoff={
+            "TW":("Asia/Taipei",walltime(16,0)),
+            "JP":("Asia/Tokyo",walltime(17,0)),
+            "US":("America/New_York",walltime(19,0) if ticker in ("GC=F","CL=F") else walltime(17,30))
+        }[region]
+        now=datetime.now(ZoneInfo(zone))
+        last_complete=now.date() if now.time()>=cutoff else now.date()-timedelta(days=1)
+        prices=prices[prices.index.date<=last_complete]
+    if prices.empty:raise ValueError("尚未取得已收盤的有效日 K")
     return prices
 
 def _cache_get(key,ttl,fn):
