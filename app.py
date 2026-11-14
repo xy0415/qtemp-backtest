@@ -9,6 +9,7 @@ from capital_backtest import capital_comparison
 from research_insights import site_research
 from qtemp_zones import site_zones
 from deep_comparison import compare_deep
+from financial_market import market_snapshot, official_news, macro_snapshot, market_history
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 3 * 1024 * 1024
@@ -107,6 +108,36 @@ def deep_comparison_css():
 @app.get('/favicon.svg')
 def site_favicon():
     return send_file('favicon.svg', mimetype='image/svg+xml')
+
+@app.get('/api/market/overview')
+def market_overview_api():
+    return jsonify(market_snapshot())
+
+@app.get('/api/market/news')
+def market_news_api():
+    return jsonify(official_news())
+
+@app.get('/api/market/macro')
+def market_macro_api():
+    return jsonify(macro_snapshot())
+
+@app.get('/api/market/history/<path:symbol>')
+def market_history_api(symbol):
+    try:
+        return jsonify(market_history(symbol,request.args.get('period','1y')))
+    except ValueError as error:
+        return jsonify({"error":str(error)}),400
+    except Exception:
+        app.logger.exception("Market history unavailable")
+        return jsonify({"error":"市場資料暫時不可用"}),503
+
+@app.get('/financial_portal.js')
+def financial_portal_js():
+    return send_file('financial_portal.js',mimetype='application/javascript')
+
+@app.get('/financial_portal.css')
+def financial_portal_css():
+    return send_file('financial_portal.css',mimetype='text/css')
 
 @app.get('/health')
 def health():
