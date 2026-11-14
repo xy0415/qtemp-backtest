@@ -79,6 +79,24 @@ def _schedule(start, end, mode, timing):
     return sorted(set(dates))
 
 
+def _time_weighted_period_return(previous_close, closing_wealth, open_cash, close_cash, opening_wealth=None):
+    """Daily time-weighted return with an opening valuation checkpoint.
+
+    Open cash participates in intraday returns; close cash earns no same-day return.
+    When holdings existed before today, separate overnight and intraday subperiods.
+    """
+    old=float(previous_close)
+    op_cash=float(open_cash)
+    cl_cash=float(close_cash)
+    ending=float(closing_wealth)-cl_cash
+    if old>0 and opening_wealth is not None:
+        opened=float(opening_wealth)
+        if opened>0 and opened+op_cash>0:
+            return float((opened/old)*(ending/(opened+op_cash))-1.)
+    capital=old+op_cash
+    return float(ending/capital-1.) if capital>0 else 0.
+
+
 def capital_comparison(symbol, start, end, initial, periodic_amount, frequency,
                        signal_amount, timing="end", lump_mode="match_dca"):
     symbol = symbols(str(symbol), 1)[0]
@@ -186,6 +204,9 @@ def capital_comparison(symbol, start, end, initial, periodic_amount, frequency,
         for i,(date,op,cl) in enumerate(zip(dates,opens,closes)):
             deposit=deposits.get(i,0.)
             prior=wealth[-1] if wealth else 0.
+            opening_wealth=shares*op  # holdings valued at the adjusted market open, before any cash flow
+            close_cash=source.get(i,0.) if kind=="dca" and timing=="end" else 0.
+            open_cash=deposit-close_cash
             if deposit>0:
                 invested+=deposit
                 flows.append((date,deposit))
@@ -222,9 +243,11 @@ def capital_comparison(symbol, start, end, initial, periodic_amount, frequency,
             wealth.append(float(end_value))
             invested_curve.append(float(invested))
             profit_ratio.append(float(end_value/invested-1) if invested>0 else None)
-            # Exclude additions from the return; deposits occur at the day's open.
-            adjusted_base=prior+deposit
-            period_return=(end_value-adjusted_base)/adjusted_base if adjusted_base>0 else 0.
+            # Separate overnight and intraday valuation; do not count close deposits
+            # as capital exposed during the same trading session.
+            period_return=_time_weighted_period_return(
+                prior,end_value,open_cash,close_cash,opening_wealth
+            )
             if i>0:
                 daily.append(float(period_return))
                 nav*=1.+period_return
@@ -269,5 +292,5 @@ def capital_comparison(symbol, start, end, initial, periodic_amount, frequency,
         "days":len(dates),"frequency":frequency,"timing":timing,
         "periodicAmount":per_period,"signalAmount":signal_cash,
         "initialAmount":ia,"lumpMode":lump_mode,"lumpBudget":lump_budget,"strategies":merged,
-        "note":"期初投入金額 IA 在三策略皆於首個交易日開盤買入；QTemp 策略僅於已確認「低估值」訊號的下一個交易日開盤追加指定金額，從不賣出；定投依設定頻率每期投入指定金額，含首尾不足一期的完整單期金額；期初於首個交易日開盤買進，期末於該期最後交易日收盤買進；單筆策略預設於期初一次投入與定期定額整段期間相同的計畫總本金（屬期初已知未來定投計畫的假設），也可改為僅投入 IA；後續不追加資金。所有策略按 Yahoo Adj Close 比例還原 OHLC，允許小數股。總報酬率=期末資產/累積投入−1；年化 XIRR 依實際資金流日期；最大回撤與年化波動使用排除新增入金的日報酬近似值。不同策略投入本金不同，資產總額不宜直接視為績效高低；不計交易手續費、稅、滑價、無風險利率及交易限制。"
+        "note":"期初投入金額 IA 在三策略皆於首個交易日開盤買入；QTemp 策略僅於已確認「低估值」訊號的下一個交易日開盤追加指定金額，從不賣出；定投依設定頻率每期投入指定金額，含首尾不足一期的完整單期金額；期初於首個交易日開盤買進，期末於該期最後交易日收盤買進；單筆策略預設於期初一次投入與定期定額整段期間相同的計畫總本金（屬期初已知未來定投計畫的假設），也可改為僅投入 IA；後續不追加資金。所有策略按 Yahoo Adj Close 比例還原 OHLC，允許小數股。總報酬率=期末資產/累積投入−1；年化 XIRR 依實際資金流日期；最大回撤與年化波動使用現金流調整後日報酬：日開盤入金計入當日盤中、日收盤入金不計當日報酬；原持股隔夜與盤中分段估值。不同策略投入本金不同，資產總額不宜直接視為績效高低；不計交易手續費、稅、滑價、無風險利率及交易限制。"
     }
