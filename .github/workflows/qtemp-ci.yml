@@ -17,7 +17,7 @@ jobs:
           cache: 'pip'
       - run: pip install -r requirements.txt
       - name: Compile backend
-        run: python -m compileall -q app.py qtemp_core.py research_features.py capital_backtest.py research_insights.py market_cache.py qtemp_alerts.py test_capital_backtest.py test_research_insights.py test_market_cache.py qtemp_zones.py test_qtemp_zones.py deep_comparison.py test_deep_comparison.py test_financial_audit.py test_watchlist_audit.py
+        run: python -m compileall -q app.py qtemp_core.py research_features.py capital_backtest.py research_insights.py market_cache.py qtemp_alerts.py test_capital_backtest.py test_research_insights.py test_market_cache.py qtemp_zones.py test_qtemp_zones.py deep_comparison.py test_deep_comparison.py test_financial_audit.py test_watchlist_audit.py test_streamlined_ui.py
       - name: Check JavaScript
         run: |
           node --check research_features.js
@@ -36,7 +36,7 @@ jobs:
           new Function(script[1]);
           JS
       - name: Capital backtest deterministic tests
-        run: python -m unittest -v test_capital_backtest test_research_insights test_market_cache test_qtemp_zones test_deep_comparison test_financial_audit test_watchlist_audit
+        run: python -m unittest -v test_capital_backtest test_research_insights test_market_cache test_qtemp_zones test_deep_comparison test_financial_audit test_watchlist_audit test_streamlined_ui
       - name: Flask and input smoke test
         run: |
           python - <<'PY'
