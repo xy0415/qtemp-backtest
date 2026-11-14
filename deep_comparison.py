@@ -72,7 +72,9 @@ def _yearly(nav):
         covers_start=first <= pd.Timestamp(year,1,7)
         covers_end=last >= pd.Timestamp(year,12,24)
         enough_sessions=len(part)>=190
-        full=bool(covers_start and covers_end and enough_sessions)
+        has_previous_close=bool(len(earlier) and earlier.index[-1].year==year-1
+                                and earlier.index[-1]>=pd.Timestamp(year-1,12,24))
+        full=bool(covers_start and covers_end and enough_sessions and has_previous_close)
         out.append({"year":str(year),"return":_safe(part.iloc[-1]/anchor-1),
                     "partial":not full,"sessions":int(len(part))})
     return out
