@@ -3,15 +3,23 @@
 const root=document.getElementById('qtemp_root');
 if(!root)return;
 const routes=[
-['overview','總覽','市場概覽','集中展示最新行情、QTemp 狀態、歷史百分位與資料更新資訊。'],
-['chart','行情圖表','行情與技術圖表','已確認日 K、QTemp 指標、時間範圍與趨勢線整合。'],
-['signals','訊號研究','QTemp 訊號研究','統整訊號勝率、歷史區間、事件路徑、日曆與年度統計。'],
-['zones','區間統計','QTemp 區間統計','分析歷史分數分布、年度區間熱力圖與目前所在位置。'],
-['strategy','策略回測','策略回測','比較 QTemp 訊號定額投入、定期定額與單筆投入的資金流和風險。'],
-['compare','標的比較','相對績效比較','比較長期績效、回撤、相關性、基準風險與多資產投資組合。'],
-['watchlist','自選股','自選股觀察','在你的瀏覽器管理觀察清單及訊號提醒。'],
-['resources','研究資源','研究資料與指標方法','查看 QTemp 公式、資料明細、TradingView 對照與匯出工具。']
+['overview','市場總覽','全球金融市場總覽','全球指數、SOX、跨資產報價、新聞及市場風險。'],
+['markets','金融市場','金融市場','全球股市、利率、商品、外匯與加密行情。'],
+['macro','總體經濟','總體經濟','利率、殖利率、美元與官方總經資料。'],
+['sectors','產業研究','產業研究','產業 ETF 實際表現與半導體產業研究入口。'],
+['stocks','個股分析','個股分析','搜尋股票、研究行情並連結基本面官方資料。'],
+['news','金融新聞','金融新聞','Fed 與 SEC 官方最新公告。'],
+['quant','量化研究','量化研究','QTemp 指標、訊號研究、策略回測與多資產比較。'],
+['watchlist','自選股','自選股觀察','在瀏覽器管理觀察清單與訊號提醒。'],
+['chart','QTemp 圖表','行情與技術圖表','已確認日 K、QTemp 指標、時間範圍與趨勢線整合。'],
+['signals','訊號研究','QTemp 訊號研究','歷史勝率、區間統計、事件路徑、日曆與年度統計。'],
+['zones','區間統計','QTemp 區間統計','歷史分數分布、熱力圖及目前所在位置。'],
+['strategy','策略回測','策略回測','比較 QTemp、定投與單筆投入的資金流和風險。'],
+['compare','多資產比較','相對績效比較','長期績效、回撤、相關性、基準與投資組合。'],
+['resources','研究資源','研究資料與指標方法','QTemp 公式、資料明細、TradingView 對照與匯出。']
 ];
+const mainRoutes=['overview','markets','macro','sectors','stocks','news','quant','watchlist'];
+const quantRoutes=['chart','signals','zones','strategy','compare','resources'];
 const base=root.querySelector('.query');
 const header=document.createElement('header');
 header.className='qtopbar';
@@ -20,31 +28,31 @@ brand.className='qbrand';brand.href='#overview';
 brand.innerHTML='<span class="qbrand-mark" aria-hidden="true"><img src="/favicon.svg?v=2" alt="" width="35" height="35"></span><span>QTemp Analytics</span>';
 header.append(brand);
 const nav=document.createElement('nav');nav.className='qtopnav';nav.setAttribute('aria-label','網站主導覽');
-routes.filter(r=>!['zones','resources'].includes(r[0])).forEach(([id,label])=>{
+routes.filter(r=>mainRoutes.includes(r[0])).forEach(([id,label])=>{
  const button=document.createElement('button');button.type='button';button.dataset.route=id;button.textContent=label;
- button.onclick=()=>{if(id==='signals' && root.dataset.view==='zones')subSignal='study';go(id)};nav.append(button);
+ button.onclick=()=>{if(id==='quant')subSignal='study';go(id)};nav.append(button);
 });
 header.append(nav);
 const mobileNav=document.createElement('label');mobileNav.className='qroute-switch';
 mobileNav.textContent='功能';
 const mobileSelect=document.createElement('select');mobileSelect.setAttribute('aria-label','切換功能頁面');
-routes.filter(r=>!['zones','resources'].includes(r[0])).forEach(([id,label])=>mobileSelect.add(new Option(label,id)));
-mobileSelect.onchange=()=>{if(mobileSelect.value==='signals'&&root.dataset.view==='zones')subSignal='study';go(mobileSelect.value)};
+routes.filter(r=>mainRoutes.includes(r[0])).forEach(([id,label])=>mobileSelect.add(new Option(label,id)));
+mobileSelect.onchange=()=>{go(mobileSelect.value)};
 mobileNav.append(mobileSelect);header.append(mobileNav);
 const help=document.createElement('button');
 help.type='button';help.className='qtopend qhelp-link';help.dataset.go='resources';
 help.textContent='資料與說明';header.append(help);
 base.before(header);
 const hero=document.createElement('section');hero.className='qhero';
-hero.innerHTML='<div class="qhero-content"><span class="qeyebrow">QTEMP ANALYTICS</span><h1>QTemp Analytics</h1><div class="qactions"><button type="button" class="primary" data-go="chart">行情圖表</button><button type="button" data-go="signals">訊號研究</button></div></div><div class="qpreview"><div class="qpreview-top"><strong>QTemp 指標</strong><span>最近收盤資料</span></div><div class="qpreview-value" data-preview-score>—</div><div class="qpreview-bottom"><span>最新已確認日 K 的分數</span></div></div>';
+hero.innerHTML='<div class="qhero-content"><span class="qeyebrow">GLOBAL FINANCIAL MARKETS</span><h1>全球金融市場總覽</h1><p class="qhero-desc">全球指數 · 半導體 SOX · 利率與商品 · 官方金融資訊</p><div class="qactions"><button type="button" class="primary" data-go="markets">查看金融市場</button><button type="button" data-go="quant">量化研究</button></div></div><div class="qhero-aside"><span>金融研究平台</span><strong>Markets & Research</strong><small>行情資料與新聞皆標示來源及時間</small></div>';
 base.before(hero);
 const shortcuts=document.createElement('div');shortcuts.className='qshortcut';
 for(const [route,icon,title,description] of [
-['chart','⌁','行情圖表','K 線與技術指標同步檢視'],
-['signals','↗','訊號研究','歷史勝率與年度表現'],
-['strategy','▥','策略回測','資金曲線與風險評估'],
+['markets','⌁','金融市場','全球行情與主要指數'],
+['macro','↗','總體經濟','利率、通膨與美元研究'],
+['quant','▥','量化研究','QTemp 與策略回測'],
 ['watchlist','◇','自選股','集中追蹤觀察標的'],
-['compare','⊞','多資產分析','資產風險與績效比較']
+['sectors','⊞','產業研究','半導體與產業強弱']
 ]){
  const card=document.createElement('button');card.type='button';card.dataset.go=route;card.innerHTML='<b aria-hidden="true">'+icon+'</b><strong>'+title+'</strong><span>'+description+'</span>';shortcuts.append(card);
 }
@@ -107,9 +115,9 @@ function go(route,updateHash=true){
  current=route;
  root.dataset.view=route;
  root.dataset.resource=subResource;
- nav.querySelectorAll('[data-route]').forEach(b=>b.setAttribute('aria-current',b.dataset.route===(route==='zones'?'signals':route)?'page':'false'));
+ nav.querySelectorAll('[data-route]').forEach(b=>b.setAttribute('aria-current',b.dataset.route===(quantRoutes.includes(route)?'quant':route)?'page':'false'));
  const info=routes.find(r=>r[0]===route);
- mobileSelect.value=route==='zones'?'signals':route;
+ mobileSelect.value=quantRoutes.includes(route)?'quant':route;
  intro.querySelector('[data-crumb=current]').textContent=info[1];
  intro.querySelector('h2').textContent=info[2];intro.querySelector('p').textContent=info[3];
  setSubnav(route==='zones'?'signals':route);
@@ -126,8 +134,9 @@ function go(route,updateHash=true){
  const mapping={strategy:'1',compare:'2',watchlist:'3'};
  if(mapping[route])extraTab(mapping[route]);
  document.dispatchEvent(new CustomEvent('qtemp-zones-show',{detail:{active:route==='zones'}}));
+ document.dispatchEvent(new CustomEvent('qtemp-route-change',{detail:{route}}));
  // Market analysis is loaded only when the selected route needs symbol-level history.
- if(['overview','chart','signals','resources'].includes(route) && results.hidden){
+ if(['chart','signals','resources'].includes(route) && results.hidden){
    const load=root.querySelector('[data-q="load"]');
    if(load&&!load.disabled)load.click();
  }
