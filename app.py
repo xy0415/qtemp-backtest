@@ -22,7 +22,7 @@ def _monitor_result(error=None, source=None):
         _monitor["requests"]+=1
         if error:
             _monitor["errors"]+=1
-            _monitor["lastError"]="資料來源或 API 請求異常"
+            _monitor["lastError"]="當前程序最近一次 API 請求異常"
             _monitor["lastErrorAt"]=now
         else:
             _monitor["lastSuccessfulApi"]=now
@@ -35,6 +35,8 @@ def diagnostics():
         result=dict(_monitor)
     result["uptimeSeconds"]=int(monotonic()-_monitor_started)
     result["checkedAt"]=datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+    result["scope"]="single_worker_since_start"
+    result["sourceStatus"]="none" if result.get("sourceStatus") is None else result["sourceStatus"]
     return jsonify(result)
 
 @app.get('/workspace_glass.css')
