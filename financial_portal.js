@@ -33,11 +33,13 @@ function card(row,click){
  const head=el('div',null,'fm-quote-head');
  head.append(el('strong',row.name),el('span',row.ticker));
  button.append(head);
- const price=el('div',row.value==null?'資料不可用':clean(row.value),'fm-price');
+ const price=el('div',row.value==null?'資料不可用':clean(row.value)+(row.unit==='%'?'%':''),'fm-price');
  button.append(price);
- const change=el('div',row.changePct==null?'尚無可比較日線':sign(row.changePct),'fm-change');
- if(row.changePct>0)change.classList.add('fm-positive');
- if(row.changePct<0)change.classList.add('fm-negative');
+ const change=el('div',row.changeBp!=null?((row.changeBp>0?'+':'')+clean(row.changeBp)+' bp'):
+    row.changePct==null?'尚無可比較日線':sign(row.changePct),'fm-change');
+ const movement=row.changeBp==null?row.changePct:row.changeBp;
+ if(movement>0)change.classList.add('fm-positive');
+ if(movement<0)change.classList.add('fm-negative');
  button.append(change);
  button.append(el('small',row.asOf?'截至 '+row.asOf+' · Yahoo 日 K':row.status,'fm-asof'));
  button.onclick=()=>click(row.ticker);
@@ -108,7 +110,7 @@ function chartSection(symbol='^SOX',startPeriod='3mo'){
    const data=await get('/api/market/history/'+encodeURIComponent(selected)+'?period='+encodeURIComponent(period),
     'history_'+requestId,600000);
    if(ticker.value!==selected||periodSelect.value!==period)return;
-   plot(host,data.points,(selected==='^TNX'?'Yahoo 指數報價':'收盤價／指數點位'),selected);
+   plot(host,data.points,(selected==='^TNX'?'美國 10Y 殖利率（%）':'收盤價／指數點位'),selected);
    status.textContent='資料截至 '+labelDate(data.asOf)+' · '+data.source;
   }catch(e){host.replaceChildren(el('p','圖表資料暫時不可用。','fm-empty'));status.textContent='行情來源無法取得：'+e.message}
  };
@@ -157,7 +159,7 @@ function quantHub(){
  tools.forEach(([route,title,description])=>{
   const button=el('button',null,'fm-tool-card');button.type='button';
   button.append(el('strong',title),el('span',description));
-  button.onclick=()=>root.querySelector('[data-go="'+route+'"]')?.click()||navigate(route);
+  button.onclick=()=>navigate(route);
   grid.append(button);
  });
  section.append(grid);return section;
