@@ -153,7 +153,7 @@ $('qa-watch-check').onclick=async()=>{
     if(r.error||!r.end)continue;
     const mode=$('qa-watch-alert-mode').value;
     const zoneHit=Number.isFinite(Number(r.score)) && Number(r.score)<=Number($('qa-watch-threshold').value);
-    const signalHit=Boolean(r.signalDate===r.end && r.signal && r.signal!=='—');
+    const signalHit=Boolean(r.newConfirmedToday===true && r.signalDate===r.end && r.signal && r.signal!=='—');
     const notices=[];
     if(mode!=='signal'&&zoneHit)notices.push({
       kind:'zone',title:'QTemp 分數區間提醒 '+r.symbol,
