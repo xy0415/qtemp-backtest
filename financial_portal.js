@@ -110,7 +110,12 @@ function chartSection(symbol='^SOX',startPeriod='3mo'){
    const data=await get('/api/market/history/'+encodeURIComponent(selected)+'?period='+encodeURIComponent(period),
     'history_'+requestId,600000);
    if(ticker.value!==selected||periodSelect.value!==period)return;
-   plot(host,data.points,(selected==='^TNX'?'美國 10Y 殖利率（%）':'收盤價／指數點位'),selected);
+   const axis=selected==='^TNX'?'殖利率（%）':
+     selected==='TWD=X'?'台幣／美元':
+     ['GC=F','CL=F','BTC-USD','ETH-USD'].includes(selected)?'美元（USD）':
+     ['^GSPC','^IXIC','^DJI','^SOX','^TWII','^N225','^VIX','DX-Y.NYB'].includes(selected)?'指數點位':
+     'ETF 收盤價格（USD）';
+   plot(host,data.points,axis,selected);
    status.textContent='資料截至 '+labelDate(data.asOf)+' · '+data.source;
   }catch(e){host.replaceChildren(el('p','圖表資料暫時不可用。','fm-empty'));status.textContent='行情來源無法取得：'+e.message}
  };
