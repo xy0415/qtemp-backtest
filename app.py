@@ -94,6 +94,14 @@ def qtemp_zones_css():
 def qtemp_zones_js():
     return send_file('qtemp_zones_ui.js',mimetype='application/javascript')
 
+@app.get('/deep_comparison_ui.js')
+def deep_comparison_ui_js():
+    return send_file('deep_comparison_ui.js',mimetype='application/javascript')
+
+@app.get('/deep_comparison.css')
+def deep_comparison_css():
+    return send_file('deep_comparison.css',mimetype='text/css')
+
 @app.get('/favicon.svg')
 def site_favicon():
     return send_file('favicon.svg', mimetype='image/svg+xml')
