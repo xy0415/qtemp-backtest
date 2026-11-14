@@ -1,59 +1,66 @@
 (()=>{'use strict';
-const root=document.querySelector('#qtemp_root');if(!root)return;
+const root=document.getElementById('qtemp_root');if(!root)return;
 const shell=document.createElement('section');shell.className='addons';
-shell.innerHTML='<div class="addons-head"><h2>進階量化研究</h2><p>策略回測 · 比較 · 自選股 · 分享</p></div>'+
-'<div class="addons-nav">'+['策略回測','標的比較','自選股','匯出與分享'].map((x,i)=>'<button type="button" data-addon-tab="'+(i+1)+'" aria-selected="'+(i===0)+'">'+x+'</button>').join('')+'</div>'+
-'<div class="addons-panel" data-addon="1" hidden><h3>QTemp 策略回測</h3><p>多頭單倉、確認收盤後隔日開盤進場，包含費率與最長持有日。</p><div class="addons-control"><label>代號<input id="extra-strategy" value="SOXL"></label><label>進場分數<input id="extra-entry" type="number" min="-100" max="0" value="-85"></label><label>出場分數<input id="extra-exit" type="number" min="0" max="100" value="35"></label><label>單邊費率 %<input id="extra-fee" type="number" min="0" max="2" step="0.05" value="0.1"></label><label>最長持有日<input id="extra-hold" type="number" min="5" max="504" value="120"></label><button type="button" class="primary" id="extra-strategy-go">開始回測</button></div><div id="extra-strategy-out"></div></div>'+
-'<div class="addons-panel" data-addon="2" hidden><h3>多標的相對績效</h3><p>最多 4 檔，以共同交易日及還原價格比較累積報酬、波動率與最大回撤。</p><div class="addons-control"><label>股票代號<input id="extra-compare" value="SOXL,QQQ,SPY"></label><button type="button" class="primary" id="extra-compare-go">比較</button></div><div id="extra-compare-out"></div></div>'+
-'<div class="addons-panel" data-addon="3" hidden><h3>自選股與 QTemp 提醒</h3><p>清單保存在這台裝置的瀏覽器。按下檢查可取得已確認收盤訊號，瀏覽器通知只在頁面使用期間觸發；Discord 定時通知需另行設定。</p><div class="addons-control"><label>股票代號<input id="extra-watch-input" placeholder="AAPL"></label><button id="extra-watch-add" type="button">加入</button><button id="extra-watch-go" type="button" class="primary">檢查自選股</button></div><div id="extra-watch-tags" class="addons-watchlist"></div><div class="addons-control"><label>QTemp 超賣門檻<input type="number" id="extra-threshold" value="-90" min="-100" max="0"></label><button type="button" id="extra-notify">啟用瀏覽器通知</button></div><div id="extra-watch-out"></div></div>'+
-'<div class="addons-panel" data-addon="4" hidden><h3>匯出與分享</h3><p>匯出目前股票的日線資料、訊號與勝率結果，或分享帶股票代號的網址。</p><div class="addons-export"><button id="extra-daily" type="button">日線 CSV</button><button id="extra-events" type="button">訊號 CSV</button><button id="extra-study" type="button">勝率 CSV</button><button id="extra-link" type="button">複製網址</button><button id="extra-print" type="button">列印／另存 PDF</button></div><p id="extra-export-out"></p></div>';
+shell.innerHTML='<div class="addons-panel" data-addon="1" hidden></div>'+
+ '<div class="addons-panel" data-addon="2" hidden></div>'+
+ '<div class="addons-panel" data-addon="3" hidden></div>'+
+ '<div class="addons-panel" data-addon="4" hidden><h3>資料與匯出</h3><p>以目前分析標的的已確認 Yahoo Finance 日線與 QTemp 訊號為準。</p>'+
+ '<div class="addons-export"><button type="button" id="extra-daily">日線 CSV</button>'+
+ '<button type="button" id="extra-events">訊號 CSV</button>'+
+ '<button type="button" id="extra-study">勝率 CSV</button>'+
+ '<button type="button" id="extra-link">複製網址</button>'+
+ '<button type="button" id="extra-print">列印／另存 PDF</button></div>'+
+ '<p id="extra-export-out" role="status"></p></div>';
 root.querySelector('[data-q="results"]').insertAdjacentElement('afterend',shell);
-const el=id=>document.getElementById(id);
-shell.querySelectorAll('[data-addon-tab]').forEach(button=>button.onclick=()=>{shell.querySelectorAll('[data-addon-tab]').forEach(x=>x.setAttribute('aria-selected',String(x===button)));shell.querySelectorAll('[data-addon]').forEach(x=>x.hidden=x.dataset.addon!==button.dataset.addonTab)});
-const pct=v=>v==null?'—':(100*v).toFixed(2)+'%';
-const num=v=>v==null?'—':Number(v).toLocaleString('zh-TW',{maximumFractionDigits:2});
-async function api(method,args){const abort=new AbortController();const timer=setTimeout(()=>abort.abort(),120000);try{const r=await fetch('/api/'+method,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({args}),signal:abort.signal});const data=await r.json();if(!r.ok||data.error)throw Error(data.error||'API 錯誤');return data}finally{clearTimeout(timer)}}
-function table(cols,rows){
- const wrap=document.createElement('div');wrap.className='addons-table';
- const t=document.createElement('table'),head=t.createTHead().insertRow();
- cols.forEach(x=>{const th=document.createElement('th');th.textContent=x;head.append(th)});
- const body=t.createTBody();wrap.append(t);
- const pageSize=15,totalPages=Math.max(1,Math.ceil(rows.length/pageSize));let page=0;
- const pager=document.createElement('div');pager.className='addons-pager';
- const previous=document.createElement('button');previous.type='button';previous.textContent='上一頁';
- const next=document.createElement('button');next.type='button';next.textContent='下一頁';
- const state=document.createElement('span');
- const draw=()=>{
-  body.replaceChildren();
-  rows.slice(page*pageSize,(page+1)*pageSize).forEach(row=>{
-   const tr=body.insertRow();
-   row.forEach(value=>tr.insertCell().textContent=value==null?'—':String(value))
-  });
-  previous.disabled=page===0;next.disabled=page>=totalPages-1;
-  state.textContent=(page+1)+' / '+totalPages+' 頁 · 共 '+rows.length+' 筆';
- };
- previous.onclick=()=>{page=Math.max(0,page-1);draw()};
- next.onclick=()=>{page=Math.min(totalPages-1,page+1);draw()};
- pager.append(previous,state,next);wrap.append(pager);draw();
- return wrap;
+// Preserve navigation's existing addon selection contract without legacy UIs.
+for(const id of ['1','2','3','4']){
+ const tab=document.createElement('button');tab.type='button';
+ tab.hidden=true;tab.dataset.addonTab=id;tab.setAttribute('aria-selected','false');
+ tab.onclick=()=>{shell.querySelectorAll('[data-addon]').forEach(p=>p.hidden=p.dataset.addon!==id)};
+ shell.prepend(tab);
 }
-function summary(items){const wrap=document.createElement('div');wrap.className='addons-summary';items.forEach(([title,value])=>{const item=document.createElement('div');item.className='addons-metric';const a=document.createElement('span');a.textContent=title;const b=document.createElement('strong');b.textContent=value;item.append(a,b);wrap.append(item)});return wrap}
-async function execute(btn,out,method,args,renderer){btn.disabled=true;out.textContent='資料計算中…';try{const res=await api(method,args);out.replaceChildren();renderer(res,out)}catch(e){out.textContent='讀取失敗：'+(e.message||e)}finally{btn.disabled=false}}
-function plot(series){const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox','0 0 850 260');svg.classList.add('addons-svg');const all=series.flatMap(x=>x.points.map(p=>p[1]));const min=Math.min(0,...all),max=Math.max(0,...all),span=max-min||1;const colors=['#18588f','#bd7833','#12836e','#795bab'];series.forEach((item,j)=>{const poly=document.createElementNS('http://www.w3.org/2000/svg','polyline');const points=item.points.map((p,i)=>(34+782*i/Math.max(item.points.length-1,1)).toFixed(2)+','+(233-200*(p[1]-min)/span).toFixed(2)).join(' ');poly.setAttribute('points',points);poly.setAttribute('stroke',colors[j%4]);poly.setAttribute('stroke-width','2.4');poly.setAttribute('fill','none');svg.append(poly)});const box=document.createElement('div');box.append(svg);const legend=document.createElement('div');legend.className='addons-legend';series.forEach((s,i)=>{const span=document.createElement('span');span.textContent='● '+s.symbol;span.style.color=colors[i%4];legend.append(span)});box.append(legend);return box}
-el('extra-strategy-go').onclick=()=>execute(el('extra-strategy-go'),el('extra-strategy-out'),'strategy',[el('extra-strategy').value,el('extra-entry').value,el('extra-exit').value,el('extra-fee').value,el('extra-hold').value],(r,o)=>{o.append(summary([['累積報酬',pct(r.totalReturn)],['年化 CAGR',pct(r.cagr)],['最大回撤',pct(r.maxDrawdown)],['交易勝率',pct(r.wins)],['完成交易',r.tradeCount],['Sharpe',num(r.sharpeZeroRf)]]));o.append(plot([{symbol:'策略資金曲線',points:r.curve.map(x=>[x[0],(x[1]-1)*100])}]));o.append(table(['進場日','出場日','交易報酬'],r.trades.map(t=>[t.entry,t.exit,pct(t.return)])));const p=document.createElement('p');p.textContent=r.note;o.append(p)});
-el('extra-compare-go').onclick=()=>execute(el('extra-compare-go'),el('extra-compare-out'),'compare_assets',[el('extra-compare').value],(r,o)=>{o.append(summary([['共同起點',r.start],['共同終點',r.end]]));o.append(plot(r.assets));o.append(table(['代號','總報酬','CAGR','最大回撤','年化波動','QTemp'],r.assets.map(a=>[a.symbol,pct(a.totalReturn),pct(a.cagr),pct(a.maxDrawdown),pct(a.volatility),num(a.qtemp)])));const p=document.createElement('p');p.textContent=r.note+(r.errors.length?'；資料失敗：'+r.errors.join('；'):'');o.append(p)});
-const storage='qtemp_watchlist_v1';let watch=[];try{watch=JSON.parse(localStorage.getItem(storage)||'["SOXL","COHR","MRVL"]');if(!Array.isArray(watch))watch=[]}catch{}watch=watch.filter(x=>typeof x==='string'&&/^[A-Z0-9.^=_-]{1,30}$/.test(x)).slice(0,6);
-function renderWatch(){el('extra-watch-tags').replaceChildren();watch.forEach(s=>{const tag=document.createElement('span');tag.className='addons-tag';tag.append(document.createTextNode(s));const remove=document.createElement('button');remove.textContent='×';remove.type='button';remove.setAttribute('aria-label','移除 '+s);remove.onclick=()=>{watch=watch.filter(x=>x!==s);saveWatch()};tag.append(remove);el('extra-watch-tags').append(tag)})}
-function saveWatch(){try{localStorage.setItem(storage,JSON.stringify(watch))}catch{}renderWatch()}
-el('extra-watch-add').onclick=()=>{const s=el('extra-watch-input').value.trim().toUpperCase();if(!/^[A-Z0-9.^=_-]{1,30}$/.test(s)){el('extra-watch-out').textContent='代號格式錯誤';return}if(!watch.includes(s)){if(watch.length>=6){el('extra-watch-out').textContent='最多 6 檔';return}watch.push(s)}el('extra-watch-input').value='';saveWatch()};
-el('extra-notify').onclick=async()=>{if(!('Notification' in window)){el('extra-watch-out').textContent='瀏覽器不支援通知';return}el('extra-notify').textContent=await Notification.requestPermission()==='granted'?'通知已授權':'通知未授權'};
-el('extra-watch-go').onclick=()=>{if(!watch.length){el('extra-watch-out').textContent='請加入股票';return}execute(el('extra-watch-go'),el('extra-watch-out'),'scan',[watch.join(',')],(r,o)=>{o.append(table(['代號','QTemp','最新訊號','確認日'],r.items.map(x=>[x.symbol,num(x.score),x.signal,x.error||x.signalDate])));let seen={};try{seen=JSON.parse(localStorage.getItem('qtemp_seen_v1')||'{}')}catch{}for(const x of r.items){if(!x.error&&x.score<=Number(el('extra-threshold').value)&&seen[x.symbol]!==x.end){if('Notification'in window&&Notification.permission==='granted')new Notification('QTemp 超賣 '+x.symbol,{body:'QTemp '+num(x.score)+' · '+x.end});seen[x.symbol]=x.end}}try{localStorage.setItem('qtemp_seen_v1',JSON.stringify(seen))}catch{}})};
-renderWatch();
-function csv(rows){return '\ufeff'+rows.map(row=>row.map(v=>'"'+String(v??'').replaceAll('"','""')+'"').join(',')).join('\r\n')}
-function download(name,body){const blob=new Blob([body],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
-async function exportCsv(kind){const symbol=root.querySelector('[data-q="symbol"]').value.trim().toUpperCase();try{el('extra-export-out').textContent='匯出中…';const data=await api('analyze',[symbol]);let rows;if(kind==='daily')rows=[data.daily.columns,...data.daily.rows];else if(kind==='events')rows=[data.events.columns,...data.events.rows];else rows=[['訊號','持有天數','有效樣本','方向勝率','平均報酬','方向報酬','平均MAE'],...data.forwardStudy.rows.map(x=>[x.signal,x.days,x.count,x.winRate,x.avgReturn,x.avgDirectional,x.avgMAE])];download('QTemp_'+symbol+'_'+kind+'.csv',csv(rows));el('extra-export-out').textContent='已下載 '+kind+' CSV'}catch(e){el('extra-export-out').textContent='匯出失敗：'+e.message}}
-el('extra-daily').onclick=()=>exportCsv('daily');el('extra-events').onclick=()=>exportCsv('events');el('extra-study').onclick=()=>exportCsv('study');
-el('extra-link').onclick=async()=>{const url=new URL(location.href);url.searchParams.set('symbol',root.querySelector('[data-q="symbol"]').value.trim().toUpperCase());try{await navigator.clipboard.writeText(url.toString());el('extra-export-out').textContent='網址已複製'}catch{el('extra-export-out').textContent=url.toString()}};
+const el=id=>document.getElementById(id);
+async function request(method,args){
+ const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),120000);
+ try{
+  const res=await fetch('/api/'+method,{method:'POST',headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({args}),signal:controller.signal});
+  const result=await res.json();if(!res.ok||result.error)throw Error(result.error||'資料取得失敗');
+  return result;
+ }finally{clearTimeout(timer)}
+}
+const csv=rows=>'\ufeff'+rows.map(row=>row.map(v=>'"'+String(v??'').replaceAll('"','""')+'"').join(',')).join('\r\n');
+function download(name,body){
+ const url=URL.createObjectURL(new Blob([body],{type:'text/csv;charset=utf-8'}));
+ const a=document.createElement('a');a.href=url;a.download=name;a.click();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+async function exportCsv(kind){
+ const symbol=root.querySelector('[data-q="symbol"]').value.trim().toUpperCase();
+ const out=el('extra-export-out');out.textContent='匯出資料中…';
+ try{
+  const data=await request('analyze',[symbol]);
+  let rows;
+  if(kind==='daily')rows=[data.daily.columns,...data.daily.rows];
+  else if(kind==='events')rows=[data.events.columns,...data.events.rows];
+  else rows=[['訊號','持有天數','有效樣本','方向勝率','平均報酬','方向報酬','平均MAE'],
+   ...data.forwardStudy.rows.map(x=>[x.signal,x.days,x.count,x.winRate,x.avgReturn,x.avgDirectional,x.avgMAE])];
+  download('QTemp_'+symbol+'_'+kind+'.csv',csv(rows));
+  out.textContent='已下載 '+kind+' CSV';
+ }catch(e){out.textContent='匯出失敗：'+e.message}
+}
+el('extra-daily').onclick=()=>exportCsv('daily');
+el('extra-events').onclick=()=>exportCsv('events');
+el('extra-study').onclick=()=>exportCsv('study');
+el('extra-link').onclick=async()=>{
+ const url=new URL(location.href);
+ url.searchParams.set('symbol',root.querySelector('[data-q="symbol"]').value.trim().toUpperCase());
+ try{await navigator.clipboard.writeText(url.toString());el('extra-export-out').textContent='已複製網址'}
+ catch{el('extra-export-out').textContent=url.toString()}
+};
 el('extra-print').onclick=()=>window.print();
-const shared=new URLSearchParams(location.search).get('symbol');if(shared&&/^[A-Z0-9.^=_-]{1,30}$/i.test(shared)){root.querySelector('[data-q="symbol"]').value=shared.toUpperCase();window.addEventListener('load',()=>root.querySelector('[data-q="load"]').click(),{once:true})}
+const shared=new URLSearchParams(location.search).get('symbol');
+if(shared&&/^[A-Z0-9.^=_-]{1,30}$/i.test(shared)){
+ root.querySelector('[data-q="symbol"]').value=shared.toUpperCase();
+}
 })();
