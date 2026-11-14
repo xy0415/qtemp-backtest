@@ -125,6 +125,7 @@ function performance(){
  const bm=data.benchmarkMetrics;
  const rows=keys.map(k=>[names[k],...data.assets.map(x=>metric(k,x.metrics[k])),
    ['beta','alpha','trackingError','informationRatio'].includes(k)?'—':metric(k,bm[k])]);
+ rows.push(['最新 QTemp（該標的最近確認日 K）',...data.assets.map(x=>x.qtemp==null?'—':fmt(x.qtemp)),'—']);
  basic.append(table(columns,rows));panel.append(basic);
  const span=section('標的歷史資料範圍','共同交易日以所有比較標的及選定基準的交集決定，不補齊缺失資料。');
  span.append(table(['代號','最早資料','最新收盤','歷史日 K'],Object.entries(data.listed).map(([sym,x])=>[sym,x.first,x.last,fmt(x.bars,0)])));
