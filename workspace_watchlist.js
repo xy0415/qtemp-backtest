@@ -12,7 +12,8 @@ panel.innerHTML='<div class="qa-workspace"><div class="qa-section-heading"><h3>�
 '<label>排序 <select id="qa-watch-sort"><option value="manual">自訂順序</option><option value="symbol">代號 A–Z</option><option value="updated">最近更新</option><option value="score">QTemp 分數</option></select></label>'+
 '<input id="qa-watch-search" type="search" placeholder="搜尋標的或備註" aria-label="搜尋自選股">'+
 '<button type="button" id="qa-watch-check">更新可見標的（最多6檔）</button>'+
-'<label>QTemp 提醒門檻 <input type="number" id="qa-watch-threshold" min="-100" max="0" step="5" value="-90" style="width:74px"></label>'+
+'<label>提醒類型 <select id="qa-watch-alert-mode"><option value="both">區間與新確認訊號</option><option value="zone">僅分數區間</option><option value="signal">僅當日確認訊號</option></select></label>'+ 
+'<label>QTemp 分數門檻 <input type="number" id="qa-watch-threshold" min="-100" max="0" step="5" value="-90" style="width:74px"></label>'+
 '<button type="button" id="qa-watch-notify">啟用瀏覽器通知</button>'+
 '<button type="button" id="qa-watch-export">匯出 JSON</button>'+
 '<label class="qa-watch-import">匯入 JSON <input id="qa-watch-import" type="file" accept=".json,application/json" hidden></label></div>'+
@@ -21,6 +22,14 @@ panel.innerHTML='<div class="qa-workspace"><div class="qa-section-heading"><h3>�
 const $=id=>document.getElementById(id);
 const KEY='qtemp_watchspace_v2',LEGACY='qtemp_watchlist_v1';
 const thresholdKey='qtemp_watch_threshold_v2';
+const alertModeKey='qtemp_watch_alert_mode_v1';
+try{
+ const saved=localStorage.getItem(alertModeKey);
+ if(['both','zone','signal'].includes(saved))$('qa-watch-alert-mode').value=saved;
+}catch{}
+$('qa-watch-alert-mode').onchange=()=>{
+ try{localStorage.setItem(alertModeKey,$('qa-watch-alert-mode').value)}catch{}
+};
 try{const n=Number(localStorage.getItem(thresholdKey));if(Number.isFinite(n)&&n>=-100&&n<=0)$('qa-watch-threshold').value=String(n)}catch{}
 const symbolOK=s=>/^[A-Z0-9.^=_-]{1,30}$/.test(s);
 const tidy=s=>String(s??'').trim().slice(0,180);
@@ -141,11 +150,26 @@ $('qa-watch-check').onclick=async()=>{
   message('查詢完成 '+result.items.length+' 檔'+(failures.length?'；資料不可用：'+failures.map(x=>x.symbol).join('、'):'')+'。數值使用最新已確認收盤日 K，並非即時報價。');
   if('Notification' in window&&Notification.permission==='granted'){
    for(const r of result.items){
-    if(r.error||r.score>Number($('qa-watch-threshold').value)||!r.end)continue;
-    const key='qtemp_watch_alert_'+r.symbol,seen=localStorage.getItem(key);
-    if(seen===r.end)continue;
-    new Notification('QTemp 低估值觀察 '+r.symbol,{body:'已確認日 K '+r.end+' · QTemp '+Number(r.score).toFixed(2)});
-    try{localStorage.setItem(key,r.end)}catch{}
+    if(r.error||!r.end)continue;
+    const mode=$('qa-watch-alert-mode').value;
+    const zoneHit=Number.isFinite(Number(r.score)) && Number(r.score)<=Number($('qa-watch-threshold').value);
+    const signalHit=Boolean(r.signalDate===r.end && r.signal && r.signal!=='—');
+    const notices=[];
+    if(mode!=='signal'&&zoneHit)notices.push({
+      kind:'zone',title:'QTemp 分數區間提醒 '+r.symbol,
+      body:'已確認日 K '+r.end+' · QTemp '+Number(r.score).toFixed(2)+'（不代表新確認訊號）'
+    });
+    if(mode!=='zone'&&signalHit)notices.push({
+      kind:'signal',title:'QTemp 當日已確認訊號 '+r.symbol,
+      body:'確認日 '+r.end+' · 訊號 '+r.signal+' · QTemp '+Number(r.score).toFixed(2)
+    });
+    for(const notice of notices){
+      const key='qtemp_watch_alert_v2_'+notice.kind+'_'+r.symbol;
+      let seen=null;try{seen=localStorage.getItem(key)}catch{}
+      if(seen===r.end)continue;
+      new Notification(notice.title,{body:notice.body});
+      try{localStorage.setItem(key,r.end)}catch{}
+    }
    }
   }
  }catch(error){message('檢查失敗：'+(error.name==='AbortError'?'請求逾時':error.message))}
