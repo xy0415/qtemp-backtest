@@ -20,18 +20,20 @@ brand.className='qbrand';brand.href='#overview';
 brand.innerHTML='<span class="qbrand-mark" aria-hidden="true"><img src="/favicon.svg?v=2" alt="" width="35" height="35"></span><span>QTemp Analytics</span>';
 header.append(brand);
 const nav=document.createElement('nav');nav.className='qtopnav';nav.setAttribute('aria-label','網站主導覽');
-routes.forEach(([id,label])=>{
+routes.filter(r=>!['zones','resources'].includes(r[0])).forEach(([id,label])=>{
  const button=document.createElement('button');button.type='button';button.dataset.route=id;button.textContent=label;
- button.onclick=()=>go(id);nav.append(button);
+ button.onclick=()=>{if(id==='signals' && root.dataset.view==='zones')subSignal='study';go(id)};nav.append(button);
 });
 header.append(nav);
 const mobileNav=document.createElement('label');mobileNav.className='qroute-switch';
 mobileNav.textContent='功能';
 const mobileSelect=document.createElement('select');mobileSelect.setAttribute('aria-label','切換功能頁面');
-routes.forEach(([id,label])=>mobileSelect.add(new Option(label,id)));
-mobileSelect.onchange=()=>go(mobileSelect.value);
+routes.filter(r=>!['zones','resources'].includes(r[0])).forEach(([id,label])=>mobileSelect.add(new Option(label,id)));
+mobileSelect.onchange=()=>{if(mobileSelect.value==='signals'&&root.dataset.view==='zones')subSignal='study';go(mobileSelect.value)};
 mobileNav.append(mobileSelect);header.append(mobileNav);
-const status=document.createElement('span');status.className='qtopend';status.textContent='歷史資料研究平台';header.append(status);
+const help=document.createElement('button');
+help.type='button';help.className='qtopend qhelp-link';help.dataset.go='resources';
+help.textContent='資料與說明';header.append(help);
 base.before(header);
 const hero=document.createElement('section');hero.className='qhero';
 hero.innerHTML='<div class="qhero-content"><span class="qeyebrow">QTEMP ANALYTICS</span><h1>QTemp Analytics</h1><div class="qactions"><button type="button" class="primary" data-go="chart">行情圖表</button><button type="button" data-go="signals">訊號研究</button></div></div><div class="qpreview"><div class="qpreview-top"><strong>QTemp 指標</strong><span>最近收盤資料</span></div><div class="qpreview-value" data-preview-score>—</div><div class="qpreview-bottom"><span>最新已確認日 K 的分數</span></div></div>';
@@ -42,7 +44,7 @@ for(const [route,icon,title,description] of [
 ['signals','↗','訊號研究','歷史勝率與年度表現'],
 ['strategy','▥','策略回測','資金曲線與風險評估'],
 ['watchlist','◇','自選股','集中追蹤觀察標的'],
-['resources','∑','研究資源','公式、來源與資料匯出']
+['compare','⊞','多資產分析','資產風險與績效比較']
 ]){
  const card=document.createElement('button');card.type='button';card.dataset.go=route;card.innerHTML='<b aria-hidden="true">'+icon+'</b><strong>'+title+'</strong><span>'+description+'</span>';shortcuts.append(card);
 }
@@ -54,10 +56,11 @@ hero.insertAdjacentElement('afterend',intro);
 
 
 const tabs=document.createElement('div');tabs.className='qsubnav';tabs.setAttribute('aria-label','研究子分頁');
-results.querySelector('.tabs').before(tabs);
+intro.after(tabs);
 const footer=document.createElement('footer');footer.className='qdisclaimer';
 footer.innerHTML='<span>© QTemp Analytics · 指標與歷史回測僅供研究參考，不構成投資建議。</span><span>Yahoo Finance 資料可能延遲 · 回測採 Adj Close 還原與確認日 K</span>';
 root.append(footer);
+const footerHelp=document.createElement('button');footerHelp.type='button';footerHelp.dataset.go='resources';footerHelp.textContent='資料、公式與匯出';footer.append(footerHelp);
 let current='',subSignal='study',subResource='formula';
 const originalTabs={chart:'chart',study:'study',annual:'annual',events:'events',details:'details',raw:'raw',audit:'compare'};
 function originalTab(tab){
@@ -71,7 +74,7 @@ function extraTab(id){
 function setSubnav(view){
  tabs.replaceChildren();tabs.className='qsubnav '+(view==='signals'?'qsignal-tabs':'qresource-tabs');
  let choices;
- if(view==='signals')choices=[['study','歷史勝率'],['event','事件研究'],['calendar','訊號日曆'],['annual','年度統計'],['events','訊號明細']];
+ if(view==='signals')choices=[['study','歷史勝率'],['zones','區間統計'],['event','事件研究'],['calendar','訊號日曆'],['annual','年度統計'],['events','訊號明細']];
  else if(view==='resources')choices=[['formula','指標公式'],['quality','資料品質'],['details','基本資料'],['raw','日線資料'],['audit','TradingView 對照'],['export','匯出與分享']];
  else{tabs.hidden=true;return}
  tabs.hidden=false;
@@ -82,6 +85,8 @@ function setSubnav(view){
   btn.onclick=()=>{
    if(view==='signals'){
      subSignal=key;
+     if(key==='zones'){go('zones');return;}
+     if(root.dataset.view==='zones'){go('signals');return;}
      if(!['event','calendar'].includes(key))originalTab(key);
    } else {
      subResource=key;
@@ -97,22 +102,23 @@ function setSubnav(view){
 }
 function go(route,updateHash=true){
  if(route==='scanner')route='strategy';
+ if(route==='zones')subSignal='zones';
  if(!routes.some(r=>r[0]===route))route='overview';
  current=route;
  root.dataset.view=route;
  root.dataset.resource=subResource;
- nav.querySelectorAll('[data-route]').forEach(b=>b.setAttribute('aria-current',b.dataset.route===route?'page':'false'));
+ nav.querySelectorAll('[data-route]').forEach(b=>b.setAttribute('aria-current',b.dataset.route===(route==='zones'?'signals':route)?'page':'false'));
  const info=routes.find(r=>r[0]===route);
- mobileSelect.value=route;
+ mobileSelect.value=route==='zones'?'signals':route;
  intro.querySelector('[data-crumb=current]').textContent=info[1];
  intro.querySelector('h2').textContent=info[2];intro.querySelector('p').textContent=info[3];
- setSubnav(route);
+ setSubnav(route==='zones'?'signals':route);
  const insight=route==='signals' && ['event','calendar'].includes(subSignal)?subSignal:
    route==='resources' && subResource==='quality'?'quality':'';
  root.dataset.insight=insight;
  document.dispatchEvent(new CustomEvent('qtemp-insight-show',{detail:{tab:insight}}));
  if(route==='chart')originalTab('chart');
- if(route==='signals' && !['event','calendar'].includes(subSignal))originalTab(subSignal);
+ if(route==='signals' && !['event','calendar','zones'].includes(subSignal))originalTab(subSignal);
  if(route==='resources'){
   extraTab('4');
   if(!['formula','export','quality'].includes(subResource))originalTab(originalTabs[subResource]);
