@@ -1,0 +1,119 @@
+/* QTemp Analytics — Financial Markets Portal 2026 */
+#qtemp_root .fm-portal{display:grid;gap:18px;margin:12px 0 26px}
+#qtemp_root .fm-panel{background:rgba(255,255,255,.90);border:1px solid #e4e9f6;
+ border-radius:17px;padding:21px 22px;box-shadow:inset 0 1px rgba(255,255,255,.95),
+ 0 11px 26px rgba(62,76,145,.05);min-width:0;position:relative}
+#qtemp_root .fm-heading{display:flex;flex-direction:column;gap:3px;margin-bottom:16px}
+#qtemp_root .fm-heading h2{font-size:17px;letter-spacing:-.015em;margin:0;color:#2d3755}
+#qtemp_root .fm-heading p{font-size:11px;color:#8290a6;margin:2px 0;line-height:1.7}
+#qtemp_root .fm-indices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}
+#qtemp_root .fm-quote{display:block!important;text-align:left;min-width:0;
+ border:1px solid rgba(218,226,245,.94)!important;border-radius:13px!important;
+ background:linear-gradient(140deg,rgba(255,255,255,.95),rgba(246,248,255,.86))!important;
+ padding:15px 15px 13px!important;box-shadow:0 6px 17px rgba(67,83,148,.04);
+ transition:transform .16s ease,border-color .16s ease}
+#qtemp_root .fm-quote:hover{transform:translateY(-2px);border-color:#abb7f7!important}
+#qtemp_root .fm-quote.fm-sox{background:linear-gradient(124deg,#f0efff,#eaf4ff)!important;
+ border-color:#b6c1f3!important;box-shadow:inset 0 1px #fff,0 9px 21px #535fca13}
+#qtemp_root .fm-quote-head{display:flex;align-items:center;justify-content:space-between;gap:7px;min-width:0}
+#qtemp_root .fm-quote-head strong{font-size:12px;font-weight:730;color:#35415e;line-height:1.4}
+#qtemp_root .fm-quote-head span{font-size:10px;color:#8b98ac;flex:none}
+#qtemp_root .fm-price{font-variant-numeric:tabular-nums;font-size:clamp(17px,1.65vw,24px);
+ font-weight:750;color:#303f60;margin:12px 0 4px;letter-spacing:-.01em}
+#qtemp_root .fm-change{font-size:12px;color:#7c8ca5;font-variant-numeric:tabular-nums;font-weight:650}
+#qtemp_root .fm-change.fm-positive{color:#cf5974}
+#qtemp_root .fm-change.fm-negative{color:#169b89}
+#qtemp_root .fm-asof{font-size:10px;color:#97a2b5;display:block;margin-top:11px;line-height:1.5}
+#qtemp_root .fm-two-col{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px;align-items:start}
+#qtemp_root .fm-sector-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:13px}
+#qtemp_root .fm-chart{min-height:260px;padding:12px 5px 0;background:linear-gradient(130deg,#fff,#f9faff);
+ border:1px solid #eff0f7;border-radius:11px}
+#qtemp_root .fm-chart svg{display:block;width:100%;height:auto}
+#qtemp_root .fm-chart-tools{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+#qtemp_root .fm-chart-tools select,#qtemp_root .fm-stock-search input{
+ padding:9px 12px;border:1px solid #dfe4f1;border-radius:10px;
+ color:#35435d;background:rgba(255,255,255,.95);min-width:0}
+#qtemp_root .fm-chart-tools select:first-child{min-width:180px;max-width:100%}
+#qtemp_root .fm-chart-link{margin-left:auto}
+#qtemp_root .fm-source-link,#qtemp_root .fm-chart-link{color:#5368cd;font-size:12px;
+ text-decoration:none;line-height:1.65;overflow-wrap:anywhere}
+#qtemp_root .fm-source-link:hover,#qtemp_root .fm-chart-link:hover{text-decoration:underline}
+#qtemp_root .fm-panel>.fm-source-link{display:block;padding:8px 0;border-bottom:1px solid #f0f1f6}
+#qtemp_root .fm-source-row{display:flex;gap:17px;flex-wrap:wrap;margin-top:15px}
+#qtemp_root .fm-news-item{border-bottom:1px solid #edf0f6;padding:11px 0;display:grid;gap:6px}
+#qtemp_root .fm-news-item:first-child{padding-top:0}
+#qtemp_root .fm-news-item:last-child{border-bottom:none}
+#qtemp_root .fm-news-title{font-size:12px;color:#33445f;text-decoration:none;font-weight:620;line-height:1.7}
+#qtemp_root .fm-news-title:hover{color:#5963dd}
+#qtemp_root .fm-meta{font-size:11px;color:#8998ad;line-height:1.7;margin:9px 0}
+#qtemp_root .fm-loading,#qtemp_root .fm-empty{padding:19px;color:#8693a9;font-size:12px;
+ background:#f9faff;border-radius:10px}
+#qtemp_root .fm-data-status{font-size:11px;color:#9aa5b7;line-height:1.7;margin:0 3px}
+#qtemp_root .fm-pill{border-radius:9px!important;background:#f1f2ff!important;
+ border:1px solid #d8dcfd!important;color:#5261ca!important;font-size:12px;
+ padding:9px 15px;margin:8px 8px 0 0}
+#qtemp_root .fm-stock-search{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+#qtemp_root .fm-stock-search input{flex:1 1 240px}
+#qtemp_root .fm-tool-card{display:grid;gap:10px;text-align:left;align-content:start;
+ padding:18px!important;border-radius:13px!important;background:linear-gradient(130deg,#fff,#f5f6ff)!important;
+ border:1px solid #e1e7f6!important;min-height:105px}
+#qtemp_root .fm-tool-card strong{font-size:14px;color:#33415f}
+#qtemp_root .fm-tool-card span{font-size:12px;line-height:1.5;color:#8290a7}
+#qtemp_root .fm-tools-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+#qtemp_root .qhero{grid-template-columns:minmax(0,1.4fr) minmax(0,.6fr)}
+#qtemp_root .qhero .qhero-desc{font-size:13px;line-height:1.7;color:#7887a1;margin:-10px 0 22px}
+#qtemp_root .qhero-aside{display:grid;gap:9px;align-content:center;padding:25px;
+ background:rgba(255,255,255,.45);border:1px solid rgba(255,255,255,.8);border-radius:18px;
+ backdrop-filter:blur(17px) saturate(140%);box-shadow:inset 0 1px #fff}
+#qtemp_root .qhero-aside span{font-size:11px;color:#7683a4}
+#qtemp_root .qhero-aside strong{color:#5c66d5;font-size:21px;line-height:1.35}
+#qtemp_root .qhero-aside small{font-size:11px;color:#8995ab}
+#qtemp_root[data-view=overview] .qhero{min-height:195px;padding:25px 32px!important;margin-bottom:8px}
+#qtemp_root[data-view=overview] .qhero h1{margin-bottom:18px;font-size:clamp(27px,3vw,39px)}
+#qtemp_root[data-view=overview] .qhero .qactions{display:flex!important}
+#qtemp_root[data-view=overview] .qhero-aside{display:grid!important}
+#qtemp_root[data-view=overview] .qshortcut,
+#qtemp_root[data-view=overview] .qa-dashboard,
+#qtemp_root[data-view=overview] .qa-monitor-bottom,
+#qtemp_root[data-view=overview] .query,
+#qtemp_root[data-view=overview] .asset,
+#qtemp_root[data-view=overview] .quote-meta,
+#qtemp_root[data-view=overview] .status,
+#qtemp_root[data-view=overview] [data-q=results],
+#qtemp_root[data-view=overview] .addons,
+#qtemp_root[data-view=overview] .formula{display:none!important}
+#qtemp_root[data-view=resources] .qa-monitor-bottom{display:grid!important}
+#qtemp_root:not([data-view=resources]) .qa-monitor-bottom{display:none!important}
+#qtemp_root[data-view=overview] .fm-portal{display:grid!important}
+#qtemp_root[data-view=markets] .fm-portal,#qtemp_root[data-view=macro] .fm-portal,
+#qtemp_root[data-view=sectors] .fm-portal,#qtemp_root[data-view=stocks] .fm-portal,
+#qtemp_root[data-view=news] .fm-portal,#qtemp_root[data-view=quant] .fm-portal{display:grid!important}
+#qtemp_root[data-view=markets] .query,#qtemp_root[data-view=macro] .query,
+#qtemp_root[data-view=sectors] .query,#qtemp_root[data-view=stocks] .query,
+#qtemp_root[data-view=news] .query,#qtemp_root[data-view=quant] .query,
+#qtemp_root[data-view=markets] .asset,#qtemp_root[data-view=macro] .asset,
+#qtemp_root[data-view=sectors] .asset,#qtemp_root[data-view=stocks] .asset,
+#qtemp_root[data-view=news] .asset,#qtemp_root[data-view=quant] .asset,
+#qtemp_root[data-view=markets] .status,#qtemp_root[data-view=macro] .status,
+#qtemp_root[data-view=sectors] .status,#qtemp_root[data-view=stocks] .status,
+#qtemp_root[data-view=news] .status,#qtemp_root[data-view=quant] .status,
+#qtemp_root[data-view=markets] [data-q=results],#qtemp_root[data-view=macro] [data-q=results],
+#qtemp_root[data-view=sectors] [data-q=results],#qtemp_root[data-view=stocks] [data-q=results],
+#qtemp_root[data-view=news] [data-q=results],#qtemp_root[data-view=quant] [data-q=results],
+#qtemp_root[data-view=markets] .addons,#qtemp_root[data-view=macro] .addons,
+#qtemp_root[data-view=sectors] .addons,#qtemp_root[data-view=stocks] .addons,
+#qtemp_root[data-view=news] .addons,#qtemp_root[data-view=quant] .addons,
+#qtemp_root[data-view=markets] .formula,#qtemp_root[data-view=macro] .formula,
+#qtemp_root[data-view=sectors] .formula,#qtemp_root[data-view=stocks] .formula,
+#qtemp_root[data-view=news] .formula,#qtemp_root[data-view=quant] .formula{display:none!important}
+#qtemp_root:not([data-view=overview]) .qhero{display:none!important}
+#qtemp_root[data-view=quant] .qsubnav,#qtemp_root[data-view=markets] .qsubnav,
+#qtemp_root[data-view=macro] .qsubnav,#qtemp_root[data-view=sectors] .qsubnav,
+#qtemp_root[data-view=stocks] .qsubnav,#qtemp_root[data-view=news] .qsubnav{display:none!important}
+#qtemp_root .qtopnav button{padding:9px 8px;font-size:11px}
+#qtemp_root .qtopbar{gap:15px}
+@media(min-width:1350px){#qtemp_root .qtopnav button{padding:9px 11px;font-size:12px}}
+@media(max-width:1050px){#qtemp_root .fm-two-col{grid-template-columns:1fr}#qtemp_root .fm-indices{grid-template-columns:repeat(2,minmax(0,1fr))}#qtemp_root .fm-sector-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:780px){#qtemp_root .fm-tools-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#qtemp_root .qhero-aside{display:none}#qtemp_root .qhero{grid-template-columns:1fr}#qtemp_root .qtopnav{display:none!important}#qtemp_root .qroute-switch{display:flex!important}}
+@media(max-width:570px){#qtemp_root .fm-panel{padding:14px}#qtemp_root .fm-indices,#qtemp_root .fm-sector-grid{gap:8px}#qtemp_root .fm-quote{padding:11px!important}#qtemp_root .fm-price{font-size:18px}#qtemp_root .fm-quote-head{align-items:start;flex-direction:column}#qtemp_root .fm-quote-head strong{font-size:11px}#qtemp_root .fm-tools-grid{grid-template-columns:1fr}#qtemp_root .fm-chart{min-height:150px}#qtemp_root[data-view=overview] .qhero{padding:18px!important}}
+@media(prefers-reduced-motion:reduce){#qtemp_root .fm-quote{transition:none!important}}
