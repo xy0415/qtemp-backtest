@@ -32,16 +32,16 @@ INDEXES=[
  ("ETH-USD","Ethereum","Crypto","加密"),
 ]
 SECTORS=[
- ("SOXX","半導體","產業 ETF"),
- ("XLK","資訊科技","產業 ETF"),
- ("XLC","通訊服務","產業 ETF"),
- ("XLF","金融","產業 ETF"),
- ("XLE","能源","產業 ETF"),
- ("XLV","醫療保健","產業 ETF"),
- ("XLI","工業","產業 ETF"),
- ("XLY","非必需消費","產業 ETF"),
- ("XLP","必需消費","產業 ETF"),
- ("XLU","公用事業","產業 ETF"),
+ ("SOXX","半導體","US","產業 ETF"),
+ ("XLK","資訊科技","US","產業 ETF"),
+ ("XLC","通訊服務","US","產業 ETF"),
+ ("XLF","金融","US","產業 ETF"),
+ ("XLE","能源","US","產業 ETF"),
+ ("XLV","醫療保健","US","產業 ETF"),
+ ("XLI","工業","US","產業 ETF"),
+ ("XLY","非必需消費","US","產業 ETF"),
+ ("XLP","必需消費","US","產業 ETF"),
+ ("XLU","公用事業","US","產業 ETF"),
 ]
 ENTRIES=INDEXES+SECTORS
 SOURCES=[
