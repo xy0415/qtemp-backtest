@@ -106,13 +106,24 @@ def _entry(entry):
         prior=float(prices.iloc[-2]) if len(prices)>1 else None
         delta=today-prior if prior is not None else None
         percent=100*delta/prior if prior and prior>0 else None
+        # Yahoo ^TNX quote scales the 10-year yield by 10; display actual percent and changes in bp.
+        yield_rate=ticker=="^TNX"
+        change_bps=delta*10 if yield_rate and delta is not None else None
+        if yield_rate:
+            today/=10
+            prior=prior/10 if prior is not None else None
+            delta=delta/10 if delta is not None else None
+            percent=None
         sampled=prices.iloc[-200:].copy()
+        if yield_rate:sampled=sampled/10
         if len(sampled)>100:
             positions=sorted(set([0,len(sampled)-1,*[round(i*(len(sampled)-1)/99) for i in range(100)]]))
             sampled=sampled.iloc[positions]
         return {"ticker":ticker,"name":label,"category":kind,"region":region,
             "value":_clean(today),"previous":_clean(prior),"change":_clean(delta),
-            "changePct":_clean(percent),"asOf":prices.index[-1].strftime("%Y-%m-%d"),
+            "changePct":_clean(percent),"changeBp":_clean(change_bps),
+            "unit":"%" if yield_rate else None,
+            "asOf":prices.index[-1].strftime("%Y-%m-%d"),
             "currency":"USD" if ticker in ("BTC-USD","ETH-USD","GC=F","CL=F") else
                 "TWD/USD" if ticker=="TWD=X" else "index" if ticker.startswith("^") else "USD",
             "series":[[d.strftime("%Y-%m-%d"),_clean(v)] for d,v in sampled.items()],
@@ -183,6 +194,8 @@ def market_history(symbol,period="1y"):
     if symbol not in allowed:raise ValueError("不支援的市場代號")
     if period not in ("1mo","3mo","6mo","1y","2y","5y"):raise ValueError("不支援的期間")
     prices=_cache_get(("history",symbol,period),900,lambda:_history(symbol,period))
+    if symbol=="^TNX":prices=prices/10.0
     return {"symbol":symbol,"period":period,"asOf":prices.index[-1].strftime("%Y-%m-%d"),
         "points":[[d.strftime("%Y-%m-%d"),_clean(v)] for d,v in prices.items()],
-        "source":"Yahoo Finance 日 K · 原始 Close（不是 Adj Close，指數、商品與加密資產各有不同口徑）"}
+        "source":"Yahoo Finance 日 K；10Y ^TNX 轉換為殖利率 %（原代號值除以 10）" if symbol=="^TNX" else
+                 "Yahoo Finance 日 K · 原始 Close（不是 Adj Close，指數、商品與加密資產各有不同口徑）"}
