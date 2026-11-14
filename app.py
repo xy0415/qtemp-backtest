@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from threading import Lock
 from time import monotonic
 from qtemp_core import site_analyze, site_compare, site_search, site_quote, site_closed_day
-from research_features import scan, compare as compare_assets, strategy
+from research_features import scan
 from capital_backtest import capital_comparison
 from research_insights import site_research
 from qtemp_zones import site_zones
@@ -114,13 +114,13 @@ def health():
 
 @app.post('/api/<method>')
 def api(method):
-    if method not in ('search', 'analyze', 'compare', 'quote', 'closed_day', 'scan', 'compare_assets', 'strategy', 'capital_comparison', 'research', 'zones', 'deep_compare'):
+    if method not in ('search', 'analyze', 'compare', 'quote', 'closed_day', 'scan', 'capital_comparison', 'research', 'zones', 'deep_compare'):
         return jsonify({'error': '不支援的操作'}), 404
     payload = request.get_json(silent=True)
     if not isinstance(payload, dict) or not isinstance(payload.get('args'), list):
         return jsonify({'error': '請求格式不正確'}), 400
     args = payload['args']
-    if (method in ('search','analyze','quote','closed_day','scan','compare_assets','research','zones') and len(args) != 1) or (method == 'compare' and len(args) != 2) or (method == 'strategy' and len(args) != 5) or (method == 'capital_comparison' and len(args) != 9) or (method == 'deep_compare' and len(args) != 7):
+    if (method in ('search','analyze','quote','closed_day','scan','compare_assets','research','zones') and len(args) != 1) or (method == 'compare' and len(args) != 2) or (method == 'capital_comparison' and len(args) != 9) or (method == 'deep_compare' and len(args) != 7):
         return jsonify({'error': '參數數量不正確'}), 400
     if any(not isinstance(v, str) for v in args):
         return jsonify({'error': '參數必須為文字'}), 400
@@ -129,7 +129,7 @@ def api(method):
     if method != 'compare' and len(args[0]) > 100:
         return jsonify({'error': '搜尋內容過長'}), 400
     try:
-        result = {'search': site_search, 'analyze': site_analyze, 'compare': site_compare, 'quote': site_quote, 'closed_day': site_closed_day, 'scan': scan, 'compare_assets': compare_assets, 'strategy': strategy, 'capital_comparison': capital_comparison, 'research': site_research, 'zones': site_zones, 'deep_compare': compare_deep}[method](*args)
+        result = {'search': site_search, 'analyze': site_analyze, 'compare': site_compare, 'quote': site_quote, 'closed_day': site_closed_day, 'scan': scan, 'capital_comparison': capital_comparison, 'research': site_research, 'zones': site_zones, 'deep_compare': compare_deep}[method](*args)
         if isinstance(result,dict):
             _monitor_result(result.get('error'),result.get('dataSourceStatus') or result.get('quality',{}).get('dataStatus'))
         else:
