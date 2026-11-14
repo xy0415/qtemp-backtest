@@ -6,7 +6,9 @@ from app import app
 class StreamlinedUiTests(unittest.TestCase):
     def test_primary_navigation_and_legacy_hashes(self):
         js=Path("platform_navigation.js").read_text(encoding="utf-8")
-        self.assertIn("routes.filter(r=>!['zones','resources'].includes(r[0]))",js)
+        self.assertIn("routes.filter(r=>mainRoutes.includes(r[0]))",js)
+        self.assertIn("const quantRoutes=",js)
+        self.assertIn("['quant','量化研究'",js)
         self.assertIn("['zones','區間統計']",js)
         self.assertIn("if(key==='zones'){go('zones');return;}",js)
         self.assertIn("dataset.go='resources'",js)
