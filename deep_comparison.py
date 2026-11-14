@@ -167,14 +167,21 @@ def compare_deep(text,benchmark="SPY",timeframe="10y",start="",end_date="",weigh
     qtemps={}
     for symbol in list(dict.fromkeys([*selected,benchmark])):
         try:
-            actual,frame,values,_=snapshot(symbol,int(datetime.now(timezone.utc).timestamp()//900))
+            if symbol==benchmark and symbol not in selected:
+                # Benchmark requires true adjusted prices, not a second full QTemp calculation.
+                from qtemp_core import load_market, apply_price_basis
+                actual,raw,_,_=load_market(symbol)
+                frame=apply_price_basis(raw)
+                values=None
+            else:
+                actual,frame,values,_=snapshot(symbol,int(datetime.now(timezone.utc).timestamp()//900))
             close=frame.Close.astype(float)
             if close.empty or not np.isfinite(close).all() or (close<=0).any():
                 raise ValueError("日 K 價格驗證失敗")
             datasets[symbol]=close
             listed[symbol]={"first":close.index[0].strftime("%Y-%m-%d"),
                             "last":close.index[-1].strftime("%Y-%m-%d"),"bars":len(close)}
-            qtemps[symbol]=_safe(values.QTemp.iloc[-1])
+            qtemps[symbol]=_safe(values.QTemp.iloc[-1]) if values is not None else None
         except Exception as e:
             errors.append(symbol+"："+str(e)[:145])
     if errors:raise ValueError("資料不完整，不能進行公平比較："+"；".join(errors))
