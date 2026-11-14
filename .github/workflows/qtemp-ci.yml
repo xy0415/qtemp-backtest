@@ -17,7 +17,7 @@ jobs:
           cache: 'pip'
       - run: pip install -r requirements.txt
       - name: Compile backend
-        run: python -m compileall -q app.py qtemp_core.py research_features.py capital_backtest.py research_insights.py market_cache.py qtemp_alerts.py test_capital_backtest.py test_research_insights.py test_market_cache.py qtemp_zones.py test_qtemp_zones.py deep_comparison.py test_deep_comparison.py test_financial_audit.py test_watchlist_audit.py test_streamlined_ui.py
+        run: python -m compileall -q app.py qtemp_core.py research_features.py capital_backtest.py research_insights.py market_cache.py qtemp_alerts.py test_capital_backtest.py test_research_insights.py test_market_cache.py qtemp_zones.py test_qtemp_zones.py deep_comparison.py test_deep_comparison.py test_financial_audit.py test_watchlist_audit.py test_streamlined_ui.py financial_market.py test_financial_market.py
       - name: Check JavaScript
         run: |
           node --check research_features.js
@@ -28,6 +28,7 @@ jobs:
           node --check workspace_watchlist.js
           node --check qtemp_zones_ui.js
           node --check deep_comparison_ui.js
+          node --check financial_portal.js
           node - <<'JS'
           const fs=require('fs');
           const html=fs.readFileSync('index.html','utf8');
@@ -36,7 +37,7 @@ jobs:
           new Function(script[1]);
           JS
       - name: Capital backtest deterministic tests
-        run: python -m unittest -v test_capital_backtest test_research_insights test_market_cache test_qtemp_zones test_deep_comparison test_financial_audit test_watchlist_audit test_streamlined_ui
+        run: python -m unittest -v test_capital_backtest test_research_insights test_market_cache test_qtemp_zones test_deep_comparison test_financial_audit test_watchlist_audit test_streamlined_ui test_financial_market
       - name: Flask and input smoke test
         run: |
           python - <<'PY'
@@ -57,6 +58,8 @@ jobs:
           assert app.test_client().get('/qtemp_zones.css').status_code==200
           assert app.test_client().get('/deep_comparison_ui.js').status_code==200
           assert app.test_client().get('/deep_comparison.css').status_code==200
+          assert app.test_client().get('/financial_portal.js').status_code==200
+          assert app.test_client().get('/financial_portal.css').status_code==200
           diag=app.test_client().get('/api/diagnostics')
           assert diag.status_code==200
           assert 'uptimeSeconds' in diag.json and 'errors' in diag.json
