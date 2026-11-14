@@ -66,8 +66,15 @@ def _yearly(nav):
         # For the first and last partial years, start from previous available close if present.
         earlier=nav.loc[nav.index<part.index[0]]
         anchor=float(earlier.iloc[-1]) if len(earlier) else float(part.iloc[0])
+        # A full year must cover the first and last trading-week window.
+        # The data-source intersection may omit holidays; avoid inferring completeness from month alone.
+        first,last=part.index[0],part.index[-1]
+        covers_start=first <= pd.Timestamp(year,1,7)
+        covers_end=last >= pd.Timestamp(year,12,24)
+        enough_sessions=len(part)>=190
+        full=bool(covers_start and covers_end and enough_sessions)
         out.append({"year":str(year),"return":_safe(part.iloc[-1]/anchor-1),
-                    "partial":bool(part.index[0].month>1 or part.index[-1].month<12)})
+                    "partial":not full,"sessions":int(len(part))})
     return out
 
 def _perf(nav,benchmark=None):
@@ -84,7 +91,7 @@ def _perf(nav,benchmark=None):
     mdd,longest,recovery,dd=_max_dd_stats(close)
     year_stats=_yearly(close)
     full_years=[x["return"] for x in year_stats if not x["partial"] and x["return"] is not None]
-    year_list=full_years if full_years else [x["return"] for x in year_stats if x["return"] is not None]
+    year_list=full_years  # Partial calendar years must not be reported as full-year extremes.
     result={
       "totalReturn":_safe(total),"cagr":_safe(cagr),"volatility":_safe(vol),
       "maxDrawdown":_safe(mdd),"sharpe":_safe(annmean/vol) if vol>0 else None,
