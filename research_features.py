@@ -31,13 +31,16 @@ def scan(text):
             actual, frame, v, events = snapshot(sym, int(datetime.now(timezone.utc).timestamp() // 900))
             end = frame.index[-1]
             cutoff = end - pd.DateOffset(days=90)
-            past = events.loc[events["確認日"] >= cutoff].drop_duplicates(["類型", "確認日"])
+            past = (events.loc[
+                events["確認日"].ge(cutoff) & ~events["暫算"].astype(bool)
+            ].drop_duplicates(["類型", "確認日"]).sort_values("確認日"))
             last = past.iloc[-1] if not past.empty else None
             items.append({
                 "symbol": actual, "end": end.date().isoformat(), "score": round(float(v.QTemp.iloc[-1]), 3),
                 "last": round(float(frame.Close.iloc[-1]), 4), "highDrawdown": round(float(frame.Close.iloc[-1]/frame.Close.iloc[-252:].max()-1), 5),
                 "signal": str(last["類型"]) if last is not None else "—",
                 "signalDate": last["確認日"].date().isoformat() if last is not None else None,
+                "newConfirmedToday": bool(last is not None and pd.Timestamp(last["確認日"]).normalize()==end.normalize()),
                 "recentSignals": int(len(past)), "error": None
             })
         except Exception as exc:
