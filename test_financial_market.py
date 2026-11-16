@@ -16,6 +16,24 @@ class MarketPortalTests(unittest.TestCase):
         self.assertEqual(entry[1],"費城半導體 SOX")
         self.assertIn(("SOXX","半導體","US","產業 ETF"),fm.SECTORS)
         self.assertNotEqual(entry[0],"SOXX")
+    def test_expanded_market_catalog_is_unique_and_grounded(self):
+        symbols=[row[0] for row in fm.ENTRIES]
+        self.assertEqual(len(symbols),len(set(symbols)))
+        for symbol in ("^NDX","^RUT","^HSI","SI=F","JPY=X","SOL-USD","^SOX"):
+            self.assertIn(symbol,symbols)
+        self.assertEqual(next(x for x in fm.ENTRIES if x[0]=="^HSI")[2],"HK")
+        self.assertEqual(next(x for x in fm.ENTRIES if x[0]=="SOL-USD")[2],"Crypto")
+    def test_compact_market_grid_and_chart_selection(self):
+        from pathlib import Path
+        js=Path("financial_portal.js").read_text(encoding="utf-8")
+        css=Path("financial_portal.css").read_text(encoding="utf-8")
+        self.assertIn("fm-market-index-grid",js)
+        self.assertIn("fm-market-category-grid",js)
+        self.assertIn("fm-market-row",js)
+        self.assertIn("fm-market-category-wide",css)
+        self.assertIn("chooseMarketTicker",js)
+        self.assertIn("['SOXX','XLK','XLC','XLF'",js)
+        self.assertIn("['BTC-USD','ETH-USD','SOL-USD']",js)
     def test_market_items_keep_no_fabricated_failures(self):
         with patch("financial_market._history",side_effect=RuntimeError("blocked")):
             result=fm._entry(("^SOX","費城半導體 SOX","US","半導體"))
