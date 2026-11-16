@@ -269,7 +269,7 @@ def yahoo_history(symbol, refresh_slot):
 
 def load_market(value):
     failures = []
-    slot = int(pd.Timestamp.now(tz='UTC').timestamp() // 300)
+    slot = int(pd.Timestamp.now(tz='UTC').timestamp() // 180)
     for symbol in candidates(value):
         try:
             frame, meta, zone = yahoo_history(symbol,slot)
