@@ -28,8 +28,10 @@ class MarketPortalTests(unittest.TestCase):
             data=fm._entry(("^SOX","費城半導體 SOX","US","半導體"))
         self.assertEqual(data["asOf"],dates[-1].strftime("%Y-%m-%d"))
         self.assertEqual(data["value"],102.)
+        self.assertIn("possiblyStale",data)
+        self.assertIn("expectedWeekdayClose",data)
         self.assertAlmostEqual(data["changePct"],-100*(2/104),places=5)
-        self.assertEqual(data["series"][-1][1],102.)
+        self.assertNotIn("series",data)  # Unused chart history must not inflate the overview payload.
     def test_macro_is_not_presented_as_official_cpi(self):
         text=fm.macro_snapshot.__doc__ or ""
         self.assertIn("not fabricated",text)
