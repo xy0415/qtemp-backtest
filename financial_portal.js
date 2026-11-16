@@ -276,7 +276,11 @@ function statusRow(){
 async function render(force=false){
  const page=root.dataset.view;
  if(!main.includes(page)){portal.hidden=true;return}
- portal.hidden=false;portal.replaceChildren(el('p','載入市場資料中…','fm-loading'));
+ portal.hidden=false;
+ const samePage=portal.dataset.activePage===page;
+ if(!force||!samePage||!portal.querySelector('.fm-panel'))
+  portal.replaceChildren(el('p','載入市場資料中…','fm-loading'));
+ portal.dataset.activePage=page;
  if(page==='quant'){portal.replaceChildren(quantHub());return}
  if(page==='stocks'){portal.replaceChildren(stocks());return}
  if(page==='news'){
@@ -290,7 +294,12 @@ async function render(force=false){
   if(root.dataset.view!==page)return;
   const body=page==='overview'?overview():page==='markets'?markets():page==='macro'?macros():sectors();
   portal.replaceChildren(body,statusRow());
- }catch(e){if(root.dataset.view===page)portal.replaceChildren(el('p','暫時無法取得金融市場資料：'+e.message,'fm-empty'),sourceLink('Yahoo Finance','https://finance.yahoo.com/'))}
+ }catch(e){if(root.dataset.view===page){
+  if(force&&portal.querySelector('.fm-panel')){
+   const notice=el('p','更新失敗：'+e.message+'。目前顯示上一次成功取得的資料，請核對卡片日期。','fm-empty');
+   portal.prepend(notice);
+  }else portal.replaceChildren(el('p','暫時無法取得金融市場資料：'+e.message,'fm-empty'),sourceLink('Yahoo Finance','https://finance.yahoo.com/'));
+ }}
 }
 document.addEventListener('qtemp-route-change',()=>render());
 function refreshWhenVisible(){
