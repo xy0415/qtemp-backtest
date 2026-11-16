@@ -30,6 +30,7 @@ class MarketPortalTests(unittest.TestCase):
         self.assertEqual(data["value"],102.)
         self.assertIn("possiblyStale",data)
         self.assertIn("expectedWeekdayClose",data)
+        self.assertNotIn("series",data)
         self.assertAlmostEqual(data["changePct"],-100*(2/104),places=5)
         self.assertNotIn("series",data)  # Unused chart history must not inflate the overview payload.
     def test_macro_is_not_presented_as_official_cpi(self):
@@ -41,6 +42,7 @@ class MarketPortalTests(unittest.TestCase):
         self.assertEqual(client.get("/financial_portal.js").status_code,200)
         self.assertEqual(client.get("/financial_portal.css").status_code,200)
         self.assertEqual(client.get("/api/market/history/NOT_A_REAL_SYMBOL").status_code,400)
+        self.assertIn("no-store",client.get("/api/market/history/NOT_A_REAL_SYMBOL").headers.get("Cache-Control",""))
         self.assertEqual(client.get("/api/market/history/%5ESOX?period=unlimited").status_code,400)
     def test_pages_are_real_routes(self):
         js=open("platform_navigation.js",encoding="utf8").read()
