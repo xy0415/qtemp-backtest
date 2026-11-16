@@ -7,7 +7,8 @@ intro.insertAdjacentElement('afterend',portal);
 const main=['overview','markets','macro','sectors','stocks','news','quant'];
 const featured=['^GSPC','^IXIC','^DJI','^SOX','^TWII','^N225'];
 const groupOrder=['美股','半導體','台股','全球','風險','利率','商品','外匯','加密'];
-let market=null,news=null,macro=null,selected='^SOX',period='3mo',requests={},loadedAt={};
+let market=null,news=null,macro=null,selected='^SOX',period='3mo',requests={},loadedAt={},pending={};
+let lastAutoCheck=0;
 const link=(ticker)=>'https://finance.yahoo.com/quote/'+encodeURIComponent(ticker)+'/';
 const clean=v=>v==null||!Number.isFinite(Number(v))?'—':Number(v).toLocaleString('zh-TW',{maximumFractionDigits:2});
 const sign=v=>v==null?'—':((v>0?'+':'')+clean(v)+'%');
@@ -16,16 +17,21 @@ const el=(tag,name,cls)=>{const x=document.createElement(tag);if(name!=null)x.te
 const labelDate=date=>date||'未取得';
 const loading=(node,msg)=>{node.replaceChildren(el('p',msg,'fm-loading'))};
 const stamp=(dt)=>{if(!dt)return'未取得';try{return new Date(dt).toLocaleString('zh-TW',{timeZone:'Asia/Taipei',hour12:false})}catch{return dt}};
-async function get(url,kind,ttl=900000){
- if(requests[kind]&&Date.now()-loadedAt[kind]<ttl)return requests[kind];
- const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),60000);
- try{
-  const res=await fetch(url,{signal:ctrl.signal,cache:'no-cache'});
-  if(!res.ok)throw Error('HTTP '+res.status);
-  const data=await res.json();
-  requests[kind]=data;loadedAt[kind]=Date.now();
-  return data;
- }finally{clearTimeout(timer)}
+async function get(url,kind,ttl=120000,force=false){
+ if(!force&&requests[kind]&&Date.now()-loadedAt[kind]<ttl)return requests[kind];
+ if(pending[kind])return pending[kind];
+ const run=async()=>{
+  const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),60000);
+  try{
+   const res=await fetch(url,{signal:ctrl.signal,cache:'no-store'});
+   if(!res.ok)throw Error('HTTP '+res.status);
+   const data=await res.json();
+   requests[kind]=data;loadedAt[kind]=Date.now();
+   return data;
+  }finally{clearTimeout(timer)}
+ };
+ pending[kind]=run();
+ try{return await pending[kind]}finally{delete pending[kind]}
 }
 function card(row,click){
  const button=el('button',null,'fm-quote');
@@ -41,7 +47,8 @@ function card(row,click){
  if(movement>0)change.classList.add('fm-positive');
  if(movement<0)change.classList.add('fm-negative');
  button.append(change);
- button.append(el('small',row.asOf?'截至 '+row.asOf+' · Yahoo 日 K':row.status,'fm-asof'));
+ const staleSuffix=row.possiblyStale?' · 資料可能過期（距今 '+row.ageDays+' 天）':'';
+ button.append(el('small',row.asOf?'收盤日 '+row.asOf+' · Yahoo 日 K'+staleSuffix:row.status,'fm-asof'));
  button.onclick=()=>click(row.ticker);
  return button;
 }
@@ -108,7 +115,7 @@ function chartSection(symbol='^SOX',startPeriod='3mo'){
   status.textContent='取得 '+selected+' 的已確認日線中…';
   try{
    const data=await get('/api/market/history/'+encodeURIComponent(selected)+'?period='+encodeURIComponent(period),
-    'history_'+requestId,600000);
+    'history_'+requestId,150000);
    if(ticker.value!==selected||periodSelect.value!==period)return;
    const axis=selected==='^TNX'?'殖利率（%）':
      selected==='TWD=X'?'台幣／美元':
@@ -254,28 +261,51 @@ function newsPage(){
 function statusRow(){
  const s=el('p',null,'fm-data-status');
  const success=(market?.items||[]).filter(x=>x.value!=null).length;
- s.textContent='行情：'+success+'/'+(market?.items?.length||0)+' 檔有資料 · 截止依各卡片交易日顯示 · 取得時間 '+stamp(market?.updatedUTC)+' · 新聞檢查 '+stamp(news?.checkedUTC);
+ s.textContent='行情：'+success+'/'+(market?.items?.length||0)+' 檔有資料 · 收盤日期依標的顯示 · 伺服器檢查 '+stamp(market?.updatedUTC)+' · 後端最多快取 3 分鐘';
+ const stale=market?.items?.filter(x=>x.possiblyStale)||[];
+ if(stale.length){
+  s.append(el('span',' · '+stale.length+' 檔資料日期較舊（可能含休市或來源延遲）','fm-stale-notice'));
+ }
+ const refresh=el('button','立即重新檢查','fm-refresh-button');
+ refresh.type='button';refresh.onclick=async()=>{refresh.disabled=true;refresh.textContent='正在檢查…';
+  try{await render(true)}finally{refresh.disabled=false;refresh.textContent='立即重新檢查'}
+ };
+ s.append(refresh);
  return s;
 }
-async function render(){
+async function render(force=false){
  const page=root.dataset.view;
  if(!main.includes(page)){portal.hidden=true;return}
  portal.hidden=false;portal.replaceChildren(el('p','載入市場資料中…','fm-loading'));
  if(page==='quant'){portal.replaceChildren(quantHub());return}
  if(page==='stocks'){portal.replaceChildren(stocks());return}
  if(page==='news'){
-  try{news=await get('/api/market/news','news',900000);if(root.dataset.view==='news')portal.replaceChildren(newsPage(),statusRow())}
+  try{news=await get('/api/market/news','news',300000,force);if(root.dataset.view==='news')portal.replaceChildren(newsPage(),statusRow())}
   catch(e){portal.replaceChildren(el('p','官方新聞連線失敗，請稍後重新整理。','fm-empty'))}
   return;
  }
  try{
-  market=await get('/api/market/overview','market',900000);
-  if(page==='overview')news=await get('/api/market/news','news',900000).catch(()=>null);
+  market=await get('/api/market/overview','market',120000,force);
+  if(page==='overview')news=await get('/api/market/news','news',300000,force).catch(()=>null);
   if(root.dataset.view!==page)return;
   const body=page==='overview'?overview():page==='markets'?markets():page==='macro'?macros():sectors();
   portal.replaceChildren(body,statusRow());
  }catch(e){if(root.dataset.view===page)portal.replaceChildren(el('p','暫時無法取得金融市場資料：'+e.message,'fm-empty'),sourceLink('Yahoo Finance','https://finance.yahoo.com/'))}
 }
-document.addEventListener('qtemp-route-change',render);
+document.addEventListener('qtemp-route-change',()=>render());
+function refreshWhenVisible(){
+ if(document.hidden||!main.includes(root.dataset.view))return;
+ const now=Date.now();
+ if(now-lastAutoCheck<120000)return;
+ lastAutoCheck=now;
+ if(root.dataset.view==='news'){
+  if(now-(loadedAt.news||0)>120000)render(true);
+ }else if(!['quant','stocks'].includes(root.dataset.view)){
+  if(now-(loadedAt.market||0)>120000)render(true);
+ }
+}
+setInterval(refreshWhenVisible,120000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshWhenVisible()});
+window.addEventListener('focus',refreshWhenVisible);
 render();
 })();
