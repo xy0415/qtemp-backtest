@@ -109,6 +109,13 @@ def deep_comparison_css():
 def site_favicon():
     return send_file('favicon.svg', mimetype='image/svg+xml')
 
+@app.after_request
+def disable_market_response_caching(response):
+    if request.path.startswith('/api/market/'):
+        response.headers['Cache-Control']='no-store, max-age=0'
+        response.headers['Pragma']='no-cache'
+    return response
+
 @app.get('/api/market/overview')
 def market_overview_api():
     return jsonify(market_snapshot())
