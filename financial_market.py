@@ -20,17 +20,23 @@ INDEXES=[
  ("^GSPC","S&P 500","US","美股"),
  ("^IXIC","NASDAQ Composite","US","美股"),
  ("^DJI","Dow Jones","US","美股"),
+ ("^NDX","NASDAQ 100","US","美股"),
+ ("^RUT","Russell 2000","US","美股"),
  ("^SOX","費城半導體 SOX","US","半導體"),
  ("^TWII","台灣加權指數","TW","台股"),
  ("^N225","日經 225","JP","全球"),
+ ("^HSI","香港恆生指數","HK","全球"),
  ("^VIX","VIX 波動率","US","風險"),
  ("^TNX","美國 10Y 殖利率","US","利率"),
  ("GC=F","黃金期貨","US","商品"),
+ ("SI=F","白銀期貨","US","商品"),
  ("CL=F","WTI 原油期貨","US","商品"),
  ("DX-Y.NYB","美元指數 DXY","US","外匯"),
  ("TWD=X","USD/TWD","TW","外匯"),
+ ("JPY=X","USD/JPY","JP","外匯"),
  ("BTC-USD","Bitcoin","Crypto","加密"),
  ("ETH-USD","Ethereum","Crypto","加密"),
+ ("SOL-USD","Solana","Crypto","加密"),
 ]
 SECTORS=[
  ("SOXX","半導體","US","產業 ETF"),
@@ -63,7 +69,7 @@ def _clean(v):
 def _history(ticker,period="1y"):
     """This requests actual completed daily bars only. No forward-filling."""
     df=yf.Ticker(ticker).history(period=period,interval="1d",auto_adjust=False,actions=False,
-                                 raise_errors=True,timeout=12)
+                                 raise_errors=True,timeout=10)
     if df is None or df.empty or "Close" not in df:
         raise ValueError("Yahoo Finance 無有效資料")
     prices=df["Close"].dropna()
@@ -78,11 +84,13 @@ def _history(ticker,period="1y"):
     else:
         # Conservative market close + buffer; never publish an intraday partial candle as a completed daily close.
         region=("TW" if ticker in ("^TWII","TWD=X") else
-                "JP" if ticker=="^N225" else "US")
+                "HK" if ticker=="^HSI" else
+                "JP" if ticker in ("^N225","JPY=X") else "US")
         zone,cutoff={
             "TW":("Asia/Taipei",walltime(16,0)),
             "JP":("Asia/Tokyo",walltime(17,0)),
-            "US":("America/New_York",walltime(19,0) if ticker in ("GC=F","CL=F") else walltime(17,30))
+            "HK":("Asia/Hong_Kong",walltime(17,0)),
+            "US":("America/New_York",walltime(19,0) if ticker in ("GC=F","CL=F","SI=F") else walltime(17,30))
         }[region]
         now=datetime.now(ZoneInfo(zone))
         last_complete=now.date() if now.time()>=cutoff else now.date()-timedelta(days=1)
@@ -122,9 +130,9 @@ def _entry(entry):
         if region=="Crypto":
             latest_expected=(now_utc-timedelta(days=1)).date()
         else:
-            tz_name={"TW":"Asia/Taipei","JP":"Asia/Tokyo","US":"America/New_York"}[region]
+            tz_name={"TW":"Asia/Taipei","JP":"Asia/Tokyo","HK":"Asia/Hong_Kong","US":"America/New_York"}[region]
             now_local=datetime.now(ZoneInfo(tz_name))
-            cutoff=walltime(16,0) if region=="TW" else walltime(17,0) if region=="JP" else walltime(19,0) if ticker in ("GC=F","CL=F") else walltime(17,30)
+            cutoff=walltime(16,0) if region=="TW" else walltime(17,0) if region in ("JP","HK") else walltime(19,0) if ticker in ("GC=F","CL=F","SI=F") else walltime(17,30)
             anchor=now_local.date() if now_local.time()>=cutoff else now_local.date()-timedelta(days=1)
             while anchor.weekday()>=5:
                 anchor-=timedelta(days=1)
@@ -139,7 +147,7 @@ def _entry(entry):
             "changePct":_clean(percent),"changeBp":_clean(change_bps),
             "unit":"%" if yield_rate else None,
             "asOf":prices.index[-1].strftime("%Y-%m-%d"),
-            "currency":"USD" if ticker in ("BTC-USD","ETH-USD","GC=F","CL=F") else
+            "currency":"USD" if ticker in ("BTC-USD","ETH-USD","SOL-USD","GC=F","SI=F","CL=F") else
                 "TWD/USD" if ticker=="TWD=X" else "index" if ticker.startswith("^") else "USD",
             "status":("歷史日 K 距今已較久，請核對當地休市日或資料源" if delayed
                       else "最新可取得的已完成日 K，並非即時成交價")}
@@ -150,7 +158,7 @@ def _entry(entry):
 def market_snapshot():
     # Bounded workers and short 3-minute cache limit request traffic without pinning an old close.
     def load():
-        with ThreadPoolExecutor(max_workers=5) as pool:
+        with ThreadPoolExecutor(max_workers=7) as pool:
             rows=list(pool.map(_entry,ENTRIES))
         return {"items":rows,"updatedUTC":_utc(),"refreshIntervalSeconds":180,
             "availableCount":sum(1 for x in rows if x.get("value") is not None),
