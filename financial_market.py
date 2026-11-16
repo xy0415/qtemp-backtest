@@ -77,7 +77,7 @@ def _history(ticker,period="1y"):
     if prices.empty:raise ValueError("沒有有效日線")
     prices.index=prices.index.tz_localize(None).normalize() if prices.index.tz is None else prices.index.tz_localize(None).normalize()
     prices=prices[~prices.index.duplicated(keep="last")].sort_index()
-    if ticker in ("BTC-USD","ETH-USD"):
+    if ticker in ("BTC-USD","ETH-USD","SOL-USD"):
         # Crypto trades continuously: only include completed UTC calendar dates.
         current_utc=datetime.now(timezone.utc).date()
         prices=prices[prices.index.date<current_utc]
