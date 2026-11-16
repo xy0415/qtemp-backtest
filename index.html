@@ -773,7 +773,7 @@
   };
   document.addEventListener('fullscreenchange',()=>{if(chart&&q('plot').clientWidth)chart.resize(q('plot').clientWidth,q('plot').clientHeight);});
   setInterval(()=>{if(!document.hidden&&data&&['overview','chart'].includes(root.dataset.view))refreshQuote();},60000);
-  setInterval(()=>{if(!document.hidden&&data)checkClosedDay();},300000);
+  setInterval(()=>{if(!document.hidden&&data)checkClosedDay();},120000);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden&&data){if(['overview','chart'].includes(root.dataset.view))refreshQuote();checkClosedDay();}});
   for(let i=1;i<=10;i++) q('years').add(new Option(i,i));
   q('years').value='10';
@@ -809,5 +809,5 @@
 <script src="/workspace_watchlist.js?v=20261114clean" defer></script>
 <script src="/qtemp_zones_ui.js?v=20261113b" defer></script>
 <script src="/deep_comparison_ui.js?v=20261114clean" defer></script>
-<script src="/financial_portal.js?v=20261114-market3" defer></script>
+<script src="/financial_portal.js?v=20261116-refresh1" defer></script>
 </body></html>
