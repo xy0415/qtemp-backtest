@@ -119,8 +119,9 @@ function chartSection(symbol='^SOX',startPeriod='3mo'){
    if(ticker.value!==selected||periodSelect.value!==period)return;
    const axis=selected==='^TNX'?'殖利率（%）':
      selected==='TWD=X'?'台幣／美元':
-     ['GC=F','CL=F','BTC-USD','ETH-USD'].includes(selected)?'美元（USD）':
-     ['^GSPC','^IXIC','^DJI','^SOX','^TWII','^N225','^VIX','DX-Y.NYB'].includes(selected)?'指數點位':
+     selected==='JPY=X'?'日圓／美元':
+     ['GC=F','SI=F','CL=F','BTC-USD','ETH-USD','SOL-USD'].includes(selected)?'美元（USD）':
+     ['^GSPC','^IXIC','^DJI','^NDX','^RUT','^SOX','^TWII','^N225','^HSI','^VIX','DX-Y.NYB'].includes(selected)?'指數點位':
      'ETF 收盤價格（USD）';
    plot(host,data.points,axis,selected);
    status.textContent='資料截至 '+labelDate(data.asOf)+' · '+data.source;
@@ -208,18 +209,74 @@ function overview(){
  frag.append(stockPrompt());
  return frag;
 }
+function compactMarketList(tickers){
+ const grid=el('div',null,'fm-market-rows');
+ for(const ticker of tickers){
+  const item=market.items.find(x=>x.ticker===ticker);
+  if(!item)continue;
+  const row=el('button',null,'fm-market-row'+(selected===ticker?' fm-market-row-selected':''));
+  row.type='button';row.title='查看 '+item.name+' 的歷史走勢';
+  const id=el('div',null,'fm-market-identity');
+  id.append(el('strong',item.name),el('small',item.ticker));
+  const price=el('div',item.value==null?'無資料':clean(item.value)+(item.unit==='%'?'%':''),'fm-market-last');
+  const movement=item.changeBp==null?item.changePct:item.changeBp;
+  const change=el('div',item.changeBp!=null?
+    (item.changeBp>0?'+':'')+clean(item.changeBp)+' bp':sign(item.changePct),'fm-market-delta');
+  if(movement>0)change.classList.add('fm-positive');
+  if(movement<0)change.classList.add('fm-negative');
+  const date=el('small',item.asOf?item.asOf:'來源無資料','fm-market-date');
+  if(item.possiblyStale)date.classList.add('fm-market-lag');
+  row.append(id,price,change,date);
+  row.onclick=()=>chooseMarketTicker(ticker);
+  grid.append(row);
+ }
+ return grid;
+}
+function chooseMarketTicker(ticker){
+ selected=ticker;
+ render().then(()=>{
+  if(root.dataset.view!=='markets')return;
+  const chart=portal.querySelector('.fm-market-chart-block');
+  if(chart)chart.scrollIntoView({behavior:'smooth',block:'center'});
+ });
+}
+function marketCategory(title,caption,tickers,wide=false){
+ const box=panel(title,caption);
+ box.classList.add('fm-market-category');
+ if(wide)box.classList.add('fm-market-category-wide');
+ box.append(compactMarketList(tickers));
+ return box;
+}
 function markets(){
  const frag=document.createDocumentFragment();
- groupOrder.forEach(group=>{
-  const items=market.items.filter(x=>x.category===group);
-  if(!items.length)return;
-  const s=panel(group,group==='半導體'?'SOX 是半導體指數，SOXX 為產業 ETF':'資料為歷史日 K，非即時報價');
-  s.append(majorCards(items,ticker=>{selected=ticker;render()}));frag.append(s);
- });
- const s=panel('產業 ETF','此區列出不同產業 ETF 與其日線漲跌幅');
- s.append(majorCards(market.items.filter(x=>x.category==='產業 ETF'),ticker=>{selected=ticker;render()}));
- frag.append(s,chartSection(selected,period));return frag;
+ const lead=panel('全球股票指數','涵蓋美股大型與小型股、科技、費城半導體及亞洲主要指數');
+ lead.classList.add('fm-market-lead');
+ const indices=['^GSPC','^IXIC','^DJI','^NDX','^RUT','^SOX','^TWII','^N225','^HSI'];
+ const grid=el('div',null,'fm-market-index-grid');
+ indices.map(t=>market.items.find(x=>x.ticker===t)).filter(Boolean).forEach(item=>grid.append(card(item,chooseMarketTicker)));
+ lead.append(grid);
+ frag.append(lead);
+ const categories=el('div',null,'fm-market-category-grid');
+ categories.append(
+  marketCategory('市場風險與利率','VIX 為指數點位；美國 10Y 以殖利率及 bp 顯示',
+    ['^VIX','^TNX']),
+  marketCategory('貴金屬與能源','商品期貨以 USD 報價；不是現貨價格',
+    ['GC=F','SI=F','CL=F']),
+  marketCategory('匯率與美元','USD/TWD、USD/JPY 為每美元對應的當地貨幣',
+    ['DX-Y.NYB','TWD=X','JPY=X']),
+  marketCategory('數位資產','以最後一個完整 UTC 日收盤價比較',
+    ['BTC-USD','ETH-USD','SOL-USD'])
+ );
+ frag.append(categories);
+ const etf=marketCategory('美股產業 ETF','橫跨科技、金融、能源、醫療及其他產業；SOXX 與 SOX 並非同一標的',
+  ['SOXX','XLK','XLC','XLF','XLE','XLV','XLI','XLY','XLP','XLU'],true);
+ frag.append(etf);
+ const chart=chartSection(selected,period);
+ chart.classList.add('fm-market-chart-block');
+ frag.append(chart);
+ return frag;
 }
+
 function macros(){
  const frag=document.createDocumentFragment();
  const s=panel('市場中的總經代理變數','這些屬市場報價，不等於官方 CPI、失業率或政策利率公布值');
