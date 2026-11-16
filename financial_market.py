@@ -101,7 +101,7 @@ def _cache_get(key,ttl,fn):
 def _entry(entry):
     ticker,label,region,kind=entry
     try:
-        prices=_cache_get(("price",ticker),900,lambda:_history(ticker,"1y"))
+        prices=_cache_get(("price",ticker),180,lambda:_history(ticker,"1y"))
         today=float(prices.iloc[-1])
         prior=float(prices.iloc[-2]) if len(prices)>1 else None
         delta=today-prior if prior is not None else None
@@ -119,7 +119,12 @@ def _entry(entry):
         if len(sampled)>100:
             positions=sorted(set([0,len(sampled)-1,*[round(i*(len(sampled)-1)/99) for i in range(100)]]))
             sampled=sampled.iloc[positions]
+        # Daily-close freshness is distinct from time of fetching or an intraday quote.
+        now_utc=datetime.now(timezone.utc)
+        age_days=max(0,(now_utc.date()-prices.index[-1].date()).days)
+        delayed=age_days>=5 if region!="Crypto" else age_days>=2
         return {"ticker":ticker,"name":label,"category":kind,"region":region,
+            "ageDays":age_days,"possiblyStale":delayed,
             "value":_clean(today),"previous":_clean(prior),"change":_clean(delta),
             "changePct":_clean(percent),"changeBp":_clean(change_bps),
             "unit":"%" if yield_rate else None,
@@ -127,20 +132,23 @@ def _entry(entry):
             "currency":"USD" if ticker in ("BTC-USD","ETH-USD","GC=F","CL=F") else
                 "TWD/USD" if ticker=="TWD=X" else "index" if ticker.startswith("^") else "USD",
             "series":[[d.strftime("%Y-%m-%d"),_clean(v)] for d,v in sampled.items()],
-            "status":"日線最後一筆；不保證為交易所最終結算或即時報價"}
+            "status":("歷史日 K 距今已較久，請核對當地休市日或資料源" if delayed
+                      else "最新可取得的已完成日 K，並非即時成交價")}
     except Exception:
         return {"ticker":ticker,"name":label,"category":kind,"region":region,
             "status":"資料暫時無法取得","error":"Yahoo Finance 未提供可驗證的日線"}
 
 def market_snapshot():
-    # Bounded workers and 15 minute in-process cache, limit Yahoo rate exposure.
+    # Bounded workers and short 3-minute cache limit request traffic without pinning an old close.
     def load():
         with ThreadPoolExecutor(max_workers=5) as pool:
             rows=list(pool.map(_entry,ENTRIES))
-        return {"items":rows,"updatedUTC":_utc(),
+        return {"items":rows,"updatedUTC":_utc(),"refreshIntervalSeconds":180,
+            "availableCount":sum(1 for x in rows if x.get("value") is not None),
+            "possiblyStaleCount":sum(1 for x in rows if x.get("possiblyStale")),
             "basis":"Yahoo Finance 每日收盤欄位；可能有延遲、不同交易所日曆及未完成日線，不視為即時成交價。",
             "limitations":"SOX 為 ^SOX 費城半導體指數；SOXX 是追蹤半導體產業的 ETF，兩者不能混同。指數殖利率報價需依資料源口徑確認。"}
-    return _cache_get(("dashboard",),900,load)
+    return _cache_get(("dashboard",),180,load)
 
 def _read_feed(source):
     name,url,category=source
@@ -174,7 +182,7 @@ def official_news():
                 "source":"Federal Reserve 與 SEC 官方新聞 RSS",
                 "status":"ok" if items else "暫時無法取得官方 RSS；不顯示推測新聞",
                 "links":[{"title":s[0],"url":s[1]} for s in SOURCES]}
-    return _cache_get(("news",),900,fetch)
+    return _cache_get(("news",),300,fetch)
 
 def macro_snapshot():
     """Select market-observed rate/volatility proxies, not fabricated macro releases."""
@@ -193,7 +201,7 @@ def market_history(symbol,period="1y"):
     allowed={x[0] for x in ENTRIES}
     if symbol not in allowed:raise ValueError("不支援的市場代號")
     if period not in ("1mo","3mo","6mo","1y","2y","5y"):raise ValueError("不支援的期間")
-    prices=_cache_get(("history",symbol,period),900,lambda:_history(symbol,period))
+    prices=_cache_get(("history",symbol,period),180,lambda:_history(symbol,period))
     if symbol=="^TNX":prices=prices/10.0
     return {"symbol":symbol,"period":period,"asOf":prices.index[-1].strftime("%Y-%m-%d"),
         "points":[[d.strftime("%Y-%m-%d"),_clean(v)] for d,v in prices.items()],
