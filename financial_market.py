@@ -124,7 +124,7 @@ def _entry(entry):
         else:
             tz_name={"TW":"Asia/Taipei","JP":"Asia/Tokyo","US":"America/New_York"}[region]
             now_local=datetime.now(ZoneInfo(tz_name))
-            cutoff=walltime(16,0) if region=="TW" else walltime(17,0) if region=="JP" else walltime(17,30)
+            cutoff=walltime(16,0) if region=="TW" else walltime(17,0) if region=="JP" else walltime(19,0) if ticker in ("GC=F","CL=F") else walltime(17,30)
             anchor=now_local.date() if now_local.time()>=cutoff else now_local.date()-timedelta(days=1)
             while anchor.weekday()>=5:
                 anchor-=timedelta(days=1)
