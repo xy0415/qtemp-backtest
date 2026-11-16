@@ -117,3 +117,14 @@
 @media(max-width:780px){#qtemp_root .fm-tools-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#qtemp_root .qhero-aside{display:none}#qtemp_root .qhero{grid-template-columns:1fr}#qtemp_root .qtopnav{display:none!important}#qtemp_root .qroute-switch{display:flex!important}}
 @media(max-width:570px){#qtemp_root .fm-panel{padding:14px}#qtemp_root .fm-indices,#qtemp_root .fm-sector-grid{gap:8px}#qtemp_root .fm-quote{padding:11px!important}#qtemp_root .fm-price{font-size:18px}#qtemp_root .fm-quote-head{align-items:start;flex-direction:column}#qtemp_root .fm-quote-head strong{font-size:11px}#qtemp_root .fm-tools-grid{grid-template-columns:1fr}#qtemp_root .fm-chart{min-height:150px}#qtemp_root[data-view=overview] .qhero{padding:18px!important}}
 @media(prefers-reduced-motion:reduce){#qtemp_root .fm-quote{transition:none!important}}
+
+/* Freshness controls; distinguish source dates from server fetch timestamps. */
+#qtemp_root .fm-data-status{display:flex;align-items:center;gap:9px;flex-wrap:wrap;
+padding:11px 2px;font-size:11px;color:#73829b;line-height:1.6}
+#qtemp_root .fm-refresh-button{background:#f1f2ff!important;border:1px solid #cfd5f7!important;
+color:#5562c7!important;border-radius:9px!important;padding:6px 11px!important;
+font-size:11px!important;cursor:pointer;white-space:nowrap}
+#qtemp_root .fm-refresh-button:disabled{cursor:progress;opacity:.58}
+#qtemp_root .fm-stale-notice{color:#ac7135;font-weight:600}
+#qtemp_root .fm-quote:has(.fm-asof){min-height:118px}
+@media(max-width:570px){#qtemp_root .fm-data-status{align-items:flex-start}#qtemp_root .fm-refresh-button{margin-left:0}}
