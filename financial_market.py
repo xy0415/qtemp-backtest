@@ -101,7 +101,7 @@ def _cache_get(key,ttl,fn):
 def _entry(entry):
     ticker,label,region,kind=entry
     try:
-        prices=_cache_get(("price",ticker),180,lambda:_history(ticker,"1y"))
+        prices=_cache_get(("price",ticker),180,lambda:_history(ticker,"1mo"))
         today=float(prices.iloc[-1])
         prior=float(prices.iloc[-2]) if len(prices)>1 else None
         delta=today-prior if prior is not None else None
@@ -114,24 +114,33 @@ def _entry(entry):
             prior=prior/10 if prior is not None else None
             delta=delta/10 if delta is not None else None
             percent=None
-        sampled=prices.iloc[-200:].copy()
-        if yield_rate:sampled=sampled/10
-        if len(sampled)>100:
-            positions=sorted(set([0,len(sampled)-1,*[round(i*(len(sampled)-1)/99) for i in range(100)]]))
-            sampled=sampled.iloc[positions]
         # Daily-close freshness is distinct from time of fetching or an intraday quote.
         now_utc=datetime.now(timezone.utc)
         age_days=max(0,(now_utc.date()-prices.index[-1].date()).days)
-        delayed=age_days>=5 if region!="Crypto" else age_days>=2
+        # Estimated latest weekday close. Exchange holidays can make this an upper bound,
+        # so the UI says "may be delayed" instead of asserting a data failure.
+        if region=="Crypto":
+            latest_expected=(now_utc-timedelta(days=1)).date()
+        else:
+            tz_name={"TW":"Asia/Taipei","JP":"Asia/Tokyo","US":"America/New_York"}[region]
+            now_local=datetime.now(ZoneInfo(tz_name))
+            cutoff=walltime(16,0) if region=="TW" else walltime(17,0) if region=="JP" else walltime(17,30)
+            anchor=now_local.date() if now_local.time()>=cutoff else now_local.date()-timedelta(days=1)
+            while anchor.weekday()>=5:
+                anchor-=timedelta(days=1)
+            latest_expected=anchor
+        missing_expected=prices.index[-1].date()<latest_expected
+        delayed=missing_expected or (age_days>=5 if region!="Crypto" else age_days>=2)
         return {"ticker":ticker,"name":label,"category":kind,"region":region,
             "ageDays":age_days,"possiblyStale":delayed,
+            "expectedWeekdayClose":latest_expected.isoformat(),
+            "closeStatus":"source_lag_possible" if missing_expected else "latest_expected_weekday",
             "value":_clean(today),"previous":_clean(prior),"change":_clean(delta),
             "changePct":_clean(percent),"changeBp":_clean(change_bps),
             "unit":"%" if yield_rate else None,
             "asOf":prices.index[-1].strftime("%Y-%m-%d"),
             "currency":"USD" if ticker in ("BTC-USD","ETH-USD","GC=F","CL=F") else
                 "TWD/USD" if ticker=="TWD=X" else "index" if ticker.startswith("^") else "USD",
-            "series":[[d.strftime("%Y-%m-%d"),_clean(v)] for d,v in sampled.items()],
             "status":("歷史日 K 距今已較久，請核對當地休市日或資料源" if delayed
                       else "最新可取得的已完成日 K，並非即時成交價")}
     except Exception:
