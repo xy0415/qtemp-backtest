@@ -114,8 +114,9 @@ def zone_analytics(frame,values,events,years=10,mode="fixed"):
     positions=np.flatnonzero(mask).tolist()
     sample=len(valid)
     if not sample:raise ValueError("所選期間沒有已確認、有效的 QTemp 分數")
-    current_score=float(score.iloc[-1])
-    if not math.isfinite(current_score):raise ValueError("最新 QTemp 分數無效")
+    current_date=pd.Timestamp(valid.index[-1])
+    current_score=float(valid.iloc[-1])
+    if not math.isfinite(current_score):raise ValueError("最新已確認 QTemp 分數無效")
     # Fixed scores and percentile ranks are *separate* partitioning modes.
     ranked=_empirical_percentile(valid)
     configs=ZONES if mode=="fixed" else PERCENTILE_ZONES
@@ -142,13 +143,13 @@ def zone_analytics(frame,values,events,years=10,mode="fixed"):
     histogram=np.histogram(np.clip(valid.to_numpy(),-100,100),bins=bins)[0]
     # An extreme-low confirmed event may show its verified close for reference.
     today_events=events.loc[(~events["暫算"].astype(bool)) &
-        (pd.to_datetime(events["確認日"]).dt.normalize()==end.normalize())
+        (pd.to_datetime(events["確認日"]).dt.normalize()==current_date.normalize())
     ].drop_duplicates(["類型","確認日"])
     confirmation=None
     if classify(current_score)=="extreme_low" and not today_events.empty:
         confirmation={
-            "day":end.strftime("%Y-%m-%d"),
-            "confirmedPrice":float(frame.Close.iloc[-1]),
+            "day":current_date.strftime("%Y-%m-%d"),
+            "confirmedPrice":float(frame.Close.loc[current_date]),
             "signalNames":today_events["類型"].astype(str).tolist(),
             "executionNote":"已確認收盤參考點位，非保證成交價格；策略買入仍為下一交易日開盤。"
         }
@@ -166,13 +167,13 @@ def zone_analytics(frame,values,events,years=10,mode="fixed"):
         "source":"Yahoo Finance · Adj Close 還原 · 已確認日 K",
         "mode":mode,"period":"all" if years is None else f"{years}y",
         "start":valid.index[0].strftime("%Y-%m-%d"),
-        "end":end.strftime("%Y-%m-%d"),"sample":sample,
+        "end":current_date.strftime("%Y-%m-%d"),"sample":sample,
         "totalWarmupExcluded":int(warmup.reindex(frame.index).fillna(True).loc[selected].sum()),
         "current":{"score":current_score,"percentile":current_percentile,
                    "zone":current_zone,"label":current_definition[1],
                    "description":current_definition[2],
                    "highRisk100":high_risk_current,
-                   "date":end.strftime("%Y-%m-%d"),"confirmation":confirmation},
+                   "date":current_date.strftime("%Y-%m-%d"),"confirmation":confirmation},
         "zones":zones,"annual":by_year,
         "histogram":{"edges":bins.tolist(),"counts":histogram.astype(int).tolist()},
         "highRisk":{"exact100Days":high_risk_exact,"exact100Percent":100*high_risk_exact/sample,
@@ -193,7 +194,7 @@ def site_zones(requested,period="10y",mode="fixed"):
     if result["current"]["confirmation"] is not None:
         from qtemp_core import load_market
         _,raw,_,_=load_market(actual)
-        record=raw.loc[frame.index[-1]]
+        record=raw.loc[pd.Timestamp(result["current"]["date"])]
         result["current"]["confirmation"]["rawClose"]=float(record["Close"])
         result["current"]["confirmation"]["executionNote"]=(
             "原始收盤價與 Adj Close 還原價僅供參考，不表示實際成交；"
