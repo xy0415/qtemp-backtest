@@ -126,7 +126,7 @@ def zone_analytics(frame,values,events,years=10,mode="fixed"):
     episodes=_episodes(keys,positions,[r[0] for r in configs])
     counts={key:keys.count(key) for key,*_ in configs}
     by_year=[]
-    for year in range(valid.index[0].year,end.year+1):
+    for year in range(valid.index[0].year,current_date.year+1):
         this=[key for day,key in zip(valid.index,keys) if day.year==year]
         by_year.append({"year":year,"counts":{key:this.count(key) for key,*_ in configs},
                         "total":len(this)})
