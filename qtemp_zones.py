@@ -129,7 +129,9 @@ def zone_analytics(frame,values,events,years=10,mode="fixed"):
         this=[key for day,key in zip(valid.index,keys) if day.year==year]
         by_year.append({"year":year,"counts":{key:this.count(key) for key,*_ in configs},
                         "total":len(this)})
-    current_percentile=float((valid.lt(current_score).sum()+.5*valid.eq(current_score).sum())/sample*100)
+    ties=int(valid.eq(current_score).sum())
+    lower=int(valid.lt(current_score).sum())
+    current_percentile=float((lower+(ties+1)/2)/sample*100) if ties else float(lower/sample*100)
     # Score values below or above the sample all rank 0 or 100 respectively.
     current_percentile=min(100.0,max(0.0,current_percentile))
     current_zone=get_zone(current_score if mode=="fixed" else current_percentile)
