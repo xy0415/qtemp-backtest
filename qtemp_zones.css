@@ -48,3 +48,32 @@
 #qtemp_root .qa-metric small{display:block;margin-top:5px;font-size:10px;color:#75839c;line-height:1.5}
 @media(max-width:780px){#qtemp_root .qz-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}#qtemp_root .qz-daycards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:550px){#qtemp_root .qz-header{padding:16px}#qtemp_root .qz-header h2{font-size:21px}#qtemp_root .qz-query{width:100%}#qtemp_root .qz-query label{flex:1}#qtemp_root .qz-query input{width:100%}#qtemp_root .qz-card{padding:13px}#qtemp_root .qz-daycards{gap:8px}#qtemp_root .qz-daycard{padding:11px}}
+
+/* Seven mutually-exclusive QTemp research bands: compact distribution + empirical stays. */
+#qtemp_root .qz-query select{padding:10px 12px;min-height:41px;border:1px solid #d8dff1;
+ border-radius:9px;background:#fff;color:#334360;min-width:138px}
+#qtemp_root .qz-statstable{display:grid;gap:13px;min-width:0}
+#qtemp_root .qz-stacked{height:19px;display:flex;overflow:hidden;border-radius:8px;background:#edf0f8;
+ border:1px solid #e2e7f3;width:100%}
+#qtemp_root .qz-stacked>div{height:100%;flex:none;position:relative}
+#qtemp_root .qz-stacked-current{box-shadow:inset 0 0 0 2px #253d88}
+#qtemp_root .qz-stats-grid{border-collapse:collapse;width:100%;min-width:730px}
+#qtemp_root .qz-stats-grid th{font-size:11px;font-weight:680;background:#f6f7fc;color:#677993;
+ padding:11px 12px;white-space:nowrap;border-bottom:1px solid #dce4f2;text-align:right}
+#qtemp_root .qz-stats-grid td{font-size:12px;color:#3c4a65;padding:11px 12px;
+ border-bottom:1px solid #ebeff7;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+#qtemp_root .qz-stats-grid th:first-child,#qtemp_root .qz-stats-grid td:first-child{
+ position:sticky;left:0;z-index:1;text-align:left;background:#fafbff;font-weight:650;min-width:116px}
+#qtemp_root .qz-stats-grid .qz-selected-row td{background:#f2f1ff;color:#364298}
+#qtemp_root .qz-stats-grid .qz-selected-row td:first-child{background:#f2f1ff}
+#qtemp_root .qz-stats-grid tfoot td{font-weight:750;background:#f7f8ff;border-top:1px solid #dce4f2}
+#qtemp_root .qz-highrisk{margin-top:13px}
+#qtemp_root .qz-risk-detail{display:flex;justify-content:space-between;gap:8px 15px;
+ align-items:center;flex-wrap:wrap;border-radius:10px;padding:13px 15px;
+ border:1px solid #e8d6e2;background:linear-gradient(120deg,#fcf8fc,#f8f8ff)}
+#qtemp_root .qz-risk-detail strong{font-size:12px;color:#a34574}
+#qtemp_root .qz-risk-detail span{font-size:11px;color:#78839a;line-height:1.5}
+#qtemp_root .qz-risk-current{background:#fff1f6;border-color:#d981ab}
+#qtemp_root .qz-note{line-height:1.8}
+@media(max-width:750px){#qtemp_root .qz-query{width:100%}#qtemp_root .qz-query label{flex:1 1 135px}
+ #qtemp_root .qz-query select{width:100%}#qtemp_root .qz-query button{flex:1 1 100%}}
