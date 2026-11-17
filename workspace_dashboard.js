@@ -30,7 +30,7 @@ const dateStatus=(d)=>{
  return d+(age>5?' · 超過五天':'');
 };
 let lastSymbol='',lastEnd='',prevScore='',pending=false;
-const zoneName=value=>value< -95?'抄底區':value< -75?'定投區間':value>95?'高估值區間':value===95?'95 臨界值':value>75?'趨勢極強':'中性區間';
+const zoneName=value=>value< -95?'抄底區':value< -75?'定投區間':value>=100?'高風險區間':value>=95?'高估值區間':value>75?'趨勢極強':'中性區間';
 let lastAnalysis=null;
 const sourceMap={yahoo_live:'Yahoo 最新擷取',verified_cache:'已驗證短期快取',stale_backup:'舊版歷史備援，可能過時'};
 function refreshOverview(){
