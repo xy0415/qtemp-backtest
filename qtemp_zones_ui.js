@@ -6,7 +6,7 @@ const section=document.createElement('section');
 section.className='qz-page';section.hidden=true;
 section.innerHTML='<div class="qz-header"><div><span class="qz-kicker">QTEMP DISTRIBUTION</span><h2>QTemp 區間統計</h2><p>歷史交易日、年度熱力圖與目前分數</p></div><div class="qz-query"><label>分析標的 <input id="qz-symbol" maxlength="30" autocomplete="off" placeholder="MSTR / 2330.TW"></label><label>歷史期間 <select id="qz-period"><option value="1y">近 1 年</option><option value="3y">近 3 年</option><option value="5y">近 5 年</option><option value="10y" selected>近 10 年</option><option value="15y">近 15 年</option><option value="all">全部歷史</option></select></label><label>區間模式 <select id="qz-mode"><option value="fixed">固定 QTemp 分數</option><option value="percentile">歷史百分位</option></select></label><button type="button" class="primary" id="qz-refresh">查詢區間</button></div></div>'+
 '<p id="qz-status" role="status">等待查詢</p><div id="qz-results" hidden>'+
-'<div class="qz-metrics"><div class="qz-metric"><span>最新 QTemp</span><strong id="qz-current">—</strong></div><div class="qz-metric"><span>目前區間</span><strong id="qz-zone">—</strong></div><div class="qz-metric"><span>有效交易日</span><strong id="qz-sample">—</strong></div><div class="qz-metric"><span>已確認收盤日</span><strong id="qz-day">—</strong></div></div>'+
+'<div class="qz-metrics"><div class="qz-metric"><span>最新 QTemp</span><strong id="qz-current">—</strong></div><div class="qz-metric"><span>目前區間</span><strong id="qz-zone">—</strong></div><div class="qz-metric"><span>目前歷史百分位</span><strong id="qz-percentile">—</strong></div><div class="qz-metric"><span>有效交易日</span><strong id="qz-sample">—</strong></div><div class="qz-metric"><span>已確認收盤日</span><strong id="qz-day">—</strong></div></div>'+
 '<div class="qz-signal" id="qz-signal" hidden></div>'+
 '<section class="qz-card"><div class="qz-card-head"><h3>歷史分數分布</h3><p>真實日 K 直方圖與經平滑的分布曲線；虛線代表目前位置</p></div><div class="qz-chart" id="qz-bell"></div></section>'+
 '<section class="qz-card"><div class="qz-card-head"><h3>年度區間熱力圖</h3><p>依年份統計各 QTemp 區間的交易日數</p></div><div id="qz-heatmap" class="qz-overflow"></div></section>'+
@@ -140,6 +140,7 @@ function display(data){
  $('qz-current').textContent=data.current.score.toFixed(2);
  $('qz-zone').textContent=data.current.label+(data.current.highRisk100?' · 100 分高風險':'');
  $('qz-zone').style.color=data.zones.find(z=>z.key===data.current.zone)?.color||'#35435d';
+ $('qz-percentile').textContent=data.current.percentile.toFixed(2)+'%';
  $('qz-sample').textContent=fmt(data.sample)+' 天';
  $('qz-day').textContent=data.end;
  const signal=$('qz-signal'),confirmation=data.current.confirmation;
