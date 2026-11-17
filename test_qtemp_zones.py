@@ -9,10 +9,24 @@ class QTempZoneTests(unittest.TestCase):
         cases={
           -100:"bottom",-95.01:"bottom",-95:"dca",-90:"dca",-75.01:"dca",
           -75:"neutral",0:"neutral",75:"neutral",75.01:"strong",94.99:"strong",
-          95:"boundary",95.01:"overvalued",100:"overvalued"
+          95:"overvalued",95.01:"overvalued",99.999:"overvalued",100:"highrisk"
         }
         for score,expected in cases.items():
             self.assertEqual(classify(score),expected)
+    def test_hundred_is_counted_only_in_high_risk(self):
+        dates=pd.bdate_range("2025-01-02",periods=6)
+        scores=[94.99,95.,99.99,100.,100.,-100.]
+        frame=pd.DataFrame({"Close":[100.]*6},index=dates)
+        values=pd.DataFrame({"QTemp":scores,"暫算":[False]*6},index=dates)
+        events=pd.DataFrame(columns=["類型","確認日","暫算"])
+        result=zone_analytics(frame,values,events,10)
+        by_key={z["key"]:z for z in result["zones"]}
+        self.assertEqual(by_key["highrisk"]["days"],2)
+        self.assertEqual(by_key["overvalued"]["days"],2)
+        self.assertEqual(by_key["strong"]["days"],1)
+        self.assertEqual(sum(z["days"] for z in result["zones"]),6)
+        self.assertEqual(sum(z["percent"] for z in result["zones"]),100)
+        self.assertEqual(result["zones"][-1]["bounds"],"QTemp = 100")
     def test_counts_exclude_warmup_and_current_signal_price(self):
         dates=pd.bdate_range("2025-01-02",periods=220)
         score=np.r_[np.full(2,-99.),np.full(50,-96.),np.full(50,-80.),np.full(50,0.),np.full(50,85.),np.full(17,98.),[-98.]]
