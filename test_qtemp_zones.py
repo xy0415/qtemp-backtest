@@ -91,6 +91,26 @@ class QTempZoneTests(unittest.TestCase):
         self.assertAlmostEqual(result["current"]["percentile"],77.5)
         self.assertEqual(result["highRisk"]["exact100Days"],0)
 
+    def test_recent_excluded_warmup_does_not_change_confirmed_current_state(self):
+        frame,values,events=self.fixture([-96,-97,100],[False,False,True])
+        result=zone_analytics(frame,values,events,1,"fixed")
+        self.assertEqual(result["sample"],2)
+        self.assertEqual(result["current"]["score"],-97)
+        self.assertEqual(result["current"]["zone"],"extreme_low")
+        self.assertFalse(result["current"]["highRisk100"])
+        self.assertEqual(result["end"],frame.index[-2].strftime("%Y-%m-%d"))
+        self.assertEqual(sum(y["total"] for y in result["annual"]),2)
+
+    def test_percentile_annual_and_entry_counts_are_mutually_exclusive(self):
+        frame,values,events=self.fixture([0,5,10,15,20,25,30,35,40,45,50,100])
+        result=zone_analytics(frame,values,events,10,"percentile")
+        self.assertEqual(len(result["zones"]),7)
+        self.assertEqual(sum(z["days"] for z in result["zones"]),result["sample"])
+        self.assertAlmostEqual(sum(z["percent"] for z in result["zones"]),100,places=9)
+        self.assertEqual(sum(y["total"] for y in result["annual"]),result["sample"])
+        self.assertEqual(result["highRisk"]["exact100Days"],1)
+        self.assertEqual(sum(z["entries"] for z in result["zones"]),12)
+
     def test_period_filters_and_all(self):
         d=pd.bdate_range("2010-01-01","2026-11-16")
         frame=pd.DataFrame({"Close":np.ones(len(d))},index=d)
