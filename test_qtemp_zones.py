@@ -1,54 +1,121 @@
-"""Deterministic QTemp state zone classification and history checks."""
+"""Deterministic seven-zone, high-risk and empirical percentile regression tests.
+
+Fixture prices are test data only; none appear as public market prices.
+"""
 import unittest
 import numpy as np
 import pandas as pd
-from qtemp_zones import classify, zone_analytics
+from unittest.mock import patch
+from qtemp_zones import (
+    classify, classify_percentile, zone_analytics, _episodes, site_zones
+)
 
 class QTempZoneTests(unittest.TestCase):
-    def test_strict_thresholds(self):
-        cases={
-          -100:"bottom",-95.01:"bottom",-95:"dca",-90:"dca",-75.01:"dca",
-          -75:"neutral",0:"neutral",75:"neutral",75.01:"strong",94.99:"strong",
-          95:"overvalued",95.01:"overvalued",99.999:"overvalued",100:"highrisk"
-        }
-        for score,expected in cases.items():
-            self.assertEqual(classify(score),expected)
-    def test_hundred_is_counted_only_in_high_risk(self):
-        dates=pd.bdate_range("2025-01-02",periods=6)
-        scores=[94.99,95.,99.99,100.,100.,-100.]
-        frame=pd.DataFrame({"Close":[100.]*6},index=dates)
-        values=pd.DataFrame({"QTemp":scores,"暫算":[False]*6},index=dates)
+    def fixture(self, scores, warmup=None, start="2025-01-02"):
+        d=pd.bdate_range(start,periods=len(scores))
+        frame=pd.DataFrame({"Close":np.linspace(100,130,len(d))},index=d)
+        values=pd.DataFrame({"QTemp":scores,"暫算":warmup if warmup is not None else [False]*len(d)},index=d)
         events=pd.DataFrame(columns=["類型","確認日","暫算"])
+        return frame,values,events
+
+    def test_strict_seven_zone_boundaries(self):
+        cases={
+            -100:"extreme_low",-95.001:"extreme_low",
+            -95:"undervalued",-75.001:"undervalued",
+            -75:"weak",-35.001:"weak",
+            -35:"neutral",0:"neutral",35:"neutral",
+            35.001:"strong",75:"strong",
+            75.001:"overvalued",94.999:"overvalued",
+            95:"extreme_high",99.999:"extreme_high",100:"extreme_high"
+        }
+        for value,key in cases.items():
+            with self.subTest(value=value):
+                self.assertEqual(classify(value),key)
+        with self.assertRaises(ValueError):classify(np.nan)
+
+    def test_mutual_exclusivity_and_no_double_count_at_100(self):
+        scores=[-100,-95,-75,-35,35,75,75.01,95,100,100,0]
+        frame,values,events=self.fixture(scores)
         result=zone_analytics(frame,values,events,10)
+        self.assertEqual(len(result["zones"]),7)
+        self.assertEqual(sum(z["days"] for z in result["zones"]),len(scores))
+        self.assertAlmostEqual(sum(z["percent"] for z in result["zones"]),100,places=9)
+        self.assertEqual(sum(y["total"] for y in result["annual"]),len(scores))
+        self.assertEqual(sum(result["histogram"]["counts"]),len(scores))
+        self.assertEqual(result["highRisk"]["exact100Days"],2)
+        self.assertAlmostEqual(result["highRisk"]["exact100Percent"],200/len(scores))
+        self.assertEqual(next(z["days"] for z in result["zones"] if z["key"]=="extreme_high"),3)
+        self.assertEqual(result["current"]["zone"],"neutral")
+        self.assertFalse(result["current"]["highRisk100"])
+
+    def test_hundred_current_warning_is_overlay_not_eighth_band(self):
+        frame,values,events=self.fixture([98,99.9,100.])
+        result=zone_analytics(frame,values,events)
+        self.assertEqual(result["current"]["label"],"極端高估")
+        self.assertTrue(result["current"]["highRisk100"])
+        self.assertEqual(result["highRisk"]["exact100Days"],1)
+        self.assertEqual(len(result["zones"]),7)
+        self.assertEqual(sum(z["days"] for z in result["zones"]),3)
+
+    def test_streaks_entries_average_longest_and_invalid_gap(self):
+        # Segment: low(low,low), neutral, low(low), gap(warmup), low
+        frame,values,events=self.fixture([-99,-99,0,-99,-99,-99,-99],
+                                         [False,False,False,False,False,True,False])
+        result=zone_analytics(frame,values,events)
+        low=next(z for z in result["zones"] if z["key"]=="extreme_low")
+        self.assertEqual(low["days"],5)
+        self.assertEqual(low["entries"],3)
+        self.assertAlmostEqual(low["averageDays"],5/3)
+        self.assertEqual(low["longestDays"],2)
+        self.assertEqual(low["ongoingDays"],1)
+        self.assertEqual(result["totalWarmupExcluded"],1)
+
+    def test_confirmed_bottom_reference_price_not_retroactive(self):
+        frame,values,events=self.fixture([-98]*30)
+        events=pd.DataFrame([{"類型":"低估值","確認日":frame.index[-1],"暫算":False}])
+        result=zone_analytics(frame,values,events)
+        self.assertEqual(result["current"]["confirmation"]["confirmedPrice"],130.)
+        events.iloc[0,events.columns.get_loc("確認日")]=frame.index[-2]
+        self.assertIsNone(zone_analytics(frame,values,events)["current"]["confirmation"])
+
+    def test_percentile_ties_are_not_split_across_bins(self):
+        frame,values,events=self.fixture([10.]*10+[20.]*10)
+        result=zone_analytics(frame,values,events,10,"percentile")
         by_key={z["key"]:z for z in result["zones"]}
-        self.assertEqual(by_key["highrisk"]["days"],2)
-        self.assertEqual(by_key["overvalued"]["days"],2)
-        self.assertEqual(by_key["strong"]["days"],1)
-        self.assertEqual(sum(z["days"] for z in result["zones"]),6)
-        self.assertEqual(sum(z["percent"] for z in result["zones"]),100)
-        self.assertEqual(result["zones"][-1]["bounds"],"QTemp = 100")
-    def test_counts_exclude_warmup_and_current_signal_price(self):
-        dates=pd.bdate_range("2025-01-02",periods=220)
-        score=np.r_[np.full(2,-99.),np.full(50,-96.),np.full(50,-80.),np.full(50,0.),np.full(50,85.),np.full(17,98.),[-98.]]
-        frame=pd.DataFrame({"Close":np.linspace(100,300,220)},index=dates)
-        values=pd.DataFrame({"QTemp":score,"暫算":[True,True]+[False]*218},index=dates)
-        events=pd.DataFrame([{
-           "類型":"低估值","確認日":dates[-1],"確認收盤價":300.,
-           "暫算":False
-        }])
-        result=zone_analytics(frame,values,events,10)
-        self.assertEqual(result["sample"],218)
-        self.assertEqual(sum(z["days"] for z in result["zones"]),218)
-        self.assertEqual(sum(y["total"] for y in result["annual"]),218)
-        self.assertEqual(sum(result["histogram"]["counts"]),218)
-        self.assertEqual(result["current"]["zone"],"bottom")
-        self.assertEqual(result["current"]["confirmation"]["confirmedPrice"],300.)
-        self.assertEqual(result["current"]["confirmation"]["day"],dates[-1].strftime("%Y-%m-%d"))
-    def test_signal_is_not_retroactively_triggered(self):
-        dates=pd.bdate_range("2025-01-02",periods=210)
-        frame=pd.DataFrame({"Close":np.full(210,50.)},index=dates)
-        values=pd.DataFrame({"QTemp":np.full(210,-96.),"暫算":np.zeros(210,dtype=bool)},index=dates)
-        events=pd.DataFrame([{"類型":"低估值","確認日":dates[-2],"確認收盤價":50.,"暫算":False}])
-        self.assertIsNone(zone_analytics(frame,values,events,10)["current"]["confirmation"])
-if __name__=="__main__":
-    unittest.main()
+        self.assertEqual(sum(z["days"] for z in result["zones"]),20)
+        self.assertAlmostEqual(sum(z["percent"] for z in result["zones"]),100)
+        self.assertEqual(sum(z["days"] for z in result["zones"] if z["days"]),20)
+        self.assertEqual(by_key["p2"]["days"],10)  # 10-score percentile 27.5
+        self.assertEqual(by_key["p4"]["days"],10)  # 20-score percentile 77.5
+        self.assertEqual(result["current"]["zone"],"p4")
+        self.assertAlmostEqual(result["current"]["percentile"],77.5)
+        self.assertEqual(result["highRisk"]["exact100Days"],0)
+
+    def test_period_filters_and_all(self):
+        d=pd.bdate_range("2010-01-01","2026-11-16")
+        frame=pd.DataFrame({"Close":np.ones(len(d))},index=d)
+        values=pd.DataFrame({"QTemp":np.linspace(-100,100,len(d)),"暫算":False},index=d)
+        events=pd.DataFrame(columns=["類型","確認日","暫算"])
+        all_result=zone_analytics(frame,values,events,None)
+        one=zone_analytics(frame,values,events,1)
+        fifteen=zone_analytics(frame,values,events,15)
+        self.assertGreater(all_result["sample"],fifteen["sample"])
+        self.assertGreater(fifteen["sample"],one["sample"])
+        self.assertEqual(sum(z["days"] for z in one["zones"]),one["sample"])
+        self.assertEqual(sum(z["days"] for z in fifteen["zones"]),fifteen["sample"])
+        self.assertEqual(sum(z["days"] for z in all_result["zones"]),all_result["sample"])
+
+    def test_percentile_boundary_values_exclusive(self):
+        cases={0:"p0",4.999:"p0",5:"p1",19.999:"p1",20:"p2",40:"p3",
+               60:"p3",60.001:"p4",80:"p4",80.001:"p5",95:"p5",95.001:"p6",100:"p6"}
+        for score,key in cases.items():
+            self.assertEqual(classify_percentile(score),key)
+
+    def test_site_validation_and_legacy_api_signature(self):
+        with self.assertRaises(ValueError):site_zones("SPY","20y","fixed")
+        with self.assertRaises(ValueError):site_zones("SPY","10y","nonsense")
+        # Legacy zone_analytics(frame, values, events, 10) remains valid.
+        frame,values,events=self.fixture([0,5,10])
+        self.assertEqual(zone_analytics(frame,values,events,10)["sample"],3)
+
+if __name__=="__main__":unittest.main()
