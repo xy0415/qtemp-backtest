@@ -109,7 +109,7 @@ class QTempZoneTests(unittest.TestCase):
         self.assertAlmostEqual(sum(z["percent"] for z in result["zones"]),100,places=9)
         self.assertEqual(sum(y["total"] for y in result["annual"]),result["sample"])
         self.assertEqual(result["highRisk"]["exact100Days"],1)
-        self.assertEqual(sum(z["entries"] for z in result["zones"]),12)
+        self.assertEqual(sum(z["entries"] for z in result["zones"]),6)  # Six consecutive percentile bands are occupied.
 
     def test_period_filters_and_all(self):
         d=pd.bdate_range("2010-01-01","2026-11-16")
