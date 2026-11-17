@@ -51,7 +51,10 @@ function plotHistogram(data){
  });
  const line=smooth.map((v,i)=>(i?'L':'M')+pos((edges[i]+edges[i+1])/2).toFixed(2)+' '+y(v).toFixed(2)).join(' ');
  svgEl(svg,'path',{d:line,fill:'none',stroke:'#555bdc','stroke-width':3.3,'stroke-linecap':'round','stroke-linejoin':'round'});
- [-100,-95,-75,-35,0,35,75,95,100].forEach(v=>
+ [-95,-75,-35,35,75,95].forEach(v=>
+  svgEl(svg,'line',{x1:pos(v),x2:pos(v),y1:top,y2:height-bottom,
+    stroke:'#c6c9e8','stroke-dasharray':'3 5','stroke-width':1}));
+ [-100,-75,-35,0,35,75,100].forEach(v=>
   svgEl(svg,'text',{x:pos(v),y:height-13,'text-anchor':'middle','font-size':v===0?13:11,fill:'#78869f'},v));
  const x=pos(Math.min(100,Math.max(-100,data.current.score)));
  svgEl(svg,'line',{x1:x,x2:x,y1:top,y2:height-bottom,stroke:'#313b9f','stroke-width':2.5,'stroke-dasharray':'6 5'});
