@@ -11,6 +11,11 @@ import financial_market as fm
 from app import app
 
 class MarketPortalTests(unittest.TestCase):
+    def setUp(self):
+        cache = patch.object(fm, "_cache", {})
+        cache.start()
+        self.addCleanup(cache.stop)
+
     def test_sox_is_a_true_index_not_soxx_etf(self):
         entry=next(x for x in fm.INDEXES if x[0]=="^SOX")
         self.assertEqual(entry[1],"費城半導體 SOX")
@@ -59,6 +64,9 @@ class MarketPortalTests(unittest.TestCase):
         self.assertEqual(client.get("/health").status_code,200)
         self.assertEqual(client.get("/financial_portal.js").status_code,200)
         self.assertEqual(client.get("/financial_portal.css").status_code,200)
+        for asset in ("equation_news.js", "market_terminal.css"):
+            with client.get("/static/" + asset) as response:
+                self.assertEqual(response.status_code, 200)
         self.assertEqual(client.get("/api/market/history/NOT_A_REAL_SYMBOL").status_code,400)
         self.assertIn("no-store",client.get("/api/market/history/NOT_A_REAL_SYMBOL").headers.get("Cache-Control",""))
         self.assertEqual(client.get("/api/market/history/%5ESOX?period=unlimited").status_code,400)

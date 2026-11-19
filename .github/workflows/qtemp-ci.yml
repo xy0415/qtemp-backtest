@@ -2,6 +2,8 @@ name: QTemp validation
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
@@ -29,6 +31,7 @@ jobs:
           node --check qtemp_zones_ui.js
           node --check deep_comparison_ui.js
           node --check financial_portal.js
+          node --check static/equation_news.js
           node - <<'JS'
           const fs=require('fs');
           const html=fs.readFileSync('index.html','utf8');
@@ -60,6 +63,8 @@ jobs:
           assert app.test_client().get('/deep_comparison.css').status_code==200
           assert app.test_client().get('/financial_portal.js').status_code==200
           assert app.test_client().get('/financial_portal.css').status_code==200
+          assert app.test_client().get('/static/equation_news.js').status_code==200
+          assert app.test_client().get('/static/market_terminal.css').status_code==200
           diag=app.test_client().get('/api/diagnostics')
           assert diag.status_code==200
           assert 'uptimeSeconds' in diag.json and 'errors' in diag.json

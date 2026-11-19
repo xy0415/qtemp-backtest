@@ -3,12 +3,12 @@
 const root=document.getElementById('qtemp_root');
 if(!root)return;
 const routes=[
-['overview','市場總覽','全球金融市場總覽','全球指數、SOX、跨資產報價、新聞及市場風險。'],
-['markets','金融市場','金融市場','全球股市、利率、商品、外匯與加密行情。'],
-['macro','總體經濟','總體經濟','利率、殖利率、美元與官方總經資料。'],
-['sectors','產業研究','產業研究','產業 ETF 實際表現與半導體產業研究入口。'],
-['stocks','個股分析','個股分析','搜尋股票、研究行情並連結基本面官方資料。'],
-['news','金融新聞','金融新聞','Fed 與 SEC 官方最新公告。'],
+['overview','市場總覽','全球金融市場總覽',''],
+['markets','金融市場','金融市場','全球股指、利率、商品、外匯與數位資產'],
+['macro','總體經濟','總體經濟','利率、美元與官方經濟數據入口'],
+['sectors','產業研究','產業研究','產業 ETF 日線表現與半導體比較'],
+['stocks','個股分析','個股分析','台美股與 ETF 搜尋'],
+['news','金融快訊','金融快訊',''],
 ['quant','量化研究','量化研究','QTemp 指標、訊號研究、策略回測與多資產比較。'],
 ['watchlist','自選股','自選股觀察','在瀏覽器管理觀察清單與訊號提醒。'],
 ['chart','QTemp 圖表','行情與技術圖表','已確認日 K、QTemp 指標、時間範圍與趨勢線整合。'],
@@ -25,7 +25,7 @@ const header=document.createElement('header');
 header.className='qtopbar';
 const brand=document.createElement('a');
 brand.className='qbrand';brand.href='#overview';
-brand.innerHTML='<span class="qbrand-mark" aria-hidden="true"><img src="/favicon.svg?v=2" alt="" width="35" height="35"></span><span>QTemp Analytics</span>';
+brand.innerHTML='<span class="qbrand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>QTemp Analytics</span>';
 header.append(brand);
 const nav=document.createElement('nav');nav.className='qtopnav';nav.setAttribute('aria-label','網站主導覽');
 routes.filter(r=>mainRoutes.includes(r[0])).forEach(([id,label])=>{
@@ -44,7 +44,7 @@ help.type='button';help.className='qtopend qhelp-link';help.dataset.go='resource
 help.textContent='資料與說明';header.append(help);
 base.before(header);
 const hero=document.createElement('section');hero.className='qhero';
-hero.innerHTML='<div class="qhero-content"><span class="qeyebrow">GLOBAL FINANCIAL MARKETS</span><h1>全球金融市場總覽</h1><p class="qhero-desc">全球指數 · 半導體 SOX · 利率與商品 · 官方金融資訊</p><div class="qactions"><button type="button" class="primary" data-go="markets">查看金融市場</button><button type="button" data-go="quant">量化研究</button></div></div><div class="qhero-aside"><span>金融研究平台</span><strong>Markets & Research</strong><small>行情資料與新聞皆標示來源及時間</small></div>';
+hero.innerHTML='<div class="qhero-content"><h1>全球金融<br><em>市場總覽</em></h1><p class="qhero-desc">全球股市、數位資產與跨市場異動</p><div class="qactions"><button type="button" class="primary" data-go="markets">查看全球行情</button><button type="button" data-go="news">瀏覽金融快訊</button></div><div class="qhero-quote-strip" aria-label="主要市場收盤行情"></div></div><section class="qhero-wire" aria-label="最新市場快訊"></section>';
 base.before(hero);
 const shortcuts=document.createElement('div');shortcuts.className='qshortcut';
 for(const [route,icon,title,description] of [
@@ -59,7 +59,7 @@ for(const [route,icon,title,description] of [
 const results=root.querySelector('[data-q=results]');
 results.insertAdjacentElement('afterend',shortcuts);
 const intro=document.createElement('section');intro.className='qroute-intro';
-intro.innerHTML='<div class="qcrumb"><button type="button" data-go="overview">首頁</button><span>／</span><span data-crumb="current">—</span></div><span class="qeyebrow">QTEMP WORKSPACE</span><h2></h2><p></p>';
+intro.innerHTML='<div class="qcrumb"><button type="button" data-go="overview">首頁</button><span>／</span><span data-crumb="current">—</span></div><h2></h2><p></p>';
 hero.insertAdjacentElement('afterend',intro);
 
 
@@ -120,6 +120,7 @@ function go(route,updateHash=true){
  mobileSelect.value=quantRoutes.includes(route)?'quant':route;
  intro.querySelector('[data-crumb=current]').textContent=info[1];
  intro.querySelector('h2').textContent=info[2];intro.querySelector('p').textContent=info[3];
+ intro.querySelector('p').hidden=!info[3];
  setSubnav(route==='zones'?'signals':route);
  const insight=route==='signals' && ['event','calendar'].includes(subSignal)?subSignal:
    route==='resources' && subResource==='quality'?'quality':'';

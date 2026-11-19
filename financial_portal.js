@@ -6,8 +6,8 @@ const portal=document.createElement('div');portal.className='fm-portal';portal.s
 intro.insertAdjacentElement('afterend',portal);
 const main=['overview','markets','macro','sectors','stocks','news','quant'];
 const featured=['^GSPC','^IXIC','^DJI','^SOX','^TWII','^N225'];
-const groupOrder=['美股','半導體','台股','全球','風險','利率','商品','外匯','加密'];
-let market=null,news=null,macro=null,selected='^SOX',period='3mo',requests={},loadedAt={},pending={};
+let market=null,selected='^SOX',period='3mo',requests={},loadedAt={},pending={};
+let unmountNews=null, activePage='';
 let lastAutoCheck=0;
 const link=(ticker)=>'https://finance.yahoo.com/quote/'+encodeURIComponent(ticker)+'/';
 const clean=v=>v==null||!Number.isFinite(Number(v))?'—':Number(v).toLocaleString('zh-TW',{maximumFractionDigits:2});
@@ -54,8 +54,9 @@ function card(row,click){
 }
 function headline(title,sub){
  const section=el('div',null,'fm-heading');
- const titleEl=el('h2',title),p=el('p',sub||'');
- section.append(titleEl,p);return section;
+ section.append(el('h2',title));
+ if(sub)section.append(el('p',sub));
+ return section;
 }
 function panel(title,sub){
  const section=el('section',null,'fm-panel');section.append(headline(title,sub));return section;
@@ -82,17 +83,17 @@ function plot(host,points,axis='價格',symbol=selected){
  const frame=svg('svg',{viewBox:'0 0 '+W+' '+H,role:'img','aria-label':symbol+' 日線走勢，橫軸為日期，縱軸為 '+axis});
  for(let i=0;i<=4;i++){
   const value=low+(high-low)*i/4,y=yy(value);
-  frame.append(svg('line',{x1:L,x2:W-R,y1:y,y2:y,stroke:'#e6eaf5'}));
-  frame.append(svg('text',{x:L-8,y:y+4,'text-anchor':'end',fill:'#74849d','font-size':12},clean(value)));
+  frame.append(svg('line',{x1:L,x2:W-R,y1:y,y2:y,stroke:'var(--market-line)'}));
+  frame.append(svg('text',{x:L-8,y:y+4,'text-anchor':'end',fill:'var(--market-muted)','font-size':12},clean(value)));
  }
  const path=cleanPoints.map((point,i)=>(i?'L':'M')+xx(i).toFixed(2)+' '+yy(+point[1]).toFixed(2)).join(' ');
- frame.append(svg('path',{d:path,stroke:'#6267de','stroke-width':2.6,fill:'none','stroke-linejoin':'round'}));
+ frame.append(svg('path',{d:path,stroke:'var(--market-accent)','stroke-width':2.6,fill:'none','stroke-linejoin':'round'}));
  for(let i=0;i<=4;i++){
   const pos=Math.round(i*(cleanPoints.length-1)/4),day=cleanPoints[pos][0];
-  frame.append(svg('text',{x:xx(pos),y:H-16,'text-anchor':'middle',fill:'#70809a','font-size':12},day.slice(0,7)));
+  frame.append(svg('text',{x:xx(pos),y:H-16,'text-anchor':'middle',fill:'var(--market-muted)','font-size':12},day.slice(0,7)));
  }
- frame.append(svg('text',{x:(L+W-R)/2,y:H-1,'text-anchor':'middle',fill:'#566783','font-size':12},'日期（年－月）'));
- frame.append(svg('text',{transform:'translate(18 '+H/2+') rotate(-90)','text-anchor':'middle',fill:'#566783','font-size':12},axis));
+ frame.append(svg('text',{x:(L+W-R)/2,y:H-1,'text-anchor':'middle',fill:'var(--market-muted)','font-size':12},'日期（年－月）'));
+ frame.append(svg('text',{transform:'translate(18 '+H/2+') rotate(-90)','text-anchor':'middle',fill:'var(--market-muted)','font-size':12},axis));
  host.append(frame);
 }
 function chartSection(symbol='^SOX',startPeriod='3mo'){
@@ -103,29 +104,29 @@ function chartSection(symbol='^SOX',startPeriod='3mo'){
  (market?.items||[]).forEach(x=>{const option=new Option(x.name,x.ticker);option.selected=x.ticker===selected;ticker.add(option)});
  const periodSelect=el('select');periodSelect.setAttribute('aria-label','切換圖表期間');
  [['1mo','1 個月'],['3mo','3 個月'],['6mo','6 個月'],['1y','1 年'],['2y','2 年'],['5y','5 年']].forEach(([value,name])=>{const opt=new Option(name,value);opt.selected=value===period;periodSelect.add(opt)});
- const open=el('a','查看來源 ↗','fm-chart-link');
+ const open=el('a','Yahoo Finance','fm-chart-link');
  open.href=link(selected);open.target='_blank';open.rel='noopener noreferrer';
  tools.append(ticker,periodSelect,open);section.append(tools);
  const host=el('div',null,'fm-chart'),status=el('p','載入圖表中…','fm-meta');
  section.append(host,status);
  const load=async()=>{
   selected=ticker.value;period=periodSelect.value;open.href=link(selected);
-  const entry=market?.items?.find(x=>x.ticker===selected);
-  const requestId=selected+'/'+period;
+  const symbol=ticker.value,range=periodSelect.value;
+  const requestId=symbol+'/'+range;
   status.textContent='取得 '+selected+' 的已確認日線中…';
   try{
    const data=await get('/api/market/history/'+encodeURIComponent(selected)+'?period='+encodeURIComponent(period),
     'history_'+requestId,150000);
-   if(ticker.value!==selected||periodSelect.value!==period)return;
-   const axis=selected==='^TNX'?'殖利率（%）':
-     selected==='TWD=X'?'台幣／美元':
-     selected==='JPY=X'?'日圓／美元':
-     ['GC=F','SI=F','CL=F','BTC-USD','ETH-USD','SOL-USD'].includes(selected)?'美元（USD）':
-     ['^GSPC','^IXIC','^DJI','^NDX','^RUT','^SOX','^TWII','^N225','^HSI','^VIX','DX-Y.NYB'].includes(selected)?'指數點位':
+   if(ticker.value!==symbol||periodSelect.value!==range||!section.isConnected)return;
+   const axis=symbol==='^TNX'?'殖利率（%）':
+     symbol==='TWD=X'?'台幣／美元':
+     symbol==='JPY=X'?'日圓／美元':
+     ['GC=F','SI=F','CL=F','BTC-USD','ETH-USD','SOL-USD'].includes(symbol)?'美元（USD）':
+     ['^GSPC','^IXIC','^DJI','^NDX','^RUT','^SOX','^TWII','^N225','^HSI','^VIX','DX-Y.NYB'].includes(symbol)?'指數點位':
      'ETF 收盤價格（USD）';
-   plot(host,data.points,axis,selected);
+   plot(host,data.points,axis,symbol);
    status.textContent='資料截至 '+labelDate(data.asOf)+' · '+data.source;
-  }catch(e){host.replaceChildren(el('p','圖表資料暫時不可用。','fm-empty'));status.textContent='行情來源無法取得：'+e.message}
+  }catch(e){if(ticker.value!==symbol||periodSelect.value!==range)return;host.replaceChildren(el('p','圖表資料暫時不可用。','fm-empty'));status.textContent='行情來源無法取得：'+e.message}
  };
  ticker.onchange=load;periodSelect.onchange=load;
  load();
@@ -133,15 +134,6 @@ function chartSection(symbol='^SOX',startPeriod='3mo'){
 }
 function sourceLink(title,url){
  const a=el('a',title,'fm-source-link');a.href=url;a.target='_blank';a.rel='noopener noreferrer';return a;
-}
-function newsList(holder,items,limit){
- holder.replaceChildren();
- if(!items?.length){holder.append(el('p','官方新聞暫時無法取得；不會顯示推測標題。','fm-empty'));return}
- items.slice(0,limit).forEach(n=>{
-  const row=el('article',null,'fm-news-item');
-  const title=sourceLink(n.title,n.url);title.className='fm-news-title';
-  row.append(title,el('small',n.source+' · '+(n.publishedUTC?stamp(n.publishedUTC):'未標示發布時間'),'fm-meta'));holder.append(row);
- });
 }
 function stockPrompt(){
  const section=panel('個股研究入口','搜尋代號後可查看 QTemp 走勢；企業基本面應以正式財報來源核對');
@@ -187,29 +179,56 @@ function majorCards(items,choose){
  const grid=el('div',null,'fm-indices');
  items.forEach(item=>grid.append(card(item,choose)));return grid;
 }
+function openMarket(ticker){
+ selected=ticker;
+ navigate('markets');
+}
+function homeQuotes(){
+ const strip=root.querySelector('.qhero-quote-strip');
+ strip.replaceChildren();
+ const label=el('div','主要市場收盤行情','fm-strip-caption');
+ strip.append(label);
+ if(!market){
+  strip.append(el('p','讀取已確認日線…','fm-meta'));
+  return;
+ }
+ for(const ticker of featured){
+  const quote=market.items.find(item=>item.ticker===ticker);
+  if(!quote)continue;
+  const row=el('button',null,'fm-strip-row');
+  row.type='button';
+  row.onclick=()=>openMarket(ticker);
+  row.title=quote.asOf?'收盤日 '+quote.asOf+(quote.possiblyStale?' · 日期較舊':''):'來源無資料';
+  const move=el('span',sign(quote.changePct));
+  if(quote.changePct>0)move.classList.add('fm-positive');
+  if(quote.changePct<0)move.classList.add('fm-negative');
+  const name=el('strong',quote.name);
+  if(quote.asOf){
+   const date=el('small',quote.asOf,'fm-strip-date');
+   if(quote.possiblyStale)date.classList.add('fm-market-lag');
+   name.append(date);
+  }
+  row.append(name,el('span',quote.value==null?'—':clean(quote.value)),move);
+  strip.append(row);
+ }
+}
 function overview(){
  const frag=document.createDocumentFragment();
- const a=panel('全球主要指數','費城半導體 SOX 特別列入核心指數；各市場交易日不同');
- a.append(majorCards(featured.map(x=>market.items.find(y=>y.ticker===x)).filter(Boolean),
-  ticker=>{location.hash='#markets';selected=ticker}));
- frag.append(a,chartSection(selected||'^SOX'));
  const two=el('div',null,'fm-two-col');
- const marketNote=panel('跨資產市場快覽','主要市場環境與風險觀察（延遲日線）');
- marketNote.append(majorCards(['^VIX','^TNX','GC=F','CL=F','BTC-USD','TWD=X']
-  .map(x=>market.items.find(y=>y.ticker===x)).filter(Boolean),ticker=>{selected=ticker;location.hash='#markets'}));
- two.append(marketNote);
- const feed=panel('官方金融資訊','官方來源公告；不是涵蓋全部市場的新聞聚合');
- const newsHost=el('div');newsList(newsHost,news?.articles,6);feed.append(newsHost);
- feed.append(pill('查看更多新聞',()=>navigate('news')));two.append(feed);frag.append(two);
- const sector=panel('產業強弱','產業 ETF 日線漲跌幅，與 SOX 指數屬不同資料口徑');
- const items=market.items.filter(x=>x.category==='產業 ETF').sort((a,b)=>(b.changePct??-10000)-(a.changePct??-10000));
- const grid=el('div',null,'fm-sector-grid');
- items.slice(0,6).forEach(x=>grid.append(card(x,ticker=>{selected=ticker;navigate('sectors')})));
- sector.append(grid);sector.append(pill('完整產業比較',()=>navigate('sectors')));frag.append(sector);
- frag.append(stockPrompt());
+ const watch=panel('跨資產市場','最新可得完整日線');
+ watch.append(compactMarketList(['^VIX','^TNX','GC=F','CL=F','DX-Y.NYB','BTC-USD','ETH-USD','TWD=X'],openMarket));
+ watch.append(pill('全部行情',()=>navigate('markets')));
+ two.append(chartSection(selected,period),watch);
+ frag.append(two);
+ const sector=panel('產業 ETF 表現','依來源最近收盤日漲跌幅排序');
+ const items=market.items.filter(x=>x.category==='產業 ETF').sort((a,b)=>(b.changePct??-Infinity)-(a.changePct??-Infinity));
+ sector.append(compactMarketList(items.map(item=>item.ticker),openMarket));
+ sector.classList.add('fm-market-category-wide');
+ sector.append(pill('產業研究',()=>navigate('sectors')));
+ frag.append(sector);
  return frag;
 }
-function compactMarketList(tickers){
+function compactMarketList(tickers,choose=chooseMarketTicker){
  const grid=el('div',null,'fm-market-rows');
  for(const ticker of tickers){
   const item=market.items.find(x=>x.ticker===ticker);
@@ -227,7 +246,7 @@ function compactMarketList(tickers){
   const date=el('small',item.asOf?item.asOf:'來源無資料','fm-market-date');
   if(item.possiblyStale)date.classList.add('fm-market-lag');
   row.append(id,price,change,date);
-  row.onclick=()=>chooseMarketTicker(ticker);
+  row.onclick=()=>choose(ticker);
   grid.append(row);
  }
  return grid;
@@ -307,14 +326,6 @@ function stocks(){
  sourceLink('SEC 公司申報原始資料','https://www.sec.gov/edgar/search/'));
  frag.append(s);return frag;
 }
-function newsPage(){
- const frag=document.createDocumentFragment();
- const s=panel('金融機構與監管官方公告','來源：Federal Reserve、SEC，文章以原文發布時間排序');
- const list=el('div');newsList(list,news?.articles,18);s.append(list);
- const row=el('div',null,'fm-source-row');
- row.append(sourceLink('Federal Reserve RSS','https://www.federalreserve.gov/feeds/press_all.xml'),
- sourceLink('SEC 公告 RSS','https://www.sec.gov/news/pressreleases.rss'));s.append(row);frag.append(s);return frag;
-}
 function statusRow(){
  const s=el('p',null,'fm-data-status');
  const success=(market?.items||[]).filter(x=>x.value!=null).length;
@@ -332,43 +343,53 @@ function statusRow(){
 }
 async function render(force=false){
  const page=root.dataset.view;
+ const changed=activePage!==page;
+ if(changed){
+  unmountNews?.();
+  unmountNews=null;
+  activePage=page;
+ }
  if(!main.includes(page)){portal.hidden=true;return}
  portal.hidden=false;
- const samePage=portal.dataset.activePage===page;
- if(!force||!samePage||!portal.querySelector('.fm-panel'))
-  portal.replaceChildren(el('p','載入市場資料中…','fm-loading'));
- portal.dataset.activePage=page;
  if(page==='quant'){portal.replaceChildren(quantHub());return}
  if(page==='stocks'){portal.replaceChildren(stocks());return}
  if(page==='news'){
-  try{news=await get('/api/market/news','news',300000,force);if(root.dataset.view==='news')portal.replaceChildren(newsPage(),statusRow())}
-  catch(e){portal.replaceChildren(el('p','官方新聞連線失敗，請稍後重新整理。','fm-empty'))}
+  if(!changed)return;
+  const section=el('section',null,'fm-wire-page');
+  portal.replaceChildren(section);
+  unmountNews=window.equationNews.mount(section,{official:()=>get('/api/market/news','news',120000)});
   return;
+ }
+ if(page==='overview'&&changed){
+  homeQuotes();
+  unmountNews=window.equationNews.mount(root.querySelector('.qhero-wire'),{preview:true});
+ }
+ if(changed || !portal.querySelector('.fm-panel')){
+  portal.replaceChildren(el('p','載入市場資料中…','fm-loading'));
  }
  try{
   market=await get('/api/market/overview','market',120000,force);
-  if(page==='overview')news=await get('/api/market/news','news',300000,force).catch(()=>null);
   if(root.dataset.view!==page)return;
+  if(page==='overview')homeQuotes();
   const body=page==='overview'?overview():page==='markets'?markets():page==='macro'?macros():sectors();
   portal.replaceChildren(body,statusRow());
  }catch(e){if(root.dataset.view===page){
-  if(force&&portal.querySelector('.fm-panel')){
-   const notice=el('p','更新失敗：'+e.message+'。目前顯示上一次成功取得的資料，請核對卡片日期。','fm-empty');
-   portal.prepend(notice);
-  }else portal.replaceChildren(el('p','暫時無法取得金融市場資料：'+e.message,'fm-empty'),sourceLink('Yahoo Finance','https://finance.yahoo.com/'));
+  if(page==='overview'&&!market){
+   root.querySelector('.qhero-quote-strip').replaceChildren(el('p','行情暫時無法取得','fm-meta'));
+  }
+  const warning=el('p',portal.querySelector('.fm-panel')?'行情更新失敗，目前顯示上次資料。':'暫時無法取得金融市場資料。','fm-empty fm-market-warning');
+  warning.append(pill('重試',()=>render(true)));
+  portal.querySelector('.fm-market-warning')?.remove();
+  if(portal.querySelector('.fm-panel'))portal.prepend(warning);
+  else portal.replaceChildren(warning,sourceLink('Yahoo Finance','https://finance.yahoo.com/'));
  }}
 }
 document.addEventListener('qtemp-route-change',()=>render());
 function refreshWhenVisible(){
- if(document.hidden||!main.includes(root.dataset.view))return;
- const now=Date.now();
- if(now-lastAutoCheck<120000)return;
- lastAutoCheck=now;
- if(root.dataset.view==='news'){
-  if(now-(loadedAt.news||0)>120000)render(true);
- }else if(!['quant','stocks'].includes(root.dataset.view)){
-  if(now-(loadedAt.market||0)>120000)render(true);
- }
+ if(document.hidden||!['overview','markets','macro','sectors'].includes(root.dataset.view))return;
+ if(Date.now()-lastAutoCheck<120000)return;
+ lastAutoCheck=Date.now();
+ if(Date.now()-(loadedAt.market||0)>120000)render(true);
 }
 setInterval(refreshWhenVisible,120000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshWhenVisible()});
