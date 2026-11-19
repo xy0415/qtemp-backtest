@@ -4,6 +4,18 @@
 
 線上網站：https://qtemp-backtest.onrender.com/
 
+## 金融市場與 EquationNews 快訊中心
+
+市場首頁提供主要收盤行情、跨資產比較、產業 ETF 與最新市場快訊。原 QTemp 圖表、區間、訊號、回測與自選股可用原本的頁面連結。
+
+- 快訊中心使用 EquationNews 公開 REST API 的頻道、列表與單則快訊端點，支援全部 14 個已列出的頻道、列表來源篩選、幣種、近 30 天關鍵字、分頁與中英文切換。頻道列表也會讀取 API 新增的頻道。
+- 主頻道以 WebSocket 提醒瀏覽器重新取得 REST 資料，並使用定時更新補漏。其他頻道由 REST 定時更新。以快訊編號去重，支援快取 ETag、斷線退避與 429 避讓。
+- 單則資料按實際回應顯示可用語言、公告全文、原始連結、圖像、Telegram、事件結構化欄位與來源 AI 內容。異動資料可包含價格、未平倉量、成交量、資金費率；僅在來源提供時顯示。
+- 每個快訊頻道有 RSS 訂閱入口，有 Telegram 連結也會顯示。Fed、SEC 既有公告保留於「機關公告」。EquationNews MCP 與 REST 提供相同快訊資料，網頁使用 REST 供瀏覽器查詢。
+- 快訊以台北時間顯示。市場行情沿用 Yahoo Finance 已確認日線，交易日期依標的市場而定；快訊時間與行情日期各自標示。
+
+EquationNews 文件：https://eqn.news/api-docs
+
 ## QTemp 七區間歷史分布與連續性統計（2026-11-17）
 
 `#zones` 的「歷史區間天數與占比」已改為真實有效日 K 的**七段互斥區間比例條＋緊湊統計表**，不再使用七張大卡片。固定分數定義如下，左右端點遵守數學區間，不重複分類：
@@ -91,7 +103,7 @@ QTemp Analytics 已由單一指標首頁改成**金融市場入口 + 獨立量�
 - `capital_backtest.py`：長期三策略與資金流績效。
 - `deep_comparison.py`：多資產報酬、風險、相關與組合。
 - `research_insights.py`、`qtemp_zones.py`：資料品質、事件研究、訊號與區間統計。
-- `index.html`、`platform_navigation.js`、`workspace_glass.css` 及各功能 UI/樣式：白底藍紫色 Liquid Glass 多頁設計。
+- `index.html`、`platform_navigation.js`、`workspace_glass.css` 及各功能 UI/樣式：多頁導覽；新版市場與快訊樣式位於 `static/market_terminal.css`。
 - `market_cache.py`：已驗證 Yahoo 歷史日線 JSON 暫存，短期快取與最多七天的可標示過時備援。Render `/tmp` 非永久儲存，不能保證部署後有備援。
 - `.github/workflows/qtemp-ci.yml`：Python 編譯、JavaScript 語法、金融計算及 Flask 路由煙霧測試。
 

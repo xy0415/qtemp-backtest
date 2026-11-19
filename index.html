@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>QTemp Analytics</title><link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2"></head><body style="margin:0;background:#fff">
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>QTemp Analytics</title><link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2"></head><body>
 
 <style>
 #qtemp_root{
@@ -158,7 +158,8 @@
 <link rel="stylesheet" href="/workspace_glass.css?v=20261114clean">
 <link rel="stylesheet" href="/qtemp_zones.css?v=20261117-seven-v2">
 <link rel="stylesheet" href="/deep_comparison.css?v=20261114clean">
-<link rel="stylesheet" href="/financial_portal.css?v=20261116-grid1">
+<link rel="stylesheet" href="/financial_portal.css?v=20261119-market">
+<link rel="stylesheet" href="/static/market_terminal.css?v=20261119">
 <section id="qtemp_root">
   <div class="head"><h1>QTemp Analytics</h1><span class="source muted">Yahoo Finance</span></div>
   <div class="query">
@@ -358,15 +359,15 @@
   }
   function drawChart(current) {
     const L=globalThis.LightweightCharts, plot=q('plot');
-    const up='#e16c86', down='#26a69a', gold='#6c6af0', axis='#667087', border='#e0e5ef', grid='#eff2f8';
-    const crosshair={color:'#98a9c8',labelBackgroundColor:'#6468c9'};
+    const up='#67d5a1', down='#f48690', gold='#f5b343', axis='#a6b0bd', border='#2b333d', grid='#252d36';
+    const crosshair={color:'#8894a4',labelBackgroundColor:'#3f4957'};
     if (observer) observer.disconnect();
     if (chart) chart.remove();
     chart=L.createChart(plot,{
       width:Math.max(1,plot.clientWidth),height:plot.clientHeight,
       localization:{locale:'zh-TW'},
-      layout:{background:{color:'#ffffff'},textColor:axis,attributionLogo:true,
-              panes:{enableResize:true,separatorColor:border,separatorHoverColor:'#a7b4d4'}},
+      layout:{background:{color:'#101317'},textColor:axis,attributionLogo:true,
+              panes:{enableResize:true,separatorColor:border,separatorHoverColor:'#526173'}},
       grid:{vertLines:{color:grid},horzLines:{color:grid}},
       crosshair:{mode:L.CrosshairMode.Normal,vertLine:crosshair,horzLine:crosshair},
       rightPriceScale:{borderColor:border},
@@ -385,7 +386,7 @@
     const byDay=new Map(candles.map((row,i)=>[row[0],[row,scores[i]]]));
     c.setData(candles.map(([time,open,high,low,close])=>({time,open,high,low,close})));
     v.setData(candles.map(([time,open,high,low,close,volume])=>volume===null?{time}:
-      {time,value:volume,color:close>=open?'#e16c8666':'#26a69a66'}));
+      {time,value:volume,color:close>=open?'#67d5a166':'#f4869066'}));
     t.setData(candles.map(([time],i)=>({time,value:scores[i]})));
     [-90,0,90].forEach(price=>t.createPriceLine({price,color:'#c3c8d6',lineStyle:L.LineStyle.Dotted,axisLabelVisible:false}));
     const overlayLines=[];
@@ -802,12 +803,13 @@
 })();
 </script>
 <script src="/research_features.js?v=20261114clean" defer></script>
-<script src="/platform_navigation.js?v=20261114-market2" defer></script>
+<script src="/platform_navigation.js?v=20261119-market" defer></script>
 <script src="/research_insights_ui.js?v=20261112r1" defer></script>
 <script src="/capital_backtest_ui.js?v=20261112r1" defer></script>
 <script src="/workspace_dashboard.js?v=20261117-seven-v1" defer></script>
 <script src="/workspace_watchlist.js?v=20261114clean" defer></script>
 <script src="/qtemp_zones_ui.js?v=20261117-seven-v2" defer></script>
 <script src="/deep_comparison_ui.js?v=20261114clean" defer></script>
-<script src="/financial_portal.js?v=20261116-grid1" defer></script>
+<script src="/static/equation_news.js?v=20261119" defer></script>
+<script src="/financial_portal.js?v=20261119-market" defer></script>
 </body></html>
