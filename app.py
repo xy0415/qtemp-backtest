@@ -178,6 +178,62 @@ def rti_backtest_api(symbol):
         return jsonify(error='歷史資料暫時無法取得，請稍後重試'), 503
 
 
+@app.get('/api/rti/<symbol>/capital')
+def rti_capital_api(symbol):
+    import pandas as pd
+    if not symbol_valid(symbol.upper()):
+        return jsonify(error='標的代號無效'), 400
+    def rti_provider(code, slot):
+        data = rti_snapshot(code, 0, 0, False, slot)
+        frame = pd.DataFrame(data['rows'])
+        frame.index = pd.to_datetime(frame.pop('day'))
+        for name in ('Open','High','Low','Close'):
+            frame[name] = frame[name.lower()]
+        events = pd.DataFrame([{'類型':'低估值','暫算':False,'確認位置':i,'確認日':frame.index[i]} for i, row in enumerate(data['rows']) if row['entry']=='buy' and row['stage']=='formal'], columns=['類型','暫算','確認位置','確認日'])
+        return data['symbol'], frame, None, events
+    try:
+        result = capital_comparison(symbol.upper(), request.args.get('start','2016-01-01'),
+                 request.args.get('end',datetime.now(timezone.utc).date().isoformat()),
+                 request.args.get('initial','100000'), request.args.get('periodic','10000'),
+                 request.args.get('frequency','monthly'), request.args.get('signal','10000'),
+                 request.args.get('timing','end'), request.args.get('lump','match_dca'), snapshot_provider=rti_provider)
+        result['strategies'][0]['name']='RTI 買入訊號'
+        result['note']='RTI 歷史日線中的買入標記於該日收盤確認後，下一可交易日開盤投入，以避免使用當日完整 K 線在同日開盤交易。定投及單筆比較沿用原站資金流與風險計算；未計稅費、滑價與交易限制。'
+        return jsonify(result)
+    except ValueError as error:
+        return jsonify(error=str(error)),400
+    except Exception:
+        app.logger.exception('RTI capital comparison failed')
+        return jsonify(error='資料暫時無法取得'),503
+
+
+@app.get('/api/rti/compare')
+def rti_compare_api():
+    import pandas as pd
+    def rti_provider(symbol, slot):
+        data = rti_snapshot(symbol, 0, 0, False, slot)
+        rows = data['rows']
+        frame = pd.DataFrame(rows)
+        frame.index = pd.to_datetime(frame.pop('day'))
+        frame['Close'] = frame['close']
+        values = pd.DataFrame({'QTemp': frame['score']}, index=frame.index)
+        return data['symbol'], frame, values, None
+    try:
+        result = compare_deep(request.args.get('symbols', 'SPY,QQQ'), request.args.get('benchmark', 'SPY'),
+                              request.args.get('period', '10y'), request.args.get('start', ''),
+                              request.args.get('end', ''), request.args.get('weights', ''),
+                              request.args.get('rebalancing', 'none'), snapshot_provider=rti_provider)
+        for asset in result['assets']:
+            asset['rti'] = asset.pop('qtemp', None)
+        result['notes'][0] = '股票為 Yahoo Finance Adj Close 還原日線，加密資產為 Yahoo Finance 已結束 UTC 日線。'
+        return jsonify(result)
+    except ValueError as error:
+        return jsonify(error=str(error)), 400
+    except Exception:
+        app.logger.exception('RTI comparison failed')
+        return jsonify(error='比較資料暫時無法取得'), 503
+
+
 @app.get('/api/rti/<symbol>/valuation')
 def rti_valuation_api(symbol):
     symbol=symbol.upper()

@@ -24,9 +24,10 @@ def backtest(symbol, start, end, initial, allocation, fee):
     base_shares = initial / (rows[0]['open'] * (1 + rate))
     transactions, curve = [], []
     peak, max_drawdown = initial, 0.0
-    for r in rows:
+    for index, r in enumerate(rows):
         opening = r['open']
-        action = r['entry'] if r['stage'] == 'formal' else None
+        prior = rows[index - 1] if index else None
+        action = prior['entry'] if prior and prior['stage'] == 'formal' else None
         if action == 'buy' and cash > 1e-8:
             spent = cash * allocation / 100
             amount = spent / (opening * (1 + rate))
@@ -52,4 +53,4 @@ def backtest(symbol, start, end, initial, allocation, fee):
                 annualizedReturn=(value / initial) ** (1 / years) - 1, maxDrawdown=max_drawdown,
                 benchmarkReturn=bench / initial - 1, transactions=list(reversed(transactions)), curve=curve[::max(1,len(curve)//500)] + ([curve[-1]] if (len(curve)-1) % max(1,len(curve)//500) else []),
                 source=data['priceBasis'], stale=data['stale'],
-                note='僅採正式分位的進場訊號；依原指標超冷／超熱條件消失後的下一根日線開盤執行。每次買入使用可用現金的指定比例，賣出使用持股的指定比例；交易成本於每次成交扣除。基準為首日開盤買入並持有。股票使用還原價格，可買零股；未計稅、滑價與流動性。')
+                note='僅採正式分位的進場訊號；RTI 歷史買賣標記需該日完整日線才能確認，回測於標記日收盤確認後下一根開盤執行，以避免使用未來資料；因此與 Pine 圖上標記的開盤價有一根之差。每次買入使用可用現金的指定比例，賣出使用持股的指定比例；交易成本於每次成交扣除。基準為首日開盤買入並持有。股票使用還原價格，可買零股；未計稅、滑價與流動性。')

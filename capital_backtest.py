@@ -98,7 +98,7 @@ def _time_weighted_period_return(previous_close, closing_wealth, open_cash, clos
 
 
 def capital_comparison(symbol, start, end, initial, periodic_amount, frequency,
-                       signal_amount, timing="end", lump_mode="match_dca"):
+                       signal_amount, timing="end", lump_mode="match_dca", snapshot_provider=None):
     symbol = symbols(str(symbol), 1)[0]
     try:
         requested_start = pd.Timestamp(start).normalize()
@@ -123,7 +123,7 @@ def capital_comparison(symbol, start, end, initial, periodic_amount, frequency,
     if ia <= 0 and per_period <= 0 and signal_cash <= 0:
         raise ValueError("至少要有一種投入資金")
 
-    actual, full, values, events = snapshot(symbol, int(datetime.now(timezone.utc).timestamp() // 900))
+    actual, full, values, events = (snapshot_provider or snapshot)(symbol, int(datetime.now(timezone.utc).timestamp() // 900))
     frame = full[(full.index >= requested_start) & (full.index <= requested_end)].copy()
     if len(frame) < 60:
         raise ValueError("所選期間有效交易日不足60日，或超過該標的可取得的歷史範圍")

@@ -12,7 +12,7 @@ const menus={
  tw:[['rank','市值排行'],['index','大盤指數'],['etf','台股 ETF'],['lookup','個股查詢'],['disclosures','公司重大訊息'],['news','台股快訊']],
  us:[['rank','市值排行'],['index','主要指數'],['etf','產業與 ETF'],['lookup','個股查詢'],['news','美股快訊']],
  crypto:[['rank','市值排行'],['assets','加密資產總覽'],['lookup','幣種查詢'],['news','加密快訊']],
- rti:[['analysis','溫度分析'],['backtest','深度回測'],['method','指標說明']]
+ rti:[['analysis','行情與 RTI'],['signals','訊號研究'],['zones','區間統計'],['backtest','買賣策略'],['capital','投入策略比較'],['compare','多資產比較'],['resources','研究資源'],['method','指標說明']]
 };
 const legacy={overview:'home',markets:'us',sectors:'us/etf',stocks:'us/lookup',macro:'us/index',news:'us/news',
  quant:'rti',chart:'rti',signals:'rti',zones:'rti',strategy:'rti',compare:'rti',resources:'rti/method',watchlist:'home'};
@@ -587,6 +587,93 @@ function renderRTI(host,data){
   host.append(valuation);
  }
 }
+function rtiResearch(host,view,symbol){
+ const form=node('form',null,'terminal-form');
+ const input=node('input');input.type='search';input.value=symbol||'SPY';input.required=true;input.setAttribute('aria-label','RTI 標的代號');
+ const group=node('label','標的代號');group.append(input);const submit=node('button','查詢','terminal-button primary');submit.type='submit';form.append(group,submit);
+ const output=node('div');host.append(form,output);
+ function load(){
+  const code=cleanSymbol(input.value,input.value.match(/^\d/) ? 'tw':'us');
+  notice(output,'讀取 RTI 歷史資料…');
+  get('/api/rti/'+urlSymbol(code)+(view==='signals'?'?divergence=1':''),120000).then(data=>{
+   if(!output.isConnected)return;
+   const all=data.rows;const selector=node('select');selector.setAttribute('aria-label','統計期間');
+   for(const n of [1,3,5,10,15,0])selector.add(new Option(n?'近 '+n+' 年':'全部歷史',String(n)));
+   selector.value='10';const panel=node('div');const header=node('div',null,'terminal-actions');header.append(node('strong',data.symbol),selector,button('匯出日線 CSV',()=>downloadRows(all,data.symbol),'terminal-button'));
+   output.replaceChildren(header,node('p',[data.priceBasis,'資料日 '+data.asOf,data.stale?'上次成功資料':null].filter(Boolean).join(' · '),'terminal-meta'),panel);
+   function update(){
+    const years=Number(selector.value);const end=new Date(all.at(-1).day+'T00:00:00Z');end.setUTCFullYear(end.getUTCFullYear()-years);
+    const rows=all.filter(r=>!years||r.day>=end.toISOString().slice(0,10));const formal=rows.filter(r=>r.stage==='formal'&&Number.isFinite(r.score));
+    panel.replaceChildren();
+    if(view==='zones'){
+     const zones=[['極端低溫',-Infinity,-95],['低溫',-95,-75],['偏弱',-75,-35],['中性',-35,35.0000001],['偏強',35.0000001,75.0000001],['高溫',75.0000001,95.0000001],['極端高溫',95.0000001,Infinity]];
+     const metrics=zones.map(([name,lo,hi])=>{let days=0,segments=0,longest=0,run=0;for(const r of rows){if(r.stage==='formal'&&r.score>=lo&&r.score<hi){days++;if(!run)segments++;run++;longest=Math.max(run,longest)}else run=0}return {name,days,segments,longest,average:segments?days/segments:null,pct:formal.length?days/formal.length*100:null}});
+     panel.append(node('h2','RTI 七區間歷史統計'),node('p','依 RTI 校準分數分類；僅使用正式分位，暖機與暫算日中斷連續區間。','terminal-meta'),table([['區間',x=>x.name],['天數',x=>x.days],['比例',x=>x.pct==null?'—':quantity(x.pct)+'%'],['進入次數',x=>x.segments],['平均連續日數',x=>quantity(x.average)],['最長連續日數',x=>x.longest]],metrics));
+     const annual=[...new Set(formal.map(x=>x.day.slice(0,4)))].reverse().map(year=>({year,...Object.fromEntries(zones.map(([name,lo,hi])=>[name,formal.filter(x=>x.day.startsWith(year)&&x.score>=lo&&x.score<hi).length]))}));
+     panel.append(node('h2','年度區間分布'),table([['年度',x=>x.year],...zones.map(([name])=>[name,x=>x[name]])],annual));
+    }else if(view==='signals'){
+     const events=rows.filter(r=>r.entry&&r.stage==='formal').map(r=>({day:r.day,type:r.entry,price:r.open,score:r.score,rsi:r.rsi})).reverse();
+     const years=[...new Set(rows.map(x=>x.day.slice(0,4)))].reverse().map(year=>{const y=events.filter(x=>x.day.startsWith(year));const buys=y.filter(x=>x.type==='buy'),sells=y.filter(x=>x.type==='sell');const avg=x=>x.length?x.reduce((v,r)=>v+r.price,0)/x.length:null;return {year,buys:buys.length,buyAvg:avg(buys),sells:sells.length,sellAvg:avg(sells)}});
+     panel.append(node('h2','年度訊號統計'),table([['年度',x=>x.year],['買入次數',x=>x.buys],['買入均價',x=>quantity(x.buyAvg)],['賣出次數',x=>x.sells],['賣出均價',x=>quantity(x.sellAvg)]],years));
+     const studies=[];for(const kind of ['buy','sell'])for(const n of [5,20,60,252]){const outcomes=[];for(let i=0;i<rows.length-n;i++){const r=rows[i];if(r.entry===kind&&r.stage==='formal'&&r.open>0&&rows[i+n].close>0)outcomes.push((rows[i+n].close/r.open-1)*100)}outcomes.sort((a,b)=>a-b);let k=outcomes.length;studies.push({kind,n,count:k,avg:k?outcomes.reduce((a,b)=>a+b,0)/k:null,median:k?(outcomes[Math.floor((k-1)/2)]+outcomes[Math.floor(k/2)])/2:null,positive:k?outcomes.filter(x=>x>0).length/k*100:null})}
+     panel.append(node('h2','事件研究 · 訊號後報酬'),table([['訊號',x=>x.kind==='buy'?'買入':'賣出'],['交易日',x=>x.n],['樣本',x=>x.count],['平均報酬',x=>move(x.avg)],['中位數',x=>move(x.median)],['上漲比例',x=>x.positive==null?'—':quantity(x.positive)+'%']],studies),node('p','訊號日開盤價至指定日收盤價，未計成本。上漲比例是價格上漲比例，不等同賣出訊號勝率。','terminal-meta'));
+     panel.append(node('h2','訊號明細與日曆'),table([['日期',x=>x.day],['訊號',x=>x.type==='buy'?'買入':'賣出'],['開盤參考價',x=>quantity(x.price)],['RTI',x=>quantity(x.score)],['RSI',x=>quantity(x.rsi)]],events));
+     if(data.divergences.length)panel.append(node('h2','已確認背離'),table([['類型',x=>x.kind==='bull'?'底背離':'頂背離'],['起點',x=>x.start],['終點',x=>x.end],['確認日',x=>x.confirmed]],data.divergences.filter(x=>rows.some(r=>r.day===x.confirmed)).reverse()));
+    }else{
+     const latest=rows.at(-1);const history=rows.slice(-200).reverse();
+     panel.append(node('h2','資料品質'),node('p','日線 '+rows.length+' 筆 · 正式分位 '+formal.length+' 筆 · 最新資料 '+latest.day+' · 正式最低樣本 '+data.minimum+' · '+data.priceBasis,'terminal-meta'),node('p','所有歷史計算以資料來源已結束日線為基礎；資料不足時不補虛構價格。','terminal-meta'),node('h2','日線與 RTI 資料（最近 200 筆）'),table([['日期',x=>x.day],['開盤',x=>quantity(x.open)],['最高',x=>quantity(x.high)],['最低',x=>quantity(x.low)],['收盤',x=>quantity(x.close)],['RTI 分數',x=>quantity(x.score)],['分位',x=>quantity(x.percentile)],['訊號',x=>x.entry==='buy'?'買入':x.entry==='sell'?'賣出':'—']],history),node('h2','指標公式與 TradingView 對照'),node('p','可匯出完整日線及 RTI 欄位，與 TradingView 匯出的同標的、同週期及同價格口徑資料逐日核對。TradingView 盤中資料與網站已收盤日線可能不同。','terminal-meta'),anchor('查看 RTI 計算方式','#rti/method','terminal-button'));
+     addCsvAudit(panel,rows);
+    }
+   }
+   selector.onchange=update;update();
+  }).catch(e=>{if(output.isConnected)notice(output,e.message,load)});
+ }
+ form.onsubmit=e=>{e.preventDefault();load()};load();
+}
+function addCsvAudit(host,rows){
+ const section=node('section',null,'terminal-method');section.append(node('h2','TradingView CSV 對照'),node('p','上傳 TradingView 匯出日線 CSV；比較同日期收盤價與 RTI 原始溫度。請選擇相同代號、日線與價格還原口徑。','terminal-meta'));
+ const input=node('input');input.type='file';input.accept='.csv,text/csv';input.setAttribute('aria-label','選擇 TradingView CSV');const output=node('div');section.append(input,output);host.append(section);
+ input.onchange=async()=>{
+  const file=input.files[0];if(!file)return;if(file.size>5*1024*1024){notice(output,'CSV 超過 5 MB');return}
+  const lines=(await file.text()).replace(/^\ufeff/,'').trim().split(/\r?\n/);
+  const parse=line=>{const cells=[];let value='',quoted=false;for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'&&quoted&&line[i+1]==='"'){value+='"';i++}else if(c==='"')quoted=!quoted;else if(c===','&&!quoted){cells.push(value);value=''}else value+=c}cells.push(value);return cells};
+  const head=parse(lines.shift()).map(x=>x.trim().toLowerCase());const dateCol=head.findIndex(x=>['time','date','日期'].includes(x));const closeCol=head.findIndex(x=>['close','收盤','收盤價'].includes(x));const scoreCol=head.findIndex(x=>x.includes('原始溫度')||x.includes('原 −100')||x==='rti');
+  if(dateCol<0||closeCol<0){notice(output,'CSV 需要 time/date 與 close 欄位。');return}
+  const lookup=new Map(rows.map(r=>[r.day,r]));const matches=[];
+  for(const line of lines){const cells=parse(line);let raw=cells[dateCol]||'';if(/^\d{10,13}$/.test(raw))raw=new Date(Number(raw)*(raw.length===10?1000:1)).toISOString().slice(0,10);else raw=raw.slice(0,10);const item=lookup.get(raw);if(!item)continue;const close=Number(cells[closeCol]);const score=scoreCol>=0&&cells[scoreCol]!==''?Number(cells[scoreCol]):null;matches.push({day:raw,website:item.close,tv:Number.isFinite(close)?close:null,delta:Number.isFinite(close)?close-item.close:null,rti:item.score,tvRti:Number.isFinite(score)?score:null,rtiDelta:Number.isFinite(score)&&Number.isFinite(item.score)?score-item.score:null})}
+  output.replaceChildren(node('p','共同日期 '+matches.length+' 筆'+(scoreCol<0?' · CSV 未找到 RTI 原始溫度欄位，僅比較收盤價':''),'terminal-meta'),table([['日期',x=>x.day],['網站收盤',x=>quantity(x.website)],['TV 收盤',x=>quantity(x.tv)],['收盤差',x=>quantity(x.delta)],['網站 RTI',x=>quantity(x.rti)],['TV RTI',x=>quantity(x.tvRti)],['RTI 差',x=>quantity(x.rtiDelta)]],matches.slice(-200).reverse()));
+ };
+}
+function downloadRows(rows,symbol){
+ const cols=['day','open','high','low','close','score','percentile','stage','rsi','cold','hot','entry'];
+ const csv='\ufeff'+[cols.join(','),...rows.map(r=>cols.map(k=>r[k]??'').join(','))].join('\r\n');
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='RTI_'+symbol+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+function showCapital(host){
+ const form=node('form',null,'terminal-form');
+ function field(label,value,type='number'){const l=node('label',label),v=node('input');v.type=type;v.value=value;v.required=true;l.append(v);form.append(l);return v}
+ const symbol=field('標的代號','SPY','text'), start=field('開始日期','2016-01-01','date'),end=field('結束日期',new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Taipei'}),'date'),initial=field('期初本金','100000'),periodic=field('每期投入','10000'),signal=field('每次訊號投入','10000');
+ for(const f of [initial,periodic,signal])f.min='0';
+ const frequency=node('select');for(const [k,v] of [['weekly','每週'],['monthly','每月'],['quarterly','每季'],['semiannual','每半年'],['annual','每年']])frequency.add(new Option(v,k));frequency.value='monthly';const fl=node('label','投入頻率');fl.append(frequency);form.append(fl);
+ const submit=node('button','執行比較','terminal-button primary');submit.type='submit';form.append(submit);const result=node('div');host.append(form,result);
+ form.onsubmit=e=>{e.preventDefault();const code=cleanSymbol(symbol.value,symbol.value.match(/^\d/)?'tw':'us');const q=new URLSearchParams({start:start.value,end:end.value,initial:initial.value,periodic:periodic.value,signal:signal.value,frequency:frequency.value});notice(result,'正在比較投入策略…');get('/api/rti/'+urlSymbol(code)+'/capital?'+q,120000).then(data=>{
+ if(!result.isConnected)return;const pct=v=>typeof v==='number'?move(v*100):'—';
+ result.replaceChildren(node('p',data.symbol+' · '+data.start+' 至 '+data.end+' · '+data.days+' 個交易日','terminal-meta'),node('p',data.note,'terminal-meta'),table([['策略',x=>x.name],['累積投入',x=>quantity(x.invested)],['期末資產',x=>quantity(x.wealth)],['損益',x=>quantity(x.profit)],['總報酬',x=>pct(x.return)],['XIRR',x=>pct(x.xirr)],['最大回撤',x=>pct(x.maxDrawdown)],['投入次數',x=>x.purchaseCount]],data.strategies));
+ for(const strategy of data.strategies){result.append(node('h2',strategy.name+' · 交易明細'),table([['交易日',x=>x.entry],['類型',x=>x.type],['價格',x=>quantity(x.price)],['投入金額',x=>quantity(x.amount)],['累計股數',x=>quantity(x.shares)],['平均成本',x=>quantity(x.avgCost)]],strategy.trades));}
+ }).catch(error=>{if(result.isConnected)notice(result,error.message)})};
+}
+function showComparison(host){
+ const form=node('form',null,'terminal-form');
+ function field(label,value){const l=node('label',label),v=node('input');v.value=value;l.append(v);form.append(l);return v}
+ const symbols=field('標的（最多 4 檔，逗號分隔）','SPY,QQQ');const weights=field('權重（逗號分隔；留空等權）','');
+ const benchmark=node('select');for(const b of ['SPY','QQQ','SOXX'])benchmark.add(new Option(b,b));const b=node('label','基準');b.append(benchmark);form.append(b);
+ const period=node('select');for(const [id,label] of [['1y','1 年'],['3y','3 年'],['5y','5 年'],['10y','10 年'],['all','全部']])period.add(new Option(label,id));period.value='10y';const p=node('label','期間');p.append(period);form.append(p);
+ const rebalance=node('select');for(const [id,label] of [['none','不再平衡'],['quarterly','每季'],['annual','每年']])rebalance.add(new Option(label,id));const rr=node('label','再平衡');rr.append(rebalance);form.append(rr);
+ const submit=node('button','比較','terminal-button primary');submit.type='submit';form.append(submit);const result=node('div');host.append(form,result);
+ form.onsubmit=e=>{e.preventDefault();const q=new URLSearchParams({symbols:symbols.value,weights:weights.value,benchmark:benchmark.value,period:period.value,rebalancing:rebalance.value});notice(result,'讀取共同交易日資料…');get('/api/rti/compare?'+q,120000).then(data=>{
+ if(!result.isConnected)return;result.replaceChildren(node('p','共同交易日 '+data.commonStart+' 至 '+data.commonEnd+' · '+data.commonDays+' 日 · 基準 '+data.benchmark,'terminal-meta'),node('h2','多資產績效與風險'),table([['標的',x=>x.symbol],['RTI',x=>quantity(x.rti)],...Object.entries({totalReturn:'總報酬',cagr:'年化報酬',volatility:'年化波動',maxDrawdown:'最大回撤',sharpe:'夏普比率',winRate:'日上漲比例',beta:'Beta',alpha:'Alpha'}).map(([k,label])=>[label,x=>typeof x.metrics[k]==='number'?(['totalReturn','cagr','volatility','maxDrawdown','winRate','alpha'].includes(k)?move(x.metrics[k]*100):quantity(x.metrics[k])):'—'])],data.assets),node('h2','相關係數'),table([['標的',x=>x.symbol],...data.symbols.map(s=>[s,x=>quantity(x.values[s])])],data.correlations),...data.notes.map(x=>node('p',x,'terminal-meta')));
+ }).catch(error=>{if(result.isConnected)notice(result,error.message)})};
+}
 function route(){
  if(location.hash==='#content')return;
  if(location.hash===currentPage&&content.childElementCount)return;
@@ -609,7 +696,7 @@ function route(){
  else {
   if(!menus[market].some(item=>item[0]===category))category=menus[market][0][0];
   const host=frame(market,category);
-  if(market==='rti'){if(category==='method')showMethod(host);else if(category==='backtest')showBacktest(host,symbol);else showRTI(host,symbol);}
+  if(market==='rti'){if(category==='method')showMethod(host);else if(category==='backtest')showBacktest(host,symbol);else if(category==='capital')showCapital(host);else if(category==='compare')showComparison(host);else if(['signals','zones','resources'].includes(category))rtiResearch(host,category,symbol);else showRTI(host,symbol);}
   else if(category==='news')showNews(host,market);
   else if(category==='assets')showCryptoAssets(host);
   else if(category==='lookup')lookup(host,market,symbol);

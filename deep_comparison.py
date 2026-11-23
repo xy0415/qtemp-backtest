@@ -158,7 +158,7 @@ def _rolling_corr(returns,benchmark):
     return _points(rolling.dropna(),max_points=600)
 
 def compare_deep(text,benchmark="SPY",timeframe="10y",start="",end_date="",weights="",
-                 rebalancing="none"):
+                 rebalancing="none", snapshot_provider=None):
     selected=symbols(text,4)
     benchmark=benchmark.strip().upper()
     if benchmark not in BENCHMARKS:raise ValueError("基準指數請選 SPY、QQQ 或 SOXX")
@@ -176,7 +176,7 @@ def compare_deep(text,benchmark="SPY",timeframe="10y",start="",end_date="",weigh
     qtemps={}
     for symbol in list(dict.fromkeys([*selected,benchmark])):
         try:
-            actual,frame,values,_=snapshot(symbol,int(datetime.now(timezone.utc).timestamp()//900))
+            actual,frame,values,_=(snapshot_provider or snapshot)(symbol,int(datetime.now(timezone.utc).timestamp()//900))
             close=frame.Close.astype(float)
             if close.empty or not np.isfinite(close).all() or (close<=0).any():
                 raise ValueError("日 K 價格驗證失敗")
