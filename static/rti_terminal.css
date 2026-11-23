@@ -266,3 +266,27 @@ body #qtemp_root.rti-terminal{max-width:none;padding:0 40px 32px!important;font-
  #qtemp_root .rti-research-page .terminal-statistics,
  #qtemp_root .rti-research-page .terminal-method{padding:14px}
 }
+/* Editorial gallery-inspired interface: clean surfaces and restrained motion. */
+:root{--market-bg:#f6f6f3;--market-panel:#fff;--market-raised:#f1f1ee;--market-line:#e0e2df;--market-ink:#20242a;--market-muted:#686f79;--market-accent:#525fe7;--market-up:#16866b;--market-down:#d35460}
+body{background:#f6f6f3!important;color:#20242a!important}
+#qtemp_root .market-tapes{background:#242631;border-color:#343641}
+#qtemp_root .tape-item,#qtemp_root .tape-label{color:#f6f6f3!important}
+#qtemp_root #pause-tapes{background:#242631;color:#fff}
+#qtemp_root .terminal-hero{background:#f6f6f3;border-color:#e0e2df}
+#qtemp_root .hero-left,#qtemp_root .hero-metrics,#qtemp_root .terminal-sidebar,#qtemp_root .terminal-header{border-color:#e0e2df}
+#qtemp_root .hero-headline .hero-highlight{color:#525fe7}
+#qtemp_root .hero-description{color:#686f79}
+#qtemp_root .hero-quote .hero-price,#qtemp_root .terminal-link{color:#525fe7!important}
+#qtemp_root .terminal-button{color:#252933;background:#fff;border-color:#d9dce2;border-radius:9px;transition:transform .18s,box-shadow .18s}
+#qtemp_root .terminal-button:hover{transform:translateY(-2px);box-shadow:0 6px 18px #242b4018}
+#qtemp_root .terminal-button.primary{background:#525fe7!important;border-color:#525fe7!important;color:white!important}
+#qtemp_root .hero-terminal{background:#fff;border-radius:18px;margin:28px;box-shadow:0 12px 40px #252b3a0c}
+#qtemp_root .hero-preview .terminal-table-wrap,#qtemp_root .hero-quote-metrics,#qtemp_root .hero-quote-metrics>div{border-color:#e3e5e8}
+#qtemp_root .home-market{background:transparent;border-color:#e0e2df}
+#qtemp_root .terminal-notice,#qtemp_root .terminal-method,#qtemp_root .terminal-statistics,#qtemp_root .terminal-chart,#qtemp_root .rti-vitals div{background:#fff}
+#qtemp_root .terminal-table td,#qtemp_root .terminal-table th{border-color:#e5e7eb}
+#qtemp_root .terminal-sidebar a[aria-current]{background:#eceeff;border-color:#dce0ff;color:#525fe7}
+#qtemp_root .terminal-form input,#qtemp_root input[aria-label="搜尋加密資產"]{background:#fff;color:#20242a;border-color:#d9dce2;border-radius:8px}
+#qtemp_root .home-listing-header{border-color:#e0e2df}
+@media(max-width:850px){#qtemp_root .hero-terminal{margin:16px}#qtemp_root .hero-left{border-color:#e0e2df}}
+@media(prefers-reduced-motion:reduce){#qtemp_root .terminal-button{transition:none}}

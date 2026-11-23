@@ -7,7 +7,7 @@ const format=new Intl.NumberFormat('zh-TW',{maximumFractionDigits:2});
 const tiny=new Intl.NumberFormat('zh-TW',{maximumSignificantDigits:5});
 const compact=new Intl.NumberFormat('en-US',{notation:'compact',maximumFractionDigits:2});
 const time=new Intl.DateTimeFormat('zh-TW',{timeZone:'Asia/Taipei',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
-const tapeNames={tw:'台股',us:'美股',crypto:'加密貨幣'};
+const tapeNames={crypto:'加密貨幣'};
 const menus={
  tw:[['rank','市值排行'],['index','大盤指數'],['etf','台股 ETF'],['lookup','個股查詢'],['disclosures','公司重大訊息'],['news','台股快訊']],
  us:[['rank','市值排行'],['index','主要指數'],['etf','產業與 ETF'],['lookup','個股查詢'],['news','美股快訊']],
@@ -196,15 +196,15 @@ function showHome(){
  const hero=node('section',null,'terminal-hero');
  const left=node('div',null,'hero-left');
  const copy=node('div',null,'hero-copy');
- const eyebrow=node('p','MARKET INTELLIGENCE  ·  台股 / 美股 / 加密貨幣','hero-regions');
+ const eyebrow=node('p','MARKET INTELLIGENCE  ·  加密貨幣 / RTI 量化研究','hero-regions');
  const title=node('h1',null,'hero-headline');
  title.append(node('span','掌握市場。'),node('span','洞悉溫度。'),node('span','從數據開始。','hero-highlight'));
- const intro=node('p','整合台股、美股及加密貨幣行情與市場快訊，搭配 RTI 歷史溫度分析，讓每一次研究都有清楚依據。','hero-description');
+ const intro=node('p','整合加密貨幣行情、鏈上市場與即時快訊，搭配 RTI 歷史溫度分析，讓每一次研究都有清楚依據。','hero-description');
  const links=node('div',null,'hero-links');
- links.append(anchor('探索市場','#tw','terminal-button primary'),anchor('RTI 深度回測','#rti/backtest','terminal-button'));
+ links.append(anchor('探索市場','#crypto','terminal-button primary'),anchor('RTI 深度回測','#rti/backtest','terminal-button'));
  copy.append(eyebrow,title,intro,links);
  const metrics=node('div',null,'hero-metrics');
- for(const [label,value,detail] of [['市場專區','03','台股 / 美股 / 加密'],['市場快訊','LIVE','EquationNews'],['資產排行','100','CoinMarketCap'],['技術分析','RTI','歷史溫度與回測']]){
+ for(const [label,value,detail] of [['市場專區','01','加密貨幣'],['市場快訊','LIVE','EquationNews'],['資產排行','100','CoinMarketCap'],['技術分析','RTI','歷史溫度與回測']]){
   const box=node('div');box.append(node('small',label),node('strong',value),node('small',detail));metrics.append(box);
  }
  left.append(copy,metrics);
@@ -692,7 +692,7 @@ function route(){
   else a.removeAttribute('aria-current');
  }
  content.replaceChildren();
- if(!menus[market])showHome();
+ if(!['crypto','rti'].includes(market))showHome();
  else {
   if(!menus[market].some(item=>item[0]===category))category=menus[market][0][0];
   const host=frame(market,category);
