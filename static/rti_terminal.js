@@ -550,6 +550,21 @@ function renderRTI(host,data){
   ],data.annual.slice(0,Number(years.value))));
  years.onchange=update;update();
  stats.append(options,yearTable);host.append(stats);
+ const study=node('section',null,'terminal-statistics');
+ study.append(node('h2','歷史訊號與後續報酬'),node('p','依原站的訊號研究方式，統計正式 RTI 進場訊號後的歷史表現；日數為交易日，報酬以訊號日開盤價至指定日收盤價計算。','terminal-meta'));
+ const findings=[];
+ for(const type of ['buy','sell'])for(const horizon of [5,20,60,252]){
+  const values=[];
+  for(let i=0;i<rows.length-horizon;i++){
+   const row=rows[i],future=rows[i+horizon];
+   if(row.entry===type&&row.stage==='formal'&&row.open>0&&future.close>0)values.push((future.close/row.open-1)*100);
+  }
+  values.sort((a,b)=>a-b);const n=values.length;
+  findings.push({type,horizon,n,avg:n?values.reduce((a,b)=>a+b,0)/n:null,median:n?(values[Math.floor((n-1)/2)]+values[Math.floor(n/2)])/2:null,positive:n?100*values.filter(x=>x>0).length/n:null});
+ }
+ study.append(table([['訊號',x=>x.type==='buy'?'過冷買入':'過熱賣出'],['持有日數',x=>x.horizon],['有效樣本',x=>x.n],['平均報酬',x=>move(x.avg)],['報酬中位數',x=>move(x.median)],['上漲比例',x=>x.positive==null?'—':quantity(x.positive)+'%']],findings));
+ study.append(node('p','資料不足的訊號不列入統計；每個期間的有效樣本數可能不同。未計交易成本、稅與滑價。','terminal-meta'));
+ host.append(study);
  if(data.divergences.length){
   const panel=node('section',null,'terminal-statistics');
   panel.append(node('h2','已確認背離'),table([

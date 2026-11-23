@@ -76,6 +76,71 @@ def _cmc(key):
     return result
 
 
+def _numeric(value):
+    try:
+        return float(str(value).replace(',', '').replace('$', '').replace('%', '').strip())
+    except (ValueError, TypeError):
+        return None
+
+
+def _twse_equities():
+    """Official listed stocks; cap is close times issued ordinary shares, not intraday."""
+    companies = _json('https://openapi.twse.com.tw/v1/opendata/t187ap03_L')
+    prices = _json('https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL')
+    by_code = {str(item.get('公司代號')): item for item in companies}
+    rows = []
+    for price in prices:
+        code = str(price.get('Code', ''))
+        company = by_code.get(code)
+        if not company or len(code) != 4 or not code.isdigit():
+            continue
+        close = _numeric(price.get('ClosingPrice'))
+        shares = _numeric(company.get('已發行普通股數或TDR原股發行股數'))
+        change = _numeric(price.get('Change'))
+        if not close or not shares or close <= 0 or shares <= 0:
+            continue
+        previous = close - change if change is not None else None
+        day = str(price.get('Date') or '')
+        if len(day)==8 and day.isdigit():
+            asof = day[:4]+'-'+day[4:6]+'-'+day[6:]
+        elif len(day)==7 and day.isdigit():
+            asof = str(int(day[:3])+1911)+'-'+day[3:5]+'-'+day[5:]
+        else:
+            asof = None
+        rows.append(dict(ticker=code+'.TW', name=company.get('公司簡稱') or price.get('Name'),
+                         marketCap=close*shares, value=close, changePct=(change/previous*100 if previous and previous>0 else None),
+                         volume=_numeric(price.get('TradeVolume')), currency='TWD', asOf=asof))
+    return '臺灣證交所 · 上市股票 · 收盤估算市值（未含上櫃）', rows
+
+
+def _nasdaq_equities():
+    """Nasdaq-listed US securities screener; preserve provider price timestamp semantics."""
+    address = 'https://api.nasdaq.com/api/screener/stocks?tableonly=true&limit=10000&offset=0&download=true'
+    data = _json(address, {'User-Agent':'Mozilla/5.0 (compatible; MarketResearch/1.0)',
+                           'Origin':'https://www.nasdaq.com', 'Referer':'https://www.nasdaq.com/'})
+    table = (data.get('data') or {}).get('table') or {}
+    rows=[]
+    for row in table.get('rows', []):
+        ticker=str(row.get('symbol') or '').upper()
+        cap=_numeric(row.get('marketCap'))
+        value=_numeric(row.get('lastsale'))
+        if not ticker or not cap or not value:
+            continue
+        rows.append(dict(ticker=ticker, name=row.get('name') or ticker, marketCap=cap,
+                         value=value, changePct=_numeric(row.get('pctchange')),
+                         volume=_numeric(row.get('volume')), asOf=None, currency='USD'))
+    return 'Nasdaq 股票篩選資料 · 報價時間請以來源為準', rows
+
+
+def _equity_with_fallback(market):
+    try:
+        source, rows = _equities(market)
+        if len(rows) >= 10:
+            return source, rows
+    except Exception:
+        pass
+    return _twse_equities() if market == 'tw' else _nasdaq_equities()
+
 def _crypto():
     key = os.environ.get('COINMARKETCAP_API_KEY')
     if key:
@@ -113,7 +178,7 @@ def rankings(market):
         if prior and monotonic() < prior[0]:
             return prior[1]
         try:
-            source, values = _crypto() if market == 'crypto' else _equities(market)
+            source, values = _crypto() if market == 'crypto' else _equity_with_fallback(market)
             values = sorted((row for row in values if row['marketCap'] and row['marketCap'] > 0),
                             key=lambda row: row['marketCap'], reverse=True)[:10]
             if len(values) < 10:
