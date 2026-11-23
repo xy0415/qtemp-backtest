@@ -64,7 +64,7 @@ def _json(url, headers=None):
 
 
 def _cmc(key):
-    address = 'https://pro-api.coinmarketcap.com/v3/cryptocurrency/listings/latest?limit=10&sort=market_cap&convert=USD'
+    address = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?limit=10&sort=market_cap&convert=USD'
     rows = _json(address, {'X-CMC_PRO_API_KEY': key}).get('data', [])
     result = []
     for row in rows:

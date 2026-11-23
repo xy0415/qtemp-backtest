@@ -12,6 +12,8 @@ from deep_comparison import compare_deep
 from financial_market import market_snapshot, official_news, macro_snapshot, market_history
 from market_rankings import MARKETS, market_segment, rankings, taiwan_disclosures
 from rti import get_earnings_reference, rti_snapshot, symbol_valid
+from rti_backtest import backtest
+from crypto_data import crypto_market
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 3 * 1024 * 1024
@@ -125,6 +127,14 @@ def market_rankings_api(market):
     return jsonify(rankings(market))
 
 
+@app.get('/api/market/crypto/assets')
+def crypto_assets_api():
+    try:
+        return jsonify(crypto_market())
+    except Exception:
+        return jsonify(error='加密資產資料來源暫時不可用'), 503
+
+
 @app.get('/api/market/tw/disclosures')
 def taiwan_disclosures_api():
     return jsonify(taiwan_disclosures())
@@ -148,6 +158,24 @@ def rti_api(symbol):
         return jsonify(rti_snapshot(symbol,rank,minimum,request.args.get('divergence')=='1',int(monotonic()//180)))
     except Exception:
         return jsonify(error='無法取得可用日線，請核對代號或稍後再試。'),503
+
+
+@app.get('/api/rti/<symbol>/backtest')
+def rti_backtest_api(symbol):
+    symbol = symbol.upper()
+    if not symbol_valid(symbol):
+        return jsonify(error='請確認代號'), 400
+    try:
+        return jsonify(backtest(symbol, request.args.get('start', '2016-01-01'),
+                                request.args.get('end', datetime.now(timezone.utc).date().isoformat()),
+                                float(request.args.get('initial', '100000')),
+                                float(request.args.get('allocation', '100')),
+                                float(request.args.get('fee', '0.1'))))
+    except ValueError as error:
+        return jsonify(error=str(error)), 400
+    except Exception:
+        app.logger.exception('RTI backtest unavailable')
+        return jsonify(error='歷史資料暫時無法取得，請稍後重試'), 503
 
 
 @app.get('/api/rti/<symbol>/valuation')

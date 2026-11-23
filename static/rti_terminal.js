@@ -11,8 +11,8 @@ const tapeNames={tw:'台股',us:'美股',crypto:'加密貨幣'};
 const menus={
  tw:[['rank','市值排行'],['index','大盤指數'],['etf','台股 ETF'],['lookup','個股查詢'],['disclosures','公司重大訊息'],['news','台股快訊']],
  us:[['rank','市值排行'],['index','主要指數'],['etf','產業與 ETF'],['lookup','個股查詢'],['news','美股快訊']],
- crypto:[['rank','市值排行'],['lookup','幣種查詢'],['news','加密快訊']],
- rti:[['analysis','溫度分析'],['method','指標說明']]
+ crypto:[['rank','市值排行'],['assets','加密資產總覽'],['lookup','幣種查詢'],['news','加密快訊']],
+ rti:[['analysis','溫度分析'],['backtest','深度回測'],['method','指標說明']]
 };
 const legacy={overview:'home',markets:'us',sectors:'us/etf',stocks:'us/lookup',macro:'us/index',news:'us/news',
  quant:'rti',chart:'rti',signals:'rti',zones:'rti',strategy:'rti',compare:'rti',resources:'rti/method',watchlist:'home'};
@@ -113,25 +113,36 @@ async function refreshTape(market,track,label){
  }
 }
 function mountTapes(){
- const refreshers=[];
- for(const [market,name] of Object.entries(tapeNames)){
-  const row=node('div',null,'tape-row');
-  const label=anchor(name,'#'+market,'tape-label');
-  const window=node('div',null,'tape-window');
-  const track=node('div',null,'tape-track');
-  track.append(node('span','載入市值排行…','terminal-meta'));
-  window.append(track);row.append(label,window);tapes.append(row);
-  refreshers.push(()=>refreshTape(market,track,label));
+ const row=node('div',null,'tape-row');
+ const label=node('span','MARKETS','tape-label');
+ const window=node('div',null,'tape-window');
+ const track=node('div',null,'tape-track');
+ track.append(node('span','載入市值排行…','terminal-meta'));
+ window.append(track);row.append(label,window);tapes.append(row);
+ async function refresh(){
+  if(document.hidden)return;
+  const results=await Promise.allSettled(Object.keys(tapeNames).map(market=>get(marketApi(market),120000)));
+  const build=duplicate=>{
+   const series=node('div',null,'tape-series');
+   if(duplicate)series.setAttribute('aria-hidden','true');
+   results.forEach((result,i)=>{
+    const market=Object.keys(tapeNames)[i];
+    if(result.status==='fulfilled'){
+     series.append(node('span',tapeNames[market],'tape-group'));
+     const list=tapeList(market,result.value,duplicate);
+     while(list.firstChild)series.append(list.firstChild);
+    }
+   });
+   return series;
+  };
+  if(results.some(r=>r.status==='fulfilled')){
+   track.replaceChildren(build(false),build(true));
+   track.classList.add('moving');
+  }else track.replaceChildren(node('span','市值排行暫時無法取得','terminal-meta'));
  }
- const refresh=()=>{if(!document.hidden)for(const update of refreshers)update()};
- refresh();setInterval(refresh,150000);
- document.addEventListener('visibilitychange',refresh);
+ refresh();setInterval(refresh,150000);document.addEventListener('visibilitychange',refresh);
  const control=document.getElementById('pause-tapes');
- control.onclick=()=>{
-  const paused=tapes.classList.toggle('paused');
-  control.textContent=paused?'播放跑馬燈':'暫停跑馬燈';
-  control.setAttribute('aria-pressed',String(paused));
- };
+ control.onclick=()=>{const paused=tapes.classList.toggle('paused');control.textContent=paused?'播放跑馬燈':'暫停跑馬燈';control.setAttribute('aria-pressed',String(paused))};
 }
 function table(columns,rows,empty='沒有可顯示的資料'){
  const wrap=node('div',null,'terminal-table-wrap');wrap.tabIndex=0;
@@ -226,6 +237,65 @@ function frame(market,category){
  const title=node('h1',menus[market].find(item=>item[0]===category)[1]);
  body.append(title,area);wrapper.append(sidebar,body);content.append(wrapper);
  return area;
+}
+function showCryptoAssets(host){
+ notice(host,'正在讀取加密資產資料…');
+ get('/api/market/crypto/assets',300000).then(data=>{
+  if(!host.isConnected)return;
+  const intro=node('p','依市值排序的加密資產，點選代號查看行情；點選列可展開供給與估值資訊。','terminal-meta');
+  const search=node('input');search.placeholder='搜尋名稱或代號';search.setAttribute('aria-label','搜尋加密資產');
+  const details=node('div',null,'terminal-method');details.append(node('h2','資產詳情'),node('p','選擇表格中的資產查看供給與估值。'));
+  const view=node('div');
+  function render(){
+   const query=search.value.toLowerCase();
+   const rows=data.items.filter(x=>(x.symbol+' '+x.name).toLowerCase().includes(query));
+   const columns=[['排名',x=>x.rank],['資產',x=>{const b=button(x.symbol+' · '+x.name,()=>detail(x),'terminal-link');return b}],
+    ['價格 USD',x=>quantity(x.price)],['1H',x=>move(x.change1h),x=>direction(x.change1h)],
+    ['24H',x=>move(x.change24h),x=>direction(x.change24h)],['7D',x=>move(x.change7d),x=>direction(x.change7d)],
+    ['30D',x=>move(x.change30d),x=>direction(x.change30d)],['市值',x=>quantity(x.marketCap,true)],['24H 成交額',x=>quantity(x.volume,true)]];
+   view.replaceChildren(table(columns,rows));
+  }
+  function detail(x){
+   details.replaceChildren(node('h2',x.name+' / '+x.symbol),table([['資料',x=>x[0]],['數值',x=>x[1]]],[
+    ['流通供給量',quantity(x.circulating,true)],['總供給量',quantity(x.totalSupply,true)],['最大供給量',quantity(x.maxSupply,true)],
+    ['完全稀釋估值 USD',quantity(x.fullyDiluted,true)],['市值占比',move(x.dominance)],['成交額 24H 變化',move(x.volumeChange)],
+    ['分類',(x.tags||[]).join('、')||'—'],['更新時間',dateTime(x.lastUpdated)]]),
+    anchor('查看價格與 RTI',marketLink('crypto','lookup',x.symbol+'-USD'),'terminal-button'));
+  }
+  search.oninput=render;render();
+  host.replaceChildren(intro,search,timestamp(data),view,details);
+ }).catch(error=>{if(host.isConnected)notice(host,error.message,()=>showCryptoAssets(host))});
+}
+function showBacktest(host,symbol){
+ const form=node('form',null,'terminal-form');
+ function field(label,value,type){const wrap=node('label',label);const input=node('input');input.type=type;input.value=value;input.required=true;wrap.append(input);form.append(wrap);return input}
+ const ticker=field('標的代號',symbol||'2330.TW','text');
+ const start=field('開始日期','2016-01-01','date');
+ const end=field('結束日期',new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Taipei'}),'date');
+ const initial=field('起始本金','100000','number');initial.min='1';
+ const allocation=field('每次買賣比例 %','100','number');allocation.min='0.01';allocation.max='100';allocation.step='0.01';
+ const fee=field('單次交易成本 %','0.1','number');fee.min='0';fee.max='5';fee.step='0.01';
+ const submit=node('button','執行回測','terminal-button primary');submit.type='submit';form.append(submit);
+ const result=node('div');host.append(node('p','檢視 RTI 訊號在歷史期間的資金表現與交易紀錄，並與買入持有比較。','terminal-meta'),form,result);
+ form.onsubmit=event=>{
+  event.preventDefault();const selected=cleanSymbol(ticker.value,ticker.value.match(/^\d/) ? 'tw' : 'us');
+  const params=new URLSearchParams({start:start.value,end:end.value,initial:initial.value,allocation:allocation.value,fee:fee.value});
+  notice(result,'正在計算歷史日線與 RTI 訊號…');submit.disabled=true;
+  get('/api/rti/'+urlSymbol(selected)+'/backtest?'+params,180000).then(data=>{
+   if(!result.isConnected)return;
+   const vitals=node('div',null,'rti-vitals');
+   for(const [label,value] of [['期末資產',quantity(data.value)],['累積報酬',move(data.totalReturn*100)],['年化報酬',move(data.annualizedReturn*100)],['最大回撤',move(data.maxDrawdown*100)],['買入持有',move(data.benchmarkReturn*100)]]){
+    const box=node('div');box.append(node('small',label),node('strong',value));vitals.append(box);
+   }
+   const graph=node('div',null,'terminal-chart');
+   result.replaceChildren(vitals,node('p',[data.symbol,data.start+' 至 '+data.end,data.source,data.stale?'上次成功資料':null].filter(Boolean).join(' · '),'terminal-meta'),
+    node('p',data.note,'terminal-meta'),node('h2','策略資產曲線'),graph,node('h2','交易明細'),table([
+     ['日期',x=>x.day],['方向',x=>x.action==='buy'?'買入':'賣出'],['成交價格',x=>quantity(x.price)],['成交數量',x=>quantity(x.shares)],
+     ['剩餘現金',x=>quantity(x.cash)],['持有數量',x=>quantity(x.holdings)],['交易後資產',x=>quantity(x.equity)]
+    ],data.transactions,'所選期間沒有可執行的正式訊號。'));
+   drawSeries(graph,data.curve.map(x=>({day:x.day,close:x.value})),{title:'RTI 策略資產',divergences:[]});
+  }).catch(error=>{if(result.isConnected)notice(result,error.message)}).finally(()=>submit.disabled=false);
+ };
 }
 function showDisclosures(host){
  notice(host,'正在取得上市櫃公司重大訊息…');
@@ -502,8 +572,9 @@ function route(){
  else {
   if(!menus[market].some(item=>item[0]===category))category=menus[market][0][0];
   const host=frame(market,category);
-  if(market==='rti')category==='method'?showMethod(host):showRTI(host,symbol);
+  if(market==='rti'){if(category==='method')showMethod(host);else if(category==='backtest')showBacktest(host,symbol);else showRTI(host,symbol);}
   else if(category==='news')showNews(host,market);
+  else if(category==='assets')showCryptoAssets(host);
   else if(category==='lookup')lookup(host,market,symbol);
   else if(category==='disclosures')showDisclosures(host);
   else marketBoard(host,market,category);

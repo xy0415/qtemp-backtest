@@ -143,3 +143,13 @@ body #qtemp_root.rti-terminal {max-width:1680px;padding:0 clamp(12px,3vw,48px) 2
 }
 
 #qtemp_root .terminal-disclosures article {padding:12px 0;border-bottom:1px solid var(--market-line)}
+/* Single combined market tape and denser exchange-inspired typography. */
+#qtemp_root .tape-group{font:600 11px var(--market-mono);color:#eea829;padding:0 14px;border-left:1px solid var(--market-line);white-space:nowrap}
+#qtemp_root .tape-track.moving{animation-duration:150s}
+#qtemp_root .terminal-hero{background:radial-gradient(ellipse at 75% 50%,#222019,#101113 65%,#090a0b);border-color:#303238}
+#qtemp_root .hero-regions{color:#eca629}
+#qtemp_root .terminal-button.primary{background:#eea829!important;color:#100d07!important}
+#qtemp_root .terminal-form label{display:grid;gap:5px;color:var(--market-muted);font-size:12px}
+#qtemp_root .terminal-form input,#qtemp_root input[aria-label="搜尋加密資產"]{min-width:120px;padding:9px;background:#0c0e10;color:#f1f2f3;border:1px solid #35383b}
+#qtemp_root .terminal-form{align-items:end;margin:18px 0 24px}
+#qtemp_root .terminal-link{cursor:pointer}
