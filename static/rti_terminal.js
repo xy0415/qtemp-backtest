@@ -254,7 +254,7 @@ function frame(market,category){
   if(id===category)link.setAttribute('aria-current','page');
   nav.append(link);
  }
- const body=node('article',null,'terminal-page');
+ const body=node('article',null,'terminal-page'+(market==='rti'?' rti-research-page':''));
  const area=node('div');
  const title=node('h1',menus[market].find(item=>item[0]===category)[1]);
  body.append(title,area);wrapper.append(sidebar,body);content.append(wrapper);
@@ -599,7 +599,7 @@ function rtiResearch(host,view,symbol){
    if(!output.isConnected)return;
    const all=data.rows;const selector=node('select');selector.setAttribute('aria-label','統計期間');
    for(const n of [1,3,5,10,15,0])selector.add(new Option(n?'近 '+n+' 年':'全部歷史',String(n)));
-   selector.value='10';const panel=node('div');const header=node('div',null,'terminal-actions');header.append(node('strong',data.symbol),selector,button('匯出日線 CSV',()=>downloadRows(all,data.symbol),'terminal-button'));
+   selector.value='10';const panel=node('div',null,'rti-research-results');const header=node('div',null,'terminal-actions rti-research-controls');header.append(node('strong',data.symbol),selector,button('匯出日線 CSV',()=>downloadRows(all,data.symbol),'terminal-button'));
    output.replaceChildren(header,node('p',[data.priceBasis,'資料日 '+data.asOf,data.stale?'上次成功資料':null].filter(Boolean).join(' · '),'terminal-meta'),panel);
    function update(){
     const years=Number(selector.value);const end=new Date(all.at(-1).day+'T00:00:00Z');end.setUTCFullYear(end.getUTCFullYear()-years);

@@ -236,3 +236,33 @@ body #qtemp_root.rti-terminal{max-width:none;padding:0 40px 32px!important;font-
  #qtemp_root .terminal-sidebar nav a{white-space:nowrap}
  #qtemp_root .terminal-page{padding:24px 0}
 }
+
+/* RTI research: compact tables, generous separation between subjects. */
+#qtemp_root .rti-research-page .terminal-table-wrap{width:fit-content;max-width:100%;margin:12px 0 0;overflow-x:auto}
+#qtemp_root .rti-research-page .terminal-table{width:auto;min-width:0;table-layout:auto}
+#qtemp_root .rti-research-page .terminal-table :is(th,td){padding:8px 16px;line-height:1.4}
+#qtemp_root .rti-research-page .terminal-table :is(th,td):first-child{padding-left:0;padding-right:24px}
+#qtemp_root .rti-research-page .terminal-table :is(th,td):last-child{padding-right:2px}
+#qtemp_root .rti-research-page h2{line-height:1.35;margin:36px 0 12px}
+#qtemp_root .rti-research-page h2:first-child{margin-top:0}
+#qtemp_root .rti-research-page .terminal-table-wrap + h2,
+#qtemp_root .rti-research-page .terminal-meta + h2{margin-top:42px}
+#qtemp_root .rti-research-page .terminal-table-wrap + .terminal-meta{margin-top:12px;line-height:1.6;max-width:72ch}
+#qtemp_root .rti-research-page .terminal-form{margin:16px 0 28px;gap:12px 16px}
+#qtemp_root .rti-research-page .rti-research-controls{gap:12px;margin:0 0 12px}
+#qtemp_root .rti-research-page .rti-research-results{margin-top:32px}
+#qtemp_root .rti-research-page .terminal-statistics,
+#qtemp_root .rti-research-page .terminal-method{margin-top:32px;padding:20px}
+#qtemp_root .rti-research-page .terminal-statistics h2,
+#qtemp_root .rti-research-page .terminal-method h2{margin:0 0 12px}
+#qtemp_root .rti-research-page .terminal-actions h2{margin:0}
+#qtemp_root .rti-research-page .terminal-chart+h2{margin-top:36px}
+@media(max-width:620px){
+ #qtemp_root .rti-research-page .terminal-table :is(th,td){padding:7px 11px}
+ #qtemp_root .rti-research-page .terminal-table :is(th,td):first-child{padding-right:16px}
+ #qtemp_root .rti-research-page h2{margin-top:30px}
+ #qtemp_root .rti-research-page .terminal-table-wrap + h2,
+ #qtemp_root .rti-research-page .terminal-meta + h2{margin-top:36px}
+ #qtemp_root .rti-research-page .terminal-statistics,
+ #qtemp_root .rti-research-page .terminal-method{padding:14px}
+}
