@@ -153,3 +153,86 @@ body #qtemp_root.rti-terminal {max-width:1680px;padding:0 clamp(12px,3vw,48px) 2
 #qtemp_root .terminal-form input,#qtemp_root input[aria-label="搜尋加密資產"]{min-width:120px;padding:9px;background:#0c0e10;color:#f1f2f3;border:1px solid #35383b}
 #qtemp_root .terminal-form{align-items:end;margin:18px 0 24px}
 #qtemp_root .terminal-link{cursor:pointer}
+/* Reference: dark exchange terminal, orange emphasis, hairline rules. */
+:root{--market-bg:#08090b;--market-panel:#0c0d0f;--market-raised:#171719;--market-line:#292a2e;--market-ink:#e9e9e5;--market-muted:#8c8d8b;--market-accent:#ffb31b;--market-up:#45c990;--market-down:#ef5a60}
+body{background:#08090b!important;color:#e9e9e5!important}
+body #qtemp_root.rti-terminal{max-width:none;padding:0 40px 32px!important;font-family:Arial,'Noto Sans TC',sans-serif}
+#qtemp_root .market-tapes{margin:0 -40px;padding:0 40px;background:#090a0c;border-bottom:1px solid #292a2e}
+#qtemp_root .tape-row{grid-template-columns:80px minmax(0,1fr);border:0}
+#qtemp_root .tape-track{min-height:31px}
+#qtemp_root .tape-item{border:0;font-size:11px;padding:3px 12px}
+#qtemp_root #pause-tapes{position:absolute;right:40px;top:0;float:none;margin:0;height:30px;background:#090a0c;border:0;color:#858583}
+#qtemp_root .tape-window{padding-right:70px}
+#qtemp_root .top-menu{justify-content:flex-start;gap:28px;padding:0;min-height:52px}
+#qtemp_root .terminal-brand{font-family:Arial,sans-serif;font-size:17px;letter-spacing:-.03em}
+#qtemp_root .terminal-brand img{width:24px;height:24px}
+#qtemp_root .terminal-brand span span{font-size:14px}
+#qtemp_root .top-menu nav{gap:8px}
+#qtemp_root .top-menu nav a{font-size:14px;padding:12px 8px}
+#qtemp_root .top-menu nav a[aria-current],#qtemp_root .top-menu nav a:hover{background:transparent;border-color:transparent;color:#ffb31b}
+#qtemp_root .terminal-hero{display:grid;grid-template-columns:53% 47%;margin:0 -40px;min-height:0;background:#08090b;border:0;border-bottom:1px solid #292a2e;overflow:visible}
+#qtemp_root .hero-left{border-right:1px solid #292a2e;min-width:0}
+#qtemp_root .hero-copy{min-height:500px;padding:65px 40px 0;background:none}
+#qtemp_root .hero-regions{font:11px var(--market-mono);letter-spacing:.1em;color:#8a8b88;margin:0 0 25px}
+#qtemp_root .hero-regions::before{content:'●';color:#45c990;margin-right:9px}
+#qtemp_root .hero-copy h1{font-size:clamp(48px,5.7vw,82px);letter-spacing:-.055em;line-height:1.04;text-shadow:none}
+#qtemp_root .hero-headline span{display:block}
+#qtemp_root .hero-headline .hero-highlight{color:#ffb31b}
+#qtemp_root .hero-description{max-width:420px;color:#9a9b99;font-size:16px;line-height:1.65;margin:24px 0 0}
+#qtemp_root .hero-links{margin-top:30px;gap:12px}
+#qtemp_root .terminal-button{background:transparent;border:1px solid #303135;border-radius:0;padding:12px 18px;font-size:13px;font-weight:700;color:#e9e9e5}
+#qtemp_root .terminal-button.primary{background:#ffb31b!important;border-color:#ffb31b!important;color:#100c02!important}
+#qtemp_root .hero-metrics{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid #292a2e;padding:45px 40px;gap:0}
+#qtemp_root .hero-metrics>div{min-width:0;padding:0 15px;border-right:1px solid #292a2e}
+#qtemp_root .hero-metrics>div:first-child{padding-left:0}
+#qtemp_root .hero-metrics>div:last-child{border:0}
+#qtemp_root .hero-metrics small,#qtemp_root .hero-quote-metrics small{display:block;font:10px var(--market-mono);color:#777976;letter-spacing:.05em}
+#qtemp_root .hero-metrics strong{display:block;font:26px var(--market-mono);margin:8px 0}
+#qtemp_root .hero-terminal{padding:34px 40px;min-width:0}
+#qtemp_root .hero-terminal-title{display:flex;justify-content:space-between;color:#858583;font:11px var(--market-mono);letter-spacing:.09em;margin-bottom:26px}
+#qtemp_root .hero-live{color:#45c990}
+#qtemp_root .hero-quote{display:flex;align-items:baseline;gap:15px;flex-wrap:wrap;font:12px var(--market-mono);margin-bottom:18px}
+#qtemp_root .hero-quote strong{font-size:20px}
+#qtemp_root .hero-quote .hero-price{color:#ffb31b;font-size:23px}
+#qtemp_root .hero-quote-metrics{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #292a2e}
+#qtemp_root .hero-quote-metrics>div{min-width:0;padding:12px;border-right:1px solid #292a2e}
+#qtemp_root .hero-quote-metrics>div:last-child{border:0}
+#qtemp_root .hero-quote-metrics strong{display:block;font:11px var(--market-mono);margin-top:6px;overflow-wrap:anywhere}
+#qtemp_root .hero-preview .terminal-table-wrap{margin-top:14px;border:1px solid #292a2e;padding:0 10px}
+#qtemp_root .hero-preview .terminal-table td,#qtemp_root .hero-preview .terminal-table th{padding:8px 6px;font-size:11px}
+#qtemp_root .hero-preview-actions{display:flex;gap:10px;margin-top:16px}
+#qtemp_root .hero-footnote{font:11px var(--market-mono);color:#737573;margin-top:15px}
+#qtemp_root .home-listing{padding:62px 0 15px}
+#qtemp_root .home-listing-header{display:flex;justify-content:space-between;align-items:end;gap:20px;border-bottom:1px solid #292a2e;padding-bottom:20px}
+#qtemp_root .home-listing-header .hero-regions{margin-bottom:12px}
+#qtemp_root .home-listing-header h2{font-size:38px;letter-spacing:-.035em}
+#qtemp_root .home-markets{display:block}
+#qtemp_root .home-market{background:transparent;border:0;border-bottom:1px solid #292a2e;padding:26px 0}
+#qtemp_root .home-market-heading{margin-bottom:15px}
+#qtemp_root .terminal-layout{grid-template-columns:190px minmax(0,1fr);gap:32px;margin-top:0}
+#qtemp_root .terminal-sidebar{padding:32px 16px 0 0;min-height:65vh}
+#qtemp_root .terminal-page{padding:32px 0}
+#qtemp_root .terminal-page h1{font-size:clamp(34px,4vw,54px);letter-spacing:-.04em}
+#qtemp_root .terminal-sidebar a[aria-current]{background:#151410;border:1px solid #5a4214;color:#ffb31b}
+#qtemp_root .terminal-table th{color:#777976}
+#qtemp_root .terminal-table td,#qtemp_root .terminal-table th{border-color:#292a2e}
+#qtemp_root .terminal-notice,#qtemp_root .terminal-method,#qtemp_root .terminal-statistics,#qtemp_root .terminal-chart{background:#0b0c0e}
+#qtemp_root .rti-vitals div{background:#0b0c0e}
+@media(max-width:850px){
+ body #qtemp_root.rti-terminal{padding-left:20px!important;padding-right:20px!important}
+ #qtemp_root .market-tapes{margin:0 -20px;padding:0 20px}
+ #qtemp_root .terminal-hero{margin:0 -20px;grid-template-columns:1fr}
+ #qtemp_root .hero-left{border-right:0;border-bottom:1px solid #292a2e}
+ #qtemp_root .hero-copy{min-height:0;padding:45px 20px}
+ #qtemp_root .hero-metrics{padding:25px 20px;grid-template-columns:repeat(2,1fr);row-gap:20px}
+ #qtemp_root .hero-metrics>div:nth-child(2){border:0}
+ #qtemp_root .hero-terminal{padding:28px 20px}
+ #qtemp_root .hero-quote-metrics{grid-template-columns:repeat(2,1fr)}
+ #qtemp_root .top-menu{flex-wrap:wrap;gap:5px;padding:10px 0}
+ #qtemp_root .terminal-layout{grid-template-columns:1fr;gap:0}
+ #qtemp_root .terminal-sidebar{padding:12px 0;min-height:0;border-right:0;border-bottom:1px solid #292a2e}
+ #qtemp_root .terminal-sidebar strong{display:none}
+ #qtemp_root .terminal-sidebar nav{display:flex;overflow:auto}
+ #qtemp_root .terminal-sidebar nav a{white-space:nowrap}
+ #qtemp_root .terminal-page{padding:24px 0}
+}

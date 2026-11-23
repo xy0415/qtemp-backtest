@@ -194,32 +194,54 @@ function marketBoard(host,market,category){
 }
 function showHome(){
  const hero=node('section',null,'terminal-hero');
- const grid=node('div',null,'hero-grid');
- const radar=node('div',null,'hero-radar');radar.setAttribute('aria-hidden','true');
- for(let i=0;i<3;i++)radar.append(node('i'));
- const layout=node('div',null,'hero-copy');
- layout.append(node('p','台股 ／ 美股 ／ 加密貨幣','hero-regions'),node('h1','市場終端'));
+ const left=node('div',null,'hero-left');
+ const copy=node('div',null,'hero-copy');
+ const eyebrow=node('p','MARKET INTELLIGENCE  ·  台股 / 美股 / 加密貨幣','hero-regions');
+ const title=node('h1',null,'hero-headline');
+ title.append(node('span','掌握市場。'),node('span','洞悉溫度。'),node('span','從數據開始。','hero-highlight'));
+ const intro=node('p','整合台股、美股及加密貨幣行情與市場快訊，搭配 RTI 歷史溫度分析，讓每一次研究都有清楚依據。','hero-description');
  const links=node('div',null,'hero-links');
- for(const [market,label] of Object.entries(tapeNames))links.append(anchor(label,'#'+market,'terminal-button'));
- links.append(anchor('RTI 溫度分析','#rti','terminal-button primary'));
- layout.append(links);hero.append(grid,radar,layout);content.append(hero);
+ links.append(anchor('探索市場','#tw','terminal-button primary'),anchor('RTI 深度回測','#rti/backtest','terminal-button'));
+ copy.append(eyebrow,title,intro,links);
+ const metrics=node('div',null,'hero-metrics');
+ for(const [label,value,detail] of [['市場專區','03','台股 / 美股 / 加密'],['市場快訊','LIVE','EquationNews'],['資產排行','100','CoinMarketCap'],['技術分析','RTI','歷史溫度與回測']]){
+  const box=node('div');box.append(node('small',label),node('strong',value),node('small',detail));metrics.append(box);
+ }
+ left.append(copy,metrics);
+ const right=node('div',null,'hero-terminal');
+ const status=node('div',null,'hero-terminal-title');status.append(node('span','MARKET OVERVIEW'),node('span','● LIVE DATA','hero-live'));
+ const preview=node('div',null,'hero-preview');notice(preview,'讀取市場資料…');
+ right.append(status,preview,node('p','市場資料依來源更新時間顯示。','hero-footnote'));
+ hero.append(left,right);content.append(hero);
+ get('/api/market/crypto/assets',300000).then(data=>{
+  if(!preview.isConnected)return;
+  const items=data.items.slice(0,8);const featured=items[0];
+  const headline=node('div',null,'hero-quote');
+  headline.append(node('strong',featured.symbol+' / USD'),node('strong',quantity(featured.price),'hero-price'),node('span',move(featured.change24h),direction(featured.change24h)));
+  const metrics=node('div',null,'hero-quote-metrics');
+  for(const [label,value] of [['市值',quantity(featured.marketCap,true)],['24H 成交額',quantity(featured.volume,true)],['7D 漲跌',move(featured.change7d)],['資料來源',data.source]]){
+   const box=node('div');box.append(node('small',label),node('strong',value));metrics.append(box);
+  }
+  const quoteTable=table([['資產',x=>anchor(x.symbol,marketLink('crypto','lookup',x.symbol+'-USD'),'terminal-symbol')],['價格 USD',x=>quantity(x.price)],['24H',x=>move(x.change24h),x=>direction(x.change24h)],['市值',x=>quantity(x.marketCap,true)]],items);
+  const actions=node('div',null,'hero-preview-actions');actions.append(anchor('查看全部資產','#crypto/assets','terminal-button'),anchor('市場快訊','#crypto/news','terminal-button'));
+  preview.replaceChildren(headline,metrics,quoteTable,actions,timestamp(data));
+ }).catch(error=>{if(preview.isConnected)notice(preview,error.message,()=>showHome())});
+ const section=node('section',null,'home-listing');
+ const heading=node('div',null,'home-listing-header');
+ heading.append(node('div',null,'home-heading-copy'),anchor('完整市場排行','#crypto/assets','terminal-button'));
+ heading.firstChild.append(node('p','THE MARKETS','hero-regions'),node('h2','市場概況'));
+ section.append(heading);
  const boards=node('div',null,'home-markets');
  for(const [market,label] of Object.entries(tapeNames)){
-  const group=node('section',null,'home-market');
-  const heading=node('div',null,'home-market-heading');
-  heading.append(node('h2',label),anchor('完整排行','#'+market,'terminal-link'));
-  const slot=node('div');
-  group.append(heading,slot);boards.append(group);
-  notice(slot,'讀取市值排行…');
+  const group=node('section',null,'home-market');const head=node('div',null,'home-market-heading');
+  head.append(node('h2',label),anchor('查看全部','#'+market,'terminal-link'));
+  const slot=node('div');group.append(head,slot);boards.append(group);notice(slot,'讀取市值排行…');
   get(marketApi(market),120000).then(data=>{
    if(!slot.isConnected)return;
-   slot.replaceChildren(table([
-    ['排名',row=>row.rank],['標的',row=>anchor(row.ticker,seriesLink(market,row),'terminal-symbol')],
-    ['價格',row=>quantity(row.value)],['漲跌',row=>move(row.changePct),row=>direction(row.changePct)]
-   ],data.items.slice(0,5)),timestamp(data));
-  }).catch(error=>{if(slot.isConnected)notice(slot,error.message)});
+   slot.replaceChildren(marketTable(market,data.items.slice(0,5),true),timestamp(data));
+  }).catch(error=>{if(slot.isConnected)notice(slot,error.message,()=>showHome())});
  }
- content.append(boards);
+ section.append(boards);content.append(section);
 }
 function frame(market,category){
  const wrapper=node('div',null,'terminal-layout');
