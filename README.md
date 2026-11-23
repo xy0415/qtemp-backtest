@@ -1,4 +1,13 @@
-# QTemp Analytics
+# RTI 市場終端
+
+台股、美股、加密貨幣分區及 Relative Temperature Index。正式網址：https://qtemp-backtest.onrender.com/
+
+- 各市場的前十大市值使用 Yahoo Finance 股票篩選器與 CoinMarketCap。美股涵蓋美國交易所上市公司與 ADR，同公司多類股票合併。缺少 CoinMarketCap 金鑰或資料時使用有來源標示的 CoinGecko／CoinPaprika。
+- 正式站從伺服器環境變數 `COINMARKETCAP_API_KEY` 讀取金鑰。
+- 報價表區分來源最近報價、確認收盤日 K、加密 24 小時資料。台股及美股新聞按分類和標題過濾，搜尋結果視 EquationNews 覆蓋而定。
+- RTI 是 Pine v6 日線版移植。包括正式分位、暫算、RSI、冷熱訊號、年度統計、選用已確認背離和獨立公告 EPS 本益比。TradingView 盤中訊號仍由原 Pine 處理。
+- 以下是舊版開發紀錄及內部相容 API 的說明。
+
 
 以真實 Yahoo Finance 已確認日線為基礎的 QTemp 量化研究平台。提供行情圖表、訊號研究、策略投入回測、多資產比較、自選股及資料品質檢查。**不提供即時保證報價、交易執行或投資建議。**
 

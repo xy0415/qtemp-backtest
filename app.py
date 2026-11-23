@@ -10,6 +10,8 @@ from research_insights import site_research
 from qtemp_zones import site_zones
 from deep_comparison import compare_deep
 from financial_market import market_snapshot, official_news, macro_snapshot, market_history
+from market_rankings import MARKETS, market_segment, rankings, taiwan_disclosures
+from rti import get_earnings_reference, rti_snapshot, symbol_valid
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 3 * 1024 * 1024
@@ -55,7 +57,7 @@ def workspace_watchlist_js():
 
 @app.get('/')
 def index():
-    return send_file('index.html')
+    return send_file('static/market_terminal_home.html')
 
 @app.get('/research_features.js')
 def extra_js():
@@ -115,6 +117,49 @@ def disable_market_response_caching(response):
         response.headers['Cache-Control']='no-store, max-age=0'
         response.headers['Pragma']='no-cache'
     return response
+
+@app.get('/api/market/rankings/<market>')
+def market_rankings_api(market):
+    if market not in MARKETS:
+        return jsonify(error='無效市場'), 404
+    return jsonify(rankings(market))
+
+
+@app.get('/api/market/tw/disclosures')
+def taiwan_disclosures_api():
+    return jsonify(taiwan_disclosures())
+
+
+@app.get('/api/market/segment/<market>/<category>')
+def market_segment_api(market, category):
+    if market not in ('tw','us') or category not in ('index','etf'):
+        return jsonify(error='無效市場分類'), 404
+    return jsonify(market_segment(market,category))
+
+
+@app.get('/api/rti/<symbol>')
+def rti_api(symbol):
+    symbol=symbol.upper()
+    rank=request.args.get('rank',0,type=int)
+    minimum=request.args.get('minimum',0,type=int)
+    if not symbol_valid(symbol) or not (rank==0 or 30<=rank<=1000) or not (minimum==0 or 30<=minimum<=1000):
+        return jsonify(error='請確認代號與分位範圍'),400
+    try:
+        return jsonify(rti_snapshot(symbol,rank,minimum,request.args.get('divergence')=='1',int(monotonic()//180)))
+    except Exception:
+        return jsonify(error='無法取得可用日線，請核對代號或稍後再試。'),503
+
+
+@app.get('/api/rti/<symbol>/valuation')
+def rti_valuation_api(symbol):
+    symbol=symbol.upper()
+    if not symbol_valid(symbol) or symbol.endswith('-USD'):
+        return jsonify(error='此標的不支援歷史本益比'),400
+    try:
+        return jsonify(get_earnings_reference(symbol,int(monotonic()//21600)))
+    except Exception:
+        return jsonify(value=None,note='本益比資料來源暫不可用')
+
 
 @app.get('/api/market/overview')
 def market_overview_api():

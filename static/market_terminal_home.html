@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="台股、美股、加密貨幣行情與 Relative Temperature Index。">
+  <title>RTI 市場終端</title>
+  <link rel="icon" href="/static/rti-mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/market_terminal.css?v=20261119">
+  <link rel="stylesheet" href="/static/rti_terminal.css?v=20261123a">
+  <script defer src="/static/equation_news.js?v=20261123-markets"></script>
+  <script defer src="/static/rti_terminal.js?v=20261123a"></script>
+</head>
+<body>
+<div id="qtemp_root" class="rti-terminal">
+  <a class="skip-link" href="#content">跳到主要內容</a>
+  <header class="terminal-header">
+    <section class="market-tapes" aria-label="三大市場市值前十">
+      <div id="tapes"></div>
+      <button id="pause-tapes" aria-pressed="false" type="button">暫停跑馬燈</button>
+    </section>
+    <div class="top-menu">
+      <a href="#home" class="terminal-brand" aria-label="RTI 首頁"><img src="/static/rti-mark.svg" alt=""><span>RTI<span> 市場終端</span></span></a>
+      <nav aria-label="市場專區">
+        <a href="#tw">台股</a><a href="#us">美股</a><a href="#crypto">加密貨幣</a><a href="#rti">RTI</a>
+      </nav>
+    </div>
+  </header>
+  <main id="content" tabindex="-1"></main>
+  <footer class="terminal-footer"><span>RTI 市場終端</span><span>報價與快訊依資料來源所標時間顯示 · 時間採台北時區</span></footer>
+</div>
+</body>
+</html>
