@@ -56,7 +56,7 @@ class RTITests(unittest.TestCase):
             with patch('market_rankings._equities',return_value=('fixture',items)):
                 first=rankings('tw')
             self.assertEqual([row['marketCap'] for row in first['items']],list(range(12,2,-1)))
-            with patch('market_rankings.monotonic',return_value=10**14), patch('market_rankings._equities',side_effect=ValueError):
+            with patch('market_rankings.monotonic',return_value=10**14), patch('market_rankings._equities',side_effect=ValueError), patch('market_rankings._twse_equities',side_effect=ValueError):
                 cached=rankings('tw')
             self.assertTrue(cached['stale'])
             self.assertEqual(cached['items'],first['items'])
