@@ -13,7 +13,7 @@ const channelGroups = [
   ['交易所公告',['binance','korea','tier2','tier3','alpha','hl','earn']],
   ['人物追蹤',['cz']]
 ];
-const locale = {zh:'中文',en:'English',ko:'한국어',tr:'Türkçe',ru:'Русский'};
+const locale = {zh:'繁體中文',en:'English',ko:'한국어',tr:'Türkçe',ru:'Русский'};
 const time = new Intl.DateTimeFormat('zh-TW',{timeZone:'Asia/Taipei',hourCycle:'h23',hour:'2-digit',minute:'2-digit',second:'2-digit'});
 const day = new Intl.DateTimeFormat('zh-TW',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit'});
 const number = new Intl.NumberFormat('zh-TW',{maximumFractionDigits:10});
@@ -21,9 +21,48 @@ const etags = new Map();
 let retryUntil = 0;
 let channelRequest;
 
+const openCCBundle='/opencc-js@1.4.2/dist/umd/full.js';
+let conversionTask;
+let toTraditional=value=>value;
+let toSimplified=value=>value;
+function prepareChinese() {
+  if(conversionTask) return conversionTask;
+  if(window.OpenCC?.Converter){
+    toTraditional=window.OpenCC.Converter({from:'cn',to:'twp'});
+    toSimplified=window.OpenCC.Converter({from:'twp',to:'cn'});
+    return Promise.resolve(true);
+  }
+  const load=src=>new Promise((resolve,reject)=>{
+    const script=document.createElement('script');
+    script.src=src;
+    script.crossOrigin='anonymous';
+    script.integrity='sha384-cKTJQkVHLwFA1XQATuNYZWw3nqczFzkXaVXvA0RLP8DmLDj33hR0ec2v4BNkJeFN';
+    const timer=setTimeout(()=>{
+      script.remove();
+      reject(Error('OpenCC 載入逾時'));
+    },5000);
+    script.onload=()=>{clearTimeout(timer);resolve()};
+    script.onerror=()=>{clearTimeout(timer);script.remove();reject(Error('OpenCC 載入失敗'))};
+    document.head.append(script);
+  });
+  conversionTask=load('https://cdn.jsdelivr.net/npm'+openCCBundle)
+    .catch(()=>load('https://unpkg.com'+openCCBundle))
+    .then(()=>{
+      toTraditional=window.OpenCC.Converter({from:'cn',to:'twp'});
+      toSimplified=window.OpenCC.Converter({from:'twp',to:'cn'});
+      return true;
+    }).catch(()=>{conversionTask=null;return false});
+  return conversionTask;
+}
+function traditional(value) {
+  if(typeof value !== 'string' || !/[\u3400-\u9fff]/.test(value)) return value;
+  // Preserve hyperlinks embedded in plain-text announcements.
+  return value.split(/(https?:\/\/[^\s]+)/g).map((part,index)=>index%2?part:toTraditional(part).replaceAll('賬戶','帳戶').replaceAll('納斯達克','那斯達克')).join('');
+}
+
 function node(tag, value, className) {
   const element = document.createElement(tag);
-  if(value != null) element.textContent = String(value);
+  if(value != null) element.textContent = traditional(String(value));
   if(className) element.className = className;
   return element;
 }
@@ -129,7 +168,7 @@ function fieldValue(key,value) {
     return list;
   }
   if(value && typeof value === 'object') return fields(value);
-  return document.createTextNode(formatField(key,value));
+  return document.createTextNode(traditional(formatField(key,value)));
 }
 function fields(data) {
   const grid = node('dl',null,'eq-fields');
@@ -341,7 +380,7 @@ function mount(host,{preview=false,official=null}={}) {
     sourceSelect.onchange = () => { source = sourceSelect.value; paint(); };
     const language = node('select');
     language.setAttribute('aria-label','快訊語言');
-    language.append(new Option('中文','zh'),new Option('English','en'));
+    language.append(new Option('繁體中文','zh'),new Option('English','en'));
     language.onchange = () => { lang = language.value; paint(); paintSources(); };
     const submit = node('button','搜尋','eq-submit');
     const reset = button('清除',() => {
@@ -351,7 +390,7 @@ function mount(host,{preview=false,official=null}={}) {
     });
     controls.onsubmit = event => {
       event.preventDefault();
-      query = search.value.trim();
+      query = toSimplified(search.value.trim());
       coin = coinInput.value.trim().toUpperCase();
       coinInput.value = coin;
       source = '';
@@ -414,7 +453,7 @@ function mount(host,{preview=false,official=null}={}) {
         const info = remote.get(key);
         const label = channelLabels[key] || info?.name_zh || info?.name_en || key;
         group.append(categoryButton(key,label));
-        options.append(new Option(label,key));
+        options.append(new Option(traditional(label),key));
       }
       if(options.childElementCount) {
         categories.append(group);
@@ -444,7 +483,7 @@ function mount(host,{preview=false,official=null}={}) {
     list.replaceChildren();
     if(sourceSelect) {
       if(items.length) sources = [...new Set(items.map(item => item.source).filter(Boolean))].sort();
-      sourceSelect.replaceChildren(new Option('全部已載入來源',''),...sources.map(name => new Option(name,name)));
+      sourceSelect.replaceChildren(new Option('全部已載入來源',''),...sources.map(name => new Option(traditional(name),name)));
       sourceSelect.value = source;
       sourceSelect.hidden = channel === 'official';
     }
@@ -542,9 +581,12 @@ function mount(host,{preview=false,official=null}={}) {
           no:item.url,time:item.publishedUTC,source:item.source,en:item.title,url:item.url
         }))};
         if(!data.items.length && officialData.status !== 'ok') throw Error('機關公告來源暫時無法使用');
-      } else data = await request('/news',{
-        channel:activeChannel,coin,query,limit:preview ? 7 : 25,before:next
-      },control.signal);
+      } else {
+        [data]=await Promise.all([
+          request('/news',{channel:activeChannel,coin,query,limit:preview ? 7 : 25,before:next},control.signal),
+          prepareChinese()
+        ]);
+      }
       if(disposed || revision !== generation) return;
       if(!Array.isArray(data.items)) throw Error('快訊格式異常');
       const freshIds = new Set(data.items.map(item => item.no));
@@ -632,7 +674,12 @@ function mount(host,{preview=false,official=null}={}) {
     paintChannels();
     paintSources();
   }).catch(() => {});
-  load();
+  prepareChinese().then(available=>{
+    if(disposed)return;
+    if(!available) sourceTime.title='繁體轉換暫時無法使用，目前顯示來源文字。';
+    paintChannels();
+    load();
+  });
   connect();
   polling = setInterval(() => {
     if(!document.hidden && channel !== 'official') load({automatic:true});

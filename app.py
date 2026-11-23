@@ -131,7 +131,8 @@ def market_macro_api():
 @app.get('/api/market/history/<path:symbol>')
 def market_history_api(symbol):
     try:
-        return jsonify(market_history(symbol,request.args.get('period','1y')))
+        return jsonify(market_history(symbol,request.args.get('period','1y'),
+                                      allow_lookup=request.args.get('lookup')=='1'))
     except ValueError as error:
         return jsonify({"error":str(error)}),400
     except Exception:

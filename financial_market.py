@@ -11,6 +11,7 @@ from functools import lru_cache
 from urllib.request import Request, urlopen
 import xml.etree.ElementTree as ET
 import math
+import re
 import threading
 import time
 import pandas as pd
@@ -50,7 +51,23 @@ SECTORS=[
  ("XLP","必需消費","US","產業 ETF"),
  ("XLU","公用事業","US","產業 ETF"),
 ]
-ENTRIES=INDEXES+SECTORS
+US_STOCKS=[
+ ("AAPL","Apple","US","美股個股"), ("NVDA","NVIDIA","US","美股個股"),
+ ("MSFT","Microsoft","US","美股個股"), ("AMD","AMD","US","美股個股"),
+ ("COHR","Coherent","US","美股個股"), ("MRVL","Marvell","US","美股個股"),
+ ("MSTR","Strategy","US","美股個股"),
+]
+TW_STOCKS=[
+ ("2330.TW","台積電","TW","台股個股"), ("2317.TW","鴻海","TW","台股個股"),
+ ("2454.TW","聯發科","TW","台股個股"), ("2308.TW","台達電","TW","台股個股"),
+ ("0050.TW","元大台灣50","TW","ETF"), ("00631L.TW","元大台灣50正2","TW","ETF"),
+]
+US_ETFS=[
+ ("SPY","S&P 500 ETF","US","ETF"), ("QQQ","Nasdaq-100 ETF","US","ETF"),
+ ("SOXL","Direxion 半導體 3 倍做多","US","ETF"), ("SMH","VanEck 半導體 ETF","US","ETF"),
+]
+ENTRIES=INDEXES+SECTORS+US_STOCKS+TW_STOCKS+US_ETFS
+ENTRIES_BY_TICKER={row[0]:row for row in ENTRIES}
 SOURCES=[
  ("Federal Reserve","https://www.federalreserve.gov/feeds/press_all.xml","央行政策"),
  ("SEC","https://www.sec.gov/news/pressreleases.rss","監管公告"),
@@ -83,7 +100,7 @@ def _history(ticker,period="1y"):
         prices=prices[prices.index.date<current_utc]
     else:
         # Conservative market close + buffer; never publish an intraday partial candle as a completed daily close.
-        region=("TW" if ticker in ("^TWII","TWD=X") else
+        region=("TW" if ticker in ("^TWII","TWD=X") or ticker.endswith((".TW",".TWO")) else
                 "HK" if ticker=="^HSI" else
                 "JP" if ticker in ("^N225","JPY=X") else "US")
         zone,cutoff={
@@ -96,6 +113,11 @@ def _history(ticker,period="1y"):
         last_complete=now.date() if now.time()>=cutoff else now.date()-timedelta(days=1)
         prices=prices[prices.index.date<=last_complete]
     if prices.empty:raise ValueError("尚未取得已收盤的有效日 K")
+    if "Volume" in df:
+        volume = df["Volume"].copy()
+        volume.index = volume.index.tz_localize(None).normalize()
+        volume = volume[~volume.index.duplicated(keep="last")]
+        prices.attrs["latest_volume"] = _clean(volume.get(prices.index[-1]))
     return prices
 
 def _cache_get(key,ttl,fn):
@@ -103,13 +125,17 @@ def _cache_get(key,ttl,fn):
         entry=_cache.get(key)
         if entry and time.monotonic()-entry[0]<ttl:return entry[1]
     value=fn()
-    with _lock:_cache[key]=(time.monotonic(),value)
+    with _lock:
+        if len(_cache)>=512 and key not in _cache:
+            del _cache[min(_cache,key=lambda existing:_cache[existing][0])]
+        _cache[key]=(time.monotonic(),value)
     return value
 
-def _entry(entry):
+def _entry(entry, prices=None):
     ticker,label,region,kind=entry
     try:
-        prices=_cache_get(("price",ticker),180,lambda:_history(ticker,"1mo"))
+        if prices is None:
+            prices=_cache_get(("price",ticker),180,lambda:_history(ticker,"1mo"))
         today=float(prices.iloc[-1])
         prior=float(prices.iloc[-2]) if len(prices)>1 else None
         delta=today-prior if prior is not None else None
@@ -146,9 +172,11 @@ def _entry(entry):
             "value":_clean(today),"previous":_clean(prior),"change":_clean(delta),
             "changePct":_clean(percent),"changeBp":_clean(change_bps),
             "unit":"%" if yield_rate else None,
+            "volume":prices.attrs.get("latest_volume"),
             "asOf":prices.index[-1].strftime("%Y-%m-%d"),
             "currency":"USD" if ticker in ("BTC-USD","ETH-USD","SOL-USD","GC=F","SI=F","CL=F") else
-                "TWD/USD" if ticker=="TWD=X" else "index" if ticker.startswith("^") else "USD",
+                "TWD/USD" if ticker=="TWD=X" else "JPY/USD" if ticker=="JPY=X" else
+                "index" if ticker.startswith("^") else "TWD" if region=="TW" else "USD",
             "status":("歷史日 K 距今已較久，請核對當地休市日或資料源" if delayed
                       else "最新可取得的已完成日 K，並非即時成交價")}
     except Exception:
@@ -214,13 +242,21 @@ def macro_snapshot():
                 {"name":"BLS 美國勞動統計","url":"https://www.bls.gov/"},
                 {"name":"BEA 美國經濟分析","url":"https://www.bea.gov/"}]}
 
-def market_history(symbol,period="1y"):
-    allowed={x[0] for x in ENTRIES}
-    if symbol not in allowed:raise ValueError("不支援的市場代號")
-    if period not in ("1mo","3mo","6mo","1y","2y","5y"):raise ValueError("不支援的期間")
+def market_history(symbol,period="1y", *, allow_lookup=False):
+    entry=ENTRIES_BY_TICKER.get(symbol)
+    if entry is None:
+        if not allow_lookup or not re.fullmatch(r"[A-Z0-9][A-Z0-9.-]{0,19}",symbol):
+            raise ValueError("不支援的市場代號")
+        region="TW" if symbol.endswith((".TW",".TWO")) else "US"
+        if "." in symbol and region!="TW":
+            raise ValueError("個股查詢支援台股 .TW／.TWO 與美股代號")
+        entry=(symbol,symbol,region,"台股個股" if region=="TW" else "美股個股")
+    if period not in ("1mo","3mo","6mo","1y","2y","5y"):
+        raise ValueError("不支援的期間")
     prices=_cache_get(("history",symbol,period),180,lambda:_history(symbol,period))
-    if symbol=="^TNX":prices=prices/10.0
+    quote=_entry(entry,prices)
+    chart_prices=prices/10.0 if symbol=="^TNX" else prices
     return {"symbol":symbol,"period":period,"asOf":prices.index[-1].strftime("%Y-%m-%d"),
-        "points":[[d.strftime("%Y-%m-%d"),_clean(v)] for d,v in prices.items()],
-        "source":"Yahoo Finance 日 K；10Y ^TNX 轉換為殖利率 %（原代號值除以 10）" if symbol=="^TNX" else
-                 "Yahoo Finance 日 K · 原始 Close（不是 Adj Close，指數、商品與加密資產各有不同口徑）"}
+        "points":[(d.strftime("%Y-%m-%d"),_clean(v)) for d,v in chart_prices.items()],
+        "quote":quote,
+        "source":"Yahoo Finance 日 K；10Y ^TNX 轉換為殖利率 %（原代號值除以 10）" if symbol=="^TNX" else "Yahoo Finance 已收盤日 K"}

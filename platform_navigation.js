@@ -4,7 +4,7 @@ const root=document.getElementById('qtemp_root');
 if(!root)return;
 const routes=[
 ['overview','市場總覽','全球金融市場總覽',''],
-['markets','金融市場','金融市場','全球股指、利率、商品、外匯與數位資產'],
+['markets','行情','市場行情',''],
 ['macro','總體經濟','總體經濟','利率、美元與官方經濟數據入口'],
 ['sectors','產業研究','產業研究','產業 ETF 日線表現與半導體比較'],
 ['stocks','個股分析','個股分析','台美股與 ETF 搜尋'],
@@ -18,7 +18,7 @@ const routes=[
 ['compare','多資產比較','相對績效比較','長期績效、回撤、相關性、基準與投資組合。'],
 ['resources','研究資源','研究資料與指標方法','QTemp 公式、資料明細、TradingView 對照與匯出。']
 ];
-const mainRoutes=['overview','markets','macro','sectors','stocks','news','quant','watchlist'];
+const mainRoutes=['overview','markets','macro','news','quant'];
 const quantRoutes=['chart','signals','zones','strategy','compare','resources'];
 const base=root.querySelector('.query');
 const header=document.createElement('header');
@@ -36,15 +36,15 @@ header.append(nav);
 const mobileNav=document.createElement('label');mobileNav.className='qroute-switch';
 mobileNav.textContent='功能';
 const mobileSelect=document.createElement('select');mobileSelect.setAttribute('aria-label','切換功能頁面');
-routes.filter(r=>mainRoutes.includes(r[0])).forEach(([id,label])=>mobileSelect.add(new Option(label,id)));
+routes.filter(r=>mainRoutes.includes(r[0])||r[0]==='watchlist').forEach(([id,label])=>mobileSelect.add(new Option(label,id)));
 mobileSelect.onchange=()=>{go(mobileSelect.value)};
 mobileNav.append(mobileSelect);header.append(mobileNav);
 const help=document.createElement('button');
 help.type='button';help.className='qtopend qhelp-link';help.dataset.go='resources';
-help.textContent='資料與說明';header.append(help);
+help.textContent='自選股';help.dataset.go='watchlist';header.append(help);
 base.before(header);
 const hero=document.createElement('section');hero.className='qhero';
-hero.innerHTML='<div class="qhero-content"><h1>全球金融<br><em>市場總覽</em></h1><p class="qhero-desc">全球股市、數位資產與跨市場異動</p><div class="qactions"><button type="button" class="primary" data-go="markets">查看全球行情</button><button type="button" data-go="news">瀏覽金融快訊</button></div><div class="qhero-quote-strip" aria-label="主要市場收盤行情"></div></div><section class="qhero-wire" aria-label="最新市場快訊"></section>';
+hero.innerHTML='<div class="market-home-header"><h1>市場總覽</h1><div class="qhero-quote-strip" aria-label="主要市場收盤行情"></div></div><div class="market-home-grid"><section class="market-home-activity" aria-label="市場快覽"></section><section class="qhero-wire" aria-label="最新市場快訊"></section></div>';
 base.before(hero);
 const shortcuts=document.createElement('div');shortcuts.className='qshortcut';
 for(const [route,icon,title,description] of [
@@ -115,9 +115,10 @@ function go(route,updateHash=true){
  current=route;
  root.dataset.view=route;
  root.dataset.resource=subResource;
- nav.querySelectorAll('[data-route]').forEach(b=>b.setAttribute('aria-current',b.dataset.route===(quantRoutes.includes(route)?'quant':route)?'page':'false'));
+ const mainRoute=quantRoutes.includes(route)?'quant':['sectors','stocks'].includes(route)?'markets':route;
+ nav.querySelectorAll('[data-route]').forEach(b=>b.setAttribute('aria-current',b.dataset.route===mainRoute?'page':'false'));
  const info=routes.find(r=>r[0]===route);
- mobileSelect.value=quantRoutes.includes(route)?'quant':route;
+ mobileSelect.value=mainRoute;
  intro.querySelector('[data-crumb=current]').textContent=info[1];
  intro.querySelector('h2').textContent=info[2];intro.querySelector('p').textContent=info[3];
  intro.querySelector('p').hidden=!info[3];
@@ -150,11 +151,5 @@ root.addEventListener('click',event=>{
 });
 window.addEventListener('popstate',()=>go(location.hash.slice(1)||'overview',false));
 window.addEventListener('hashchange',()=>{if(location.hash.slice(1)!==current)go(location.hash.slice(1)||'overview',false)});
-const preview=hero.querySelector('[data-preview-score]'),score=root.querySelector('[data-q=score]');
-if(score&&preview){
- const observer=new MutationObserver(()=>{preview.textContent=score.textContent?.trim()||'—'});
- observer.observe(score,{childList:true,characterData:true,subtree:true});
- preview.textContent=score.textContent||'—';
-}
 go(location.hash.slice(1)||'overview',false);
 })();
