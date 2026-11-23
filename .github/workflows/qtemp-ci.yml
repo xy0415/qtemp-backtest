@@ -32,6 +32,7 @@ jobs:
           node --check deep_comparison_ui.js
           node --check financial_portal.js
           node --check static/equation_news.js
+          node --check static/rti_terminal.js
           node - <<'JS'
           const fs=require('fs');
           const html=fs.readFileSync('index.html','utf8');
@@ -40,7 +41,7 @@ jobs:
           new Function(script[1]);
           JS
       - name: Capital backtest deterministic tests
-        run: python -m unittest -v test_capital_backtest test_research_insights test_market_cache test_qtemp_zones test_deep_comparison test_financial_audit test_watchlist_audit test_streamlined_ui test_financial_market
+        run: python -m unittest -v test_capital_backtest test_research_insights test_market_cache test_qtemp_zones test_deep_comparison test_financial_audit test_watchlist_audit test_streamlined_ui test_financial_market test_rti
       - name: Flask and input smoke test
         run: |
           python - <<'PY'

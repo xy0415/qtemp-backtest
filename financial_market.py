@@ -94,7 +94,7 @@ def _history(ticker,period="1y"):
     if prices.empty:raise ValueError("沒有有效日線")
     prices.index=prices.index.tz_localize(None).normalize() if prices.index.tz is None else prices.index.tz_localize(None).normalize()
     prices=prices[~prices.index.duplicated(keep="last")].sort_index()
-    if ticker in ("BTC-USD","ETH-USD","SOL-USD"):
+    if ticker.endswith("-USD"):
         # Crypto trades continuously: only include completed UTC calendar dates.
         current_utc=datetime.now(timezone.utc).date()
         prices=prices[prices.index.date<current_utc]
@@ -174,7 +174,7 @@ def _entry(entry, prices=None):
             "unit":"%" if yield_rate else None,
             "volume":prices.attrs.get("latest_volume"),
             "asOf":prices.index[-1].strftime("%Y-%m-%d"),
-            "currency":"USD" if ticker in ("BTC-USD","ETH-USD","SOL-USD","GC=F","SI=F","CL=F") else
+            "currency":"USD" if region=="Crypto" or ticker in ("GC=F","SI=F","CL=F") else
                 "TWD/USD" if ticker=="TWD=X" else "JPY/USD" if ticker=="JPY=X" else
                 "index" if ticker.startswith("^") else "TWD" if region=="TW" else "USD",
             "status":("歷史日 K 距今已較久，請核對當地休市日或資料源" if delayed
@@ -245,12 +245,12 @@ def macro_snapshot():
 def market_history(symbol,period="1y", *, allow_lookup=False):
     entry=ENTRIES_BY_TICKER.get(symbol)
     if entry is None:
-        if not allow_lookup or not re.fullmatch(r"[A-Z0-9][A-Z0-9.-]{0,19}",symbol):
+        if not allow_lookup or not re.fullmatch(r"[A-Z0-9][A-Z0-9._-]{0,26}",symbol):
             raise ValueError("不支援的市場代號")
-        region="TW" if symbol.endswith((".TW",".TWO")) else "US"
+        region="TW" if symbol.endswith((".TW",".TWO")) else "Crypto" if symbol.endswith("-USD") else "US"
         if "." in symbol and region!="TW":
             raise ValueError("個股查詢支援台股 .TW／.TWO 與美股代號")
-        entry=(symbol,symbol,region,"台股個股" if region=="TW" else "美股個股")
+        entry=(symbol,symbol,region,{"TW":"台股個股","US":"美股個股","Crypto":"加密"}[region])
     if period not in ("1mo","3mo","6mo","1y","2y","5y"):
         raise ValueError("不支援的期間")
     prices=_cache_get(("history",symbol,period),180,lambda:_history(symbol,period))

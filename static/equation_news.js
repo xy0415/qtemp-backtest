@@ -320,8 +320,8 @@ function showStory(host,story,feedLang) {
   load();
 }
 
-function mount(host,{preview=false,official=null}={}) {
-  let channel = 'all';
+function mount(host,{preview=false,official=null,initialChannel='all',allowedChannels=null,storyFilter=null }={}) {
+  let channel = initialChannel;
   let lang = 'zh';
   let coin = '';
   let query = '';
@@ -437,8 +437,12 @@ function mount(host,{preview=false,official=null}={}) {
   }
   function paintChannels() {
     if(preview) return;
-    categories.replaceChildren(categoryButton('all',channelLabels.all));
-    channelSelect.replaceChildren(new Option(channelLabels.all,'all'));
+    categories.replaceChildren();
+    channelSelect.replaceChildren();
+    if(!allowedChannels || allowedChannels.includes('all')){
+      categories.append(categoryButton('all',channelLabels.all));
+      channelSelect.append(new Option(channelLabels.all,'all'));
+    }
     const listed = new Set();
     const remote = new Map(channelList.map(item => [item.key,item]));
     for(const [title,keys] of [...channelGroups,['其他頻道',channelList.map(item => item.key)]]) {
@@ -448,7 +452,7 @@ function mount(host,{preview=false,official=null}={}) {
       options.label = title;
       group.append(heading);
       for(const key of keys) {
-        if(listed.has(key) || key === 'all') continue;
+        if(listed.has(key) || key === 'all' || (allowedChannels && !allowedChannels.includes(key))) continue;
         listed.add(key);
         const info = remote.get(key);
         const label = channelLabels[key] || info?.name_zh || info?.name_en || key;
@@ -460,7 +464,7 @@ function mount(host,{preview=false,official=null}={}) {
         channelSelect.append(options);
       }
     }
-    if(official) {
+    if(official && (!allowedChannels || allowedChannels.includes('official'))) {
       categories.append(categoryButton('official','機關公告'));
       channelSelect.append(new Option('機關公告','official'));
     }
@@ -583,12 +587,13 @@ function mount(host,{preview=false,official=null}={}) {
         if(!data.items.length && officialData.status !== 'ok') throw Error('機關公告來源暫時無法使用');
       } else {
         [data]=await Promise.all([
-          request('/news',{channel:activeChannel,coin,query,limit:preview ? 7 : 25,before:next},control.signal),
+          request('/news',{channel:activeChannel,coin,query,limit:storyFilter ? 50 : preview ? 7 : 25,before:next},control.signal),
           prepareChinese()
         ]);
       }
       if(disposed || revision !== generation) return;
       if(!Array.isArray(data.items)) throw Error('快訊格式異常');
+      if(storyFilter)data={...data,items:data.items.filter(storyFilter)};
       const freshIds = new Set(data.items.map(item => item.no));
       const combined = append ? [...items,...data.items] :
         userPaged ? [...data.items,...items.filter(item => !freshIds.has(item.no))] : data.items;
@@ -632,7 +637,7 @@ function mount(host,{preview=false,official=null}={}) {
     }
   }
   function connect() {
-    if(disposed || document.hidden || typeof WebSocket === 'undefined') return;
+    if(disposed || document.hidden || typeof WebSocket === 'undefined' || (allowedChannels && !allowedChannels.some(key=>key==='all'||key==='main'))) return;
     socket = new WebSocket('wss://api.eqn.news/public/ws');
     socket.onopen = () => {
       reconnectDelay = 1000;
