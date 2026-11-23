@@ -28,17 +28,26 @@ class MarketPortalTests(unittest.TestCase):
             self.assertIn(symbol,symbols)
         self.assertEqual(next(x for x in fm.ENTRIES if x[0]=="^HSI")[2],"HK")
         self.assertEqual(next(x for x in fm.ENTRIES if x[0]=="SOL-USD")[2],"Crypto")
-    def test_compact_market_grid_and_chart_selection(self):
+    def test_market_table_and_quote_workbench_assets(self):
         from pathlib import Path
-        js=Path("financial_portal.js").read_text(encoding="utf-8")
-        css=Path("financial_portal.css").read_text(encoding="utf-8")
-        self.assertIn("fm-market-index-grid",js)
-        self.assertIn("fm-market-category-grid",js)
-        self.assertIn("fm-market-row",js)
-        self.assertIn("fm-market-category-wide",css)
-        self.assertIn("chooseMarketTicker",js)
-        self.assertIn("['SOXX','XLK','XLC','XLF'",js)
-        self.assertIn("['BTC-USD','ETH-USD','SOL-USD']",js)
+        portal = Path("financial_portal.js").read_text(encoding="utf-8")
+        watchlist = Path("workspace_watchlist.js").read_text(encoding="utf-8")
+        self.assertIn("market-quotes-table", portal)
+        self.assertIn("aria-sort", portal)
+        self.assertIn("market-heatmap", portal)
+        self.assertIn("qtemp_watch_quote_layout_v1", watchlist)
+
+    def test_full_symbol_details_match_history_and_volume(self):
+        dates = pd.bdate_range("2026-11-10", periods=3)
+        prices = pd.Series([100., 104., 102.], index=dates)
+        prices.attrs["latest_volume"] = 12345
+        with patch("financial_market._history", return_value=prices):
+            payload = fm.market_history("6488.TWO", "3mo", allow_lookup=True)
+        self.assertEqual(payload["quote"]["asOf"], payload["points"][-1][0])
+        self.assertEqual(payload["quote"]["value"], payload["points"][-1][1])
+        self.assertEqual(payload["quote"]["volume"], 12345)
+        self.assertEqual(payload["quote"]["region"], "TW")
+
     def test_market_items_keep_no_fabricated_failures(self):
         with patch("financial_market._history",side_effect=RuntimeError("blocked")):
             result=fm._entry(("^SOX","費城半導體 SOX","US","半導體"))
@@ -64,7 +73,7 @@ class MarketPortalTests(unittest.TestCase):
         self.assertEqual(client.get("/health").status_code,200)
         self.assertEqual(client.get("/financial_portal.js").status_code,200)
         self.assertEqual(client.get("/financial_portal.css").status_code,200)
-        for asset in ("equation_news.js", "market_terminal.css"):
+        for asset in ("equation_news.js", "market_terminal.css", "market_quotes.css"):
             with client.get("/static/" + asset) as response:
                 self.assertEqual(response.status_code, 200)
         self.assertEqual(client.get("/api/market/history/NOT_A_REAL_SYMBOL").status_code,400)

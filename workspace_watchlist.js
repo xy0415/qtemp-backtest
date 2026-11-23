@@ -18,6 +18,7 @@ panel.innerHTML='<div class="qa-workspace"><div class="qa-section-heading"><h3>�
 '<button type="button" id="qa-watch-export">匯出 JSON</button>'+
 '<label class="qa-watch-import">匯入 JSON <input id="qa-watch-import" type="file" accept=".json,application/json" hidden></label></div>'+
 '<p class="qa-watch-message" id="qa-watch-message">資料保存在目前瀏覽器，不會同步至其他裝置。行情檢查最多每次六檔，避免大量請求。</p>'+
+'<div class="market-watch-layout" id="market-watch-layout" aria-label="自選報價工作台"></div>'+
 '<div class="qa-watch-table" id="qa-watch-table"></div></div>';
 const $=id=>document.getElementById(id);
 const KEY='qtemp_watchspace_v2',LEGACY='qtemp_watchlist_v1';
@@ -73,6 +74,87 @@ function el(tag,txt,cls){
  const n=document.createElement(tag);if(txt!==undefined)n.textContent=txt;
  if(cls)n.className=cls;return n;
 }
+const layoutKey='qtemp_watch_quote_layout_v1';
+let widgets=[];
+let dragging=null;
+try{
+ const stored=JSON.parse(localStorage.getItem(layoutKey)||'[]');
+ if(Array.isArray(stored))widgets=stored.filter(row=>row&&symbolOK(row.symbol)).slice(0,6).map(row=>({
+  symbol:row.symbol,wide:row.wide===true,period:['1mo','3mo','6mo','1y','2y','5y'].includes(row.period)?row.period:'3mo'
+ }));
+}catch{}
+function saveWidgets(){
+ try{localStorage.setItem(layoutKey,JSON.stringify(widgets))}catch{message('無法保存報價面板配置。')}
+}
+function moveWidget(from,to){
+ const index=widgets.findIndex(row=>row.symbol===from);
+ const target=widgets.findIndex(row=>row.symbol===to);
+ if(index<0||target<0||index===target)return;
+ const [widget]=widgets.splice(index,1);
+ widgets.splice(target,0,widget);
+ saveWidgets();renderWidgets();
+}
+function renderWidgets(){
+ if(root.dataset.view!=='watchlist'||!window.qtempMarkets)return;
+ const host=$('market-watch-layout');
+ for(const child of Array.from(host.children)){
+  if(!widgets.some(row=>row.symbol===child.dataset.symbol))child.remove();
+ }
+ for(const [index,widget] of widgets.entries()){
+  let box=Array.from(host.children).find(child=>child.dataset.symbol===widget.symbol);
+  if(!box){
+   box=el('section',undefined,'market-watch-widget');
+   box.dataset.symbol=widget.symbol;
+   const controls=el('div',undefined,'market-watch-controls');
+   const title=el('strong',widget.symbol);
+   const handle=el('button','拖曳', 'market-drag');handle.type='button';handle.draggable=true;
+   handle.title='拖曳調整報價面板順序';
+   handle.ondragstart=event=>{
+    dragging=widget.symbol;box.dataset.dragging='true';
+    event.dataTransfer.effectAllowed='move';event.dataTransfer.setData('text/plain',widget.symbol);
+   };
+   handle.ondragend=()=>{dragging=null;delete box.dataset.dragging};
+   box.ondragover=event=>{if(dragging&&dragging!==widget.symbol){event.preventDefault();event.dataTransfer.dropEffect='move'}};
+   box.ondrop=event=>{
+    if(!dragging)return;
+    event.preventDefault();
+    moveWidget(dragging,widget.symbol);
+   };
+   const up=el('button','前移');up.type='button';up.dataset.move='previous';
+   up.onclick=()=>moveWidget(widget.symbol,widgets[widgets.indexOf(widget)-1]?.symbol);
+   const down=el('button','後移');down.type='button';down.dataset.move='next';
+   down.onclick=()=>moveWidget(widget.symbol,widgets[widgets.indexOf(widget)+1]?.symbol);
+   const size=el('button');size.type='button';size.dataset.widgetSize='';
+   size.onclick=()=>{widget.wide=!widget.wide;saveWidgets();renderWidgets()};
+   const close=el('button','關閉面板');close.type='button';
+   close.onclick=()=>{widgets=widgets.filter(row=>row!==widget);saveWidgets();renderWidgets()};
+   controls.append(title,handle,up,down,size,close);
+   const chart=el('div',undefined,'market-detail');
+   box.append(controls,chart);host.append(box);
+   window.qtempMarkets.quoteChart(chart,widget.symbol,period=>{widget.period=period;saveWidgets()},widget.period);
+  }
+  box.dataset.wide=String(widget.wide);
+  box.querySelector('[data-widget-size]').textContent=widget.wide?'縮窄':'放寬';
+  box.querySelector('[data-move=previous]').disabled=index===0;
+  box.querySelector('[data-move=next]').disabled=index===widgets.length-1;
+  if(host.children[index]!==box)host.insertBefore(box,host.children[index]||null);
+ }
+}
+function openWidget(symbol){
+ if(widgets.some(row=>row.symbol===symbol)){
+  [...$('market-watch-layout').children].find(node=>node.dataset.symbol===symbol)?.scrollIntoView({block:'nearest'});
+  return;
+ }
+ if(widgets.length>=6){message('報價工作台最多同時顯示 6 檔。');return}
+ widgets.push({symbol,wide:false,period:'3mo'});
+ saveWidgets();renderWidgets();
+ message('已開啟 '+symbol+' 的收盤行情面板。');
+}
+document.addEventListener('qtemp-route-change',event=>{
+ if(event.detail.route==='watchlist')queueMicrotask(renderWidgets);
+});
+window.addEventListener('load',renderWidgets,{once:true});
+
 function render(){
  groups();
  const target=$('qa-watch-table');target.replaceChildren();
@@ -87,9 +169,11 @@ function render(){
   goto.type='button';goto.onclick=()=>{
    root.querySelector('[data-q="symbol"]').value=item.symbol;
    const load=root.querySelector('[data-q="load"]');load?.click();
-   root.querySelector('[data-route="chart"]')?.click();
+   location.hash='#chart';
   };
-  sym.append(goto);
+  const quotePanel=el('button','報價面板');
+  quotePanel.type='button';quotePanel.onclick=()=>openWidget(item.symbol);
+  sym.append(goto,quotePanel);
   const group=tr.insertCell(),groupInput=el('input');groupInput.value=item.group;groupInput.maxLength=24;groupInput.setAttribute('aria-label',item.symbol+' 分組');
   groupInput.onchange=()=>{item.group=tidy(groupInput.value).slice(0,24)||'一般觀察';item.updated=Date.now();persist();render()};
   group.append(groupInput);
@@ -108,7 +192,11 @@ function render(){
    action.append(btn);
   }
   const remove=el('button','移除');remove.type='button';
-  remove.onclick=()=>{items=items.filter(x=>x!==item);persist();render()};
+  remove.onclick=()=>{
+   items=items.filter(x=>x!==item);
+   widgets=widgets.filter(row=>row.symbol!==item.symbol);
+   saveWidgets();persist();render();renderWidgets();
+  };
   action.append(remove);
  }
  target.append(table);
@@ -188,7 +276,9 @@ $('qa-watch-import').onchange=async()=>{
   const safe=incoming.filter(x=>x&&symbolOK(x.symbol)).slice(0,60).map(x=>({
    symbol:x.symbol,group:tidy(x.group).slice(0,24)||'一般觀察',note:tidy(x.note),created:Date.now(),updated:Date.now()
   }));
-  const unique=new Map(safe.map(x=>[x.symbol,x]));items=[...unique.values()];persist();render();message('已匯入 '+items.length+' 檔。');
+  const unique=new Map(safe.map(x=>[x.symbol,x]));items=[...unique.values()];
+  widgets=widgets.filter(row=>unique.has(row.symbol));
+  saveWidgets();persist();render();renderWidgets();message('已匯入 '+items.length+' 檔。');
  }catch(error){message('匯入失敗：'+error.message)}
  finally{$('qa-watch-import').value=''}
 };
