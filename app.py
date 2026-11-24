@@ -13,7 +13,7 @@ from financial_market import market_snapshot, official_news, macro_snapshot, mar
 from market_rankings import MARKETS, market_segment, rankings, taiwan_disclosures
 from rti import get_earnings_reference, rti_snapshot, symbol_valid
 from rti_backtest import backtest
-from crypto_data import crypto_market
+from crypto_data import crypto_market, crypto_resource, SORTS
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 3 * 1024 * 1024
@@ -129,10 +129,34 @@ def market_rankings_api(market):
 
 @app.get('/api/market/crypto/assets')
 def crypto_assets_api():
+    page = request.args.get('page', '1')
+    sort = request.args.get('sort', 'rank')
+    order = request.args.get('order', 'desc')
+    provider = request.args.get('provider', '')
+    if not page.isascii() or not page.isdecimal() or len(page) > 6 or int(page) < 1 or sort not in SORTS or order not in ('asc', 'desc') or provider not in ('', 'CoinMarketCap', 'CoinGecko'):
+        return jsonify(error='無效的資產分頁或排序'), 400
     try:
-        return jsonify(crypto_market())
+        return jsonify(crypto_market(int(page), sort, order, provider))
     except Exception:
-        return jsonify(error='加密資產資料來源暫時不可用'), 503
+        return jsonify(error='此排序的加密資產資料暫時無法取得'), 503
+
+
+@app.get('/api/market/crypto/resources/<name>')
+def crypto_resources_api(name):
+    from urllib.error import HTTPError
+    try:
+        return jsonify(crypto_resource(name, request.args.get('id', ''),
+                                       request.args.get('platform', ''), request.args.get('address', '')))
+    except KeyError:
+        return jsonify(error='找不到此資料類別'), 404
+    except HTTPError as error:
+        message = {401:'上游 API 授權失敗', 403:'目前方案未開放此資料',
+                   404:'上游沒有這個標的', 429:'上游請求頻率達上限，請稍後重試'}
+        return jsonify(error=message.get(error.code, '上游資料暫時不可用')), 503
+    except ValueError as error:
+        return jsonify(error=str(error)), 400
+    except Exception:
+        return jsonify(error='加密市場資料暫時不可用'), 503
 
 
 @app.get('/api/market/tw/disclosures')

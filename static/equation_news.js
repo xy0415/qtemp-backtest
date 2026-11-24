@@ -5,13 +5,13 @@ const channelLabels = {
   all:'全部快訊', main:'加密快訊', tradfi:'傳統金融', tfmoves:'美股異動',
   binance:'幣安公告', korea:'韓國交易所', tier2:'二線交易所上新', tier3:'三線交易所上新',
   alpha:'Binance Alpha', hl:'Hyperliquid', pricechange:'價格異動', oi:'未平倉量異動',
-  major:'大幅波動', cz:'CZ 與何一', earn:'理財提醒'
+  major:'大幅波動', cz:'CZ 與何一', elon:'馬斯克動態', earn:'理財提醒'
 };
 const channelGroups = [
   ['市場新聞',['main','tradfi']],
   ['市場異動',['tfmoves','pricechange','oi','major']],
   ['交易所公告',['binance','korea','tier2','tier3','alpha','hl','earn']],
-  ['人物追蹤',['cz']]
+  ['人物追蹤',['cz','elon']]
 ];
 const locale = {zh:'繁體中文',en:'English',ko:'한국어',tr:'Türkçe',ru:'Русский'};
 const time = new Intl.DateTimeFormat('zh-TW',{timeZone:'Asia/Taipei',hourCycle:'h23',hour:'2-digit',minute:'2-digit',second:'2-digit'});
@@ -320,10 +320,10 @@ function showStory(host,story,feedLang) {
   load();
 }
 
-function mount(host,{preview=false,official=null,initialChannel='all',allowedChannels=null,storyFilter=null }={}) {
+function mount(host,{preview=false,official=null,initialChannel='all',initialCoin='',allowedChannels=null,storyFilter=null }={}) {
   let channel = initialChannel;
   let lang = 'zh';
-  let coin = '';
+  let coin = /^[A-Z0-9$@-]{1,18}$/i.test(initialCoin||'') ? initialCoin.toUpperCase() : '';
   let query = '';
   let items = [];
   let cursor = null;
@@ -373,6 +373,7 @@ function mount(host,{preview=false,official=null,initialChannel='all',allowedCha
     searchable = search;
     coinInput = node('input');
     coinInput.placeholder = '幣種代號';
+    coinInput.value = coin;
     coinInput.setAttribute('aria-label','幣種代號');
     coinInput.maxLength = 24;
     sourceSelect = node('select');
@@ -588,7 +589,7 @@ function mount(host,{preview=false,official=null,initialChannel='all',allowedCha
       } else {
         [data]=await Promise.all([
           request('/news',{channel:activeChannel,coin,query,limit:storyFilter ? 50 : preview ? 7 : 25,before:next},control.signal),
-          prepareChinese()
+          prepareChinese().then(available=>{if(!available && lang==='zh')throw Error('繁體中文轉換暫時無法載入，請重試或切換英文')})
         ]);
       }
       if(disposed || revision !== generation) return;
@@ -681,7 +682,7 @@ function mount(host,{preview=false,official=null,initialChannel='all',allowedCha
   }).catch(() => {});
   prepareChinese().then(available=>{
     if(disposed)return;
-    if(!available) sourceTime.title='繁體轉換暫時無法使用，目前顯示來源文字。';
+    if(!available) sourceTime.title='繁體轉換暫時無法使用，請重試或切換英文。';
     paintChannels();
     load();
   });
@@ -699,5 +700,5 @@ function mount(host,{preview=false,official=null,initialChannel='all',allowedCha
     document.removeEventListener('visibilitychange',visibility);
   };
 }
-window.equationNews = {mount};
+window.equationNews = {mount,traditional,prepareChinese};
 })();

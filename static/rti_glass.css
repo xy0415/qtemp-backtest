@@ -195,3 +195,16 @@ body #qtemp_root.rti-terminal:fullscreen{overflow:auto;background:radial-gradien
 #qtemp_root .terminal-link{color:var(--glass-accent)!important}
 #qtemp_root button.eq-story-title:hover,#qtemp_root :is(.eq-row-meta .eq-token,.eq-story-meta .eq-token,.eq-row-meta span+span,.eq-link){color:var(--glass-accent)}
 #qtemp_root .eq-channel[aria-pressed=true]{box-shadow:inset 2px 0 var(--glass-accent)}
+
+#qtemp_root .crypto-sort{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 13px;padding:6px;border:1px solid var(--glass-line);border-radius:18px;background:var(--glass-panel)}
+#qtemp_root .crypto-sort button[aria-pressed=true]{background:#e6e6e6;color:#171717;border-color:#eee}
+#qtemp_root .crypto-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:14px;margin-bottom:18px}
+#qtemp_root .crypto-grid > .crypto-panel{min-width:0;margin:0}
+#qtemp_root .crypto-panel h2{margin-bottom:14px}
+#qtemp_root .crypto-panel .terminal-form{padding:12px}
+#qtemp_root .crypto-address{overflow-wrap:anywhere}
+@media(max-width:790px){
+ #qtemp_root .crypto-grid{grid-template-columns:minmax(0,1fr)}
+ #qtemp_root .crypto-sort{flex-wrap:nowrap;overflow-x:auto}
+ #qtemp_root .crypto-sort button{flex:none}
+}

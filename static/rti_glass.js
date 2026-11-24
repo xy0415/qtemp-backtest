@@ -6,8 +6,9 @@
   const nav = top.querySelector('nav');
   const motion = matchMedia('(prefers-reduced-motion: reduce)');
   const routes = [
-    ['首頁', '#home', '⌂'], ['市值排行', '#crypto/rank', '◈'],
-    ['加密資產總覽', '#crypto/assets', '▤'], ['幣種查詢', '#crypto/lookup', '⌕'],
+    ['首頁', '#home', '⌂'], ['加密資產總覽', '#crypto/assets', '◈'],
+    ['市場指標', '#crypto/overview', '▤'], ['板塊輪動', '#crypto/sectors'],
+    ['衍生品監控', '#crypto/derivatives'], ['鏈上與交易所', '#crypto/chain'],
     ['加密快訊', '#crypto/news', '≋'], ['行情與 RTI', '#rti/analysis', '∿'],
     ['訊號研究', '#rti/signals', '↗'], ['區間統計', '#rti/zones'],
     ['買賣策略', '#rti/backtest'], ['投入策略比較', '#rti/capital'],
@@ -85,7 +86,7 @@
     matches = routes.filter(([name, href]) => (name + ' ' + href).toLowerCase().includes(term));
     if (term && /^[a-z0-9]{2,12}(?:-usd)?$/i.test(term)) {
       const symbol = term.toUpperCase().replace(/-USD$/, '');
-      matches = [...matches, ['查詢 ' + symbol + ' 行情', '#crypto/lookup/' + symbol + '-USD']];
+      matches = [...matches, ['查詢 ' + symbol + ' 行情', '#crypto/assets/' + symbol]];
     }
     index = 0;
     results.replaceChildren();
@@ -153,7 +154,7 @@
     if (!document.fullscreenElement && root.classList.contains('glass-wide')) setWide(false);
   });
   dock.append(wide);
-  for (const [name, href, icon] of routes.filter(route => ['#home','#crypto/rank','#crypto/news','#rti/analysis','#rti/signals'].includes(route[1]))) {
+  for (const [name, href, icon] of routes.filter(route => ['#home','#crypto/assets','#crypto/news','#rti/analysis','#rti/signals'].includes(route[1]))) {
     const link = el('a', 'glass-dock-item', icon);
     link.href = href;
     link.setAttribute('aria-label', name);
@@ -168,7 +169,7 @@
   function dockState() {
     const path = location.hash || '#home';
     for (const link of dock.querySelectorAll('a')) {
-      const marketDefault = path === '#crypto' ? '#crypto/rank' : path === '#rti' ? '#rti/analysis' : path;
+      const marketDefault = path === '#crypto' ? '#crypto/assets' : path === '#rti' ? '#rti/analysis' : path;
       if (marketDefault === link.hash || marketDefault.startsWith(link.hash + '/')) link.setAttribute('aria-current', 'page');
       else link.removeAttribute('aria-current');
     }
