@@ -287,7 +287,7 @@ function externalLink(url,label){
 }
 function showCryptoAssets(host,symbol){
  const sorts=[['rank','排名'],['price','價格'],['change1h','1 小時漲跌'],['change24h','24 小時漲跌'],
-  ['change7d','7 天漲跌'],['change30d','30 天漲跌'],['marketCap','市值'],['volume','24 小時成交額']];
+  ['change7d','7 天漲跌'],['marketCap','市值'],['volume','24 小時成交額']];
  const header=node('div',null,'crypto-sort');
  header.setAttribute('role','group');header.setAttribute('aria-label','全市場排序');
  const form=node('form',null,'terminal-actions');
@@ -333,7 +333,7 @@ function showCryptoAssets(host,symbol){
     ['7D',x=>move(x.change7d),x=>direction(x.change7d)],['30D',x=>move(x.change30d),x=>direction(x.change30d)],
     ['市值 USD',x=>quantity(x.marketCap,true)],['24H 成交額 USD',x=>quantity(x.volume,true)]];
   view.replaceChildren(table(entries,filtered));
-  const index={rank:0,price:2,change1h:3,change24h:4,change7d:5,change30d:6,marketCap:7,volume:8}[sort];
+  const index={rank:0,price:2,change1h:3,change24h:4,change7d:5,marketCap:7,volume:8}[sort];
   view.querySelectorAll('th')[index]?.setAttribute('aria-sort',(sort==='rank'?order==='desc':order==='asc')?'ascending':'descending');
  }
  async function load(reset){
@@ -420,11 +420,12 @@ function showCryptoDashboard(host){
  cryptoPanel(grid,'全市場概況','global',(out,d)=>{
   const quote=usdQuote(d);
   textList(out,[['總市值 USD',numerical(quote.total_market_cap,true)],['24H 成交額 USD',numerical(quote.total_volume_24h,true)],
-   ['BTC 市占率',pct(d.btc_dominance)],['ETH 市占率',pct(d.eth_dominance)],['山寨幣市值 USD',numerical(quote.altcoin_market_cap,true)],
+   ['BTC 市占率',numerical(d.btc_dominance)+'%'],['ETH 市占率',numerical(d.eth_dominance)+'%'],['山寨幣市值 USD',numerical(quote.altcoin_market_cap,true)],
    ['山寨幣成交額 USD',numerical(quote.altcoin_volume_24h,true)],['活躍幣種',numerical(d.active_cryptocurrencies)],['活躍交易所',numerical(d.active_exchanges)],['活躍交易對',numerical(d.active_market_pairs)]]);
  });
- const mood={ 'Extreme Fear':'極度恐懼',Fear:'恐懼',Neutral:'中性',Greed:'貪婪','Extreme Greed':'極度貪婪'};
- cryptoPanel(grid,'恐懼與貪婪','fear',(out,d)=>textList(out,[['指數',numerical(d.value)],['情緒',mood[d.value_classification]||'—'],['更新',cryptoDate(d.update_time||d.timestamp)]]));
+ const moods={'extreme fear':'極度恐懼',fear:'恐懼',neutral:'中性',greed:'貪婪','extreme greed':'極度貪婪'};
+ const mood=value=>moods[String(value||'').trim().toLowerCase().replace(/[_-]+/g,' ')]||'—';
+ cryptoPanel(grid,'恐懼與貪婪','fear',(out,d)=>textList(out,[['指數',numerical(d.value)],['情緒',mood(d.value_classification??d.valueClassification??d.classification)],['更新',cryptoDate(d.update_time||d.timestamp)]]));
  cryptoPanel(grid,'山寨幣季節','altseason',(out,d)=>textList(out,[['指數',numerical(d.altcoin_index)],['一年最高',numerical(d.yearly_high)],['一年最低',numerical(d.yearly_low)],['山寨幣總市值 USD',numerical(d.altcoin_marketcap,true)]]));
  for(const index of ['cmc20','cmc100']){
   const name=index.toUpperCase().replace('CMC','CMC ');
@@ -436,12 +437,20 @@ function showCryptoDashboard(host){
  }
  const history=button('顯示市場歷史資料',()=>{
   history.remove();
-  cryptoPanel(host,'近 30 日恐懼與貪婪','fear-history',(out,d)=>out.append(table([['日期',x=>cryptoDate(x.timestamp)],['分數',x=>x.value],['情緒',x=>mood[x.value_classification]||'—']],asList(d,'data'))));
+  cryptoPanel(host,'近 30 日恐懼與貪婪','fear-history',(out,d)=>out.append(table([['日期',x=>cryptoDate(x.timestamp)],['分數',x=>x.value],['情緒',x=>mood(x.value_classification??x.valueClassification??x.classification)]],asList(d,'data'))));
   cryptoPanel(host,'近 30 日山寨幣季節','altseason-history',(out,d)=>out.append(table([['日期',x=>cryptoDate(x.timestamp??x.time??x.snapshot_time)],['分數',x=>x.altcoin_index??x.altcoinIndex??x.value]],asList(d,'historical','points','data','altcoinSeasonIndex'))));
   cryptoPanel(host,'近 30 日全市場指標','global-history',(out,d)=>out.append(table([['日期',x=>cryptoDate(x.timestamp)],['總市值 USD',x=>numerical(usdQuote(x).total_market_cap,true)],['成交額 USD',x=>numerical(usdQuote(x).total_volume_24h,true)],['BTC 市占率',x=>pct(x.btc_dominance)]],asList(d,'quotes').slice().reverse())));
   for(const index of ['cmc20','cmc100'])cryptoPanel(host,index.toUpperCase()+' 歷史指數',index+'-history',(out,d)=>out.append(table([['日期',x=>cryptoDate(x.update_time??x.timestamp??x.last_update)],['指數',x=>numerical(x.value)]],asList(d,'quotes','points','data').slice().reverse())));
  },'terminal-button');
  host.append(history);
+ const sources=node('section',null,'terminal-method');
+ sources.append(node('h2','資料來源與延伸資源'),
+  node('p','本站市場數值來自 CoinMarketCap，事件與公告來自方程式新聞。以下可查資料定義、更新頻率與其餘資料的方案限制。','terminal-meta'));
+ const links=node('div',null,'terminal-actions');
+ links.append(externalLink('https://coinmarketcap.com/api/documentation/pro-api-reference/','CMC 資料目錄'),
+  externalLink('https://coinmarketcap.com/api/pricing/','CMC 資料方案'),
+  externalLink('https://eqn.news/api-docs','方程式新聞 API'));
+ sources.append(links);host.append(sources);
 }
 function showCryptoSectors(host){
  const detail=node('div');
@@ -459,6 +468,10 @@ function showCryptoSectors(host){
    ['24H 成交額 USD',x=>numerical(x.volume,true)],['成交額變化',x=>move(x.volume_change)]],rows));
  });
  host.append(detail);
+}
+const precisePercent=new Intl.NumberFormat('zh-TW',{style:'percent',maximumFractionDigits:6,signDisplay:'exceptZero'});
+function contractPercent(value){
+ return value==null||!Number.isFinite(Number(value))?'—':precisePercent.format(Number(value));
 }
 function showCryptoDerivatives(host){
  const form=node('form',null,'terminal-form');
@@ -480,8 +493,8 @@ function showCryptoDerivatives(host){
     cryptoPanel(detail,asset.symbol+' · 永續與期貨','contracts',(out,d)=>{
      out.append(table([['交易所',x=>x.exchange?.exchange_name],['交易對',x=>x.market_pair_symbol],['類型',x=>({perpetual:'永續',futures:'期貨'}[x.category]||x.category)],
       ['價格 USD',x=>numerical(usdQuote(x).price)],['24H 成交額 USD',x=>numerical(usdQuote(x).volume_24h,true)],
-      ['未平倉量',x=>numerical(usdQuote(x).open_interest,true)],['資金費率',x=>x.exchange_reported_quotes?.[0]?.funding_rate==null?'—':move(100*Number(x.exchange_reported_quotes[0].funding_rate))],
-      ['指數價 USD',x=>numerical(x.exchange_reported_quotes?.[0]?.index_price)],['基差',x=>x.exchange_reported_quotes?.[0]?.index_basis==null?'—':move(100*Number(x.exchange_reported_quotes[0].index_basis))]],asList(d,'market_pairs')));
+      ['未平倉量',x=>numerical(usdQuote(x).open_interest,true)],['資金費率',x=>contractPercent(x.exchange_reported_quotes?.[0]?.funding_rate)],
+      ['指數價 USD',x=>numerical(x.exchange_reported_quotes?.[0]?.index_price)],['基差',x=>contractPercent(x.exchange_reported_quotes?.[0]?.index_basis)]],asList(d,'market_pairs')));
     },{id:asset.providerId});
    }
    if(assets.length>1)output.append(...assets.map(x=>button(x.symbol+' · '+x.name,()=>contracts(x),'terminal-button')));

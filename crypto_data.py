@@ -13,7 +13,7 @@ from market_rankings import _json
 SORTS = {
     'rank': 'market_cap', 'marketCap': 'market_cap_strict', 'price': 'price',
     'change1h': 'percent_change_1h', 'change24h': 'percent_change_24h',
-    'change7d': 'percent_change_7d', 'change30d': 'percent_change_30d', 'volume': 'volume_24h',
+    'change7d': 'percent_change_7d', 'volume': 'volume_24h',
 }
 PAGE_SIZE = 100
 
