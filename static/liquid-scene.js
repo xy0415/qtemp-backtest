@@ -60,6 +60,16 @@ float softbox(vec3 reflected, vec3 direction, vec2 extent) {
     float falloff = 1.0 - 0.31 * dot(position, position) * 0.5;
     return step(0.0,dot(reflected,direction)) * panel.x * panel.y * falloff;
 }
+float stripLight(vec3 ray, vec3 direction, vec2 size, float tilt) {
+    vec3 right = normalize(cross(vec3(0.0, 1.0, 0.0), direction));
+    vec3 up = cross(direction, right);
+    vec2 axes = rotation(tilt) * vec2(dot(ray, right), dot(ray, up));
+    float across = abs(axes.y) / size.y;
+    float end = 1.0 - smoothstep(0.64, 1.04, abs(axes.x) / size.x);
+    float core = exp2(-3.3 * across * across);
+    float shoulder = exp2(-0.87 * across * across);
+    return step(0.0, dot(ray, direction)) * end * (0.76 * core + 0.24 * shoulder);
+}
 float studio(vec3 r) {
     float light = mix(0.009, 0.075, smoothstep(-0.2, 0.45, r.y));
     light += 0.10 * pow(max(dot(r, normalize(vec3(-0.84,0.27,0.66))), 0.0), 7.0);
@@ -70,11 +80,22 @@ float studio(vec3 r) {
     light += 0.48 * softbox(r,normalize(vec3(-0.90,0.14,-0.44)),vec2(0.24,0.53));
     return light;
 }
+float movingLights(vec3 reflected) {
+    float sweep = sin(phase);
+    vec3 key = normalize(vec3(-0.36 + 0.19 * sweep, 0.39, 0.88));
+    vec3 rim = normalize(vec3(0.72, 0.21 + 0.17 * cos(phase), 0.55));
+    vec3 back = normalize(vec3(0.10 + 0.10 * cos(phase), 0.31, -0.94));
+    return 0.76 * stripLight(reflected, back, vec2(0.72, 0.022), 0.05)
+         + 0.94 * stripLight(reflected, key, vec2(0.64, 0.043), -0.34)
+         + 0.63 * stripLight(reflected, rim, vec2(0.49, 0.026), 0.39);
+}
 float metal(vec3 point, vec3 ray) {
     vec3 n = normalAt(point);
     vec3 reflected = reflect(ray,n);
     float rim = pow(1.0-max(0.0,dot(n,-ray)),4.0);
-    return studio(reflected) + rim * (0.034 + 0.090 * max(n.y,0.0));
+    float chromeFresnel = mix(0.86, 1.0, rim);
+    return chromeFresnel * (studio(reflected) + movingLights(reflected))
+           + rim * (0.040 + 0.105 * max(n.y,0.0));
 }
 void main() {
     vec2 uv = (gl_FragCoord.xy - 0.5 * resolution) / resolution.y;
@@ -88,19 +109,38 @@ void main() {
         tone = metal(origin+ray*hit,ray);
     } else if (ray.y < -0.01 && floorDist < 12.0) {
         vec3 floorPoint = origin + ray * floorDist;
-        vec2 ripple = floorPoint.xz - vec2(0.09,0.3);
-        float radius = max(0.04,length(ripple));
-        float slope = 0.023 * cos(radius*15.0-phase*2.0) * exp(-radius*0.95);
-        vec2 drift = vec2(0.0045 * cos(13.0 * floorPoint.x + 6.0 * floorPoint.z + phase),
-                          0.0035 * sin(9.0 * floorPoint.z - phase));
-        vec3 n = normalize(vec3(slope*ripple.x/radius + drift.x,1.0,slope*ripple.y/radius + drift.y));
-        vec3 reflected = reflect(ray,n);
-        float mirror = trace(floorPoint+vec3(0.0,0.006,0.0),reflected,6.0);
-        float fresnel = pow(1.0 - abs(dot(n,ray)), 4.0);
-        float reflection = 0.43 + 0.42 * fresnel;
-        float glint = 0.14 * pow(max(dot(reflected,normalize(vec3(-0.45,0.43,0.78))),0.0),36.0);
-        tone = mix(tone,0.017+(0.085+0.08*fresnel)*studio(reflected)+glint,1.0-smoothstep(5.0,12.0,floorDist));
-        if (mirror >= 0.0) tone = mix(tone, metal(floorPoint+reflected*mirror,reflected), reflection);
+        vec2 xy = floorPoint.xz;
+        vec2 center = vec2(0.11 + 0.08 * sin(phase), 0.27);
+        vec2 radial = xy - center;
+        float radius = max(0.045, length(radial));
+        float spread = exp(-1.10 * radius) * smoothstep(0.0, 0.23, radius);
+        // Wave slopes bend the reflected ray before it strikes the metal.
+        vec2 slope = radial / radius * spread * (
+            0.054 * cos(16.5 * radius - 2.0 * phase)
+          + 0.014 * cos(33.0 * radius - 4.0 * phase + 0.8));
+        vec2 along = vec2(0.48, 0.88);
+        vec2 across = vec2(-0.86, 0.50);
+        float broad = dot(xy, along) * 8.1 - phase;
+        float fine = dot(xy, across) * 22.0 + 2.0 * phase;
+        slope += 0.012 * along * cos(broad) + 0.0055 * across * cos(fine + 0.6 * sin(broad));
+        float distantFade = 1.0 - smoothstep(4.1, 11.0, floorDist);
+        slope *= distantFade;
+        vec3 n = normalize(vec3(slope.x, 1.0, slope.y));
+        vec3 reflected = reflect(ray, n);
+        vec3 waterOrigin = floorPoint + vec3(0.0, 0.007, 0.0);
+        float mirror = trace(waterOrigin, reflected, 6.0);
+        float fresnel = pow(1.0 - clamp(dot(n, -ray), 0.0, 1.0), 5.0);
+        float contact = exp(-2.6 * dot(radial, radial));
+        float spreadLight = exp(-dot(radial * vec2(0.41, 0.66), radial * vec2(0.41, 0.66)));
+        float reflectedLight = (0.024 + 0.085 * fresnel) * studio(reflected);
+        // The same light strips appear directly on the water and on the reflected sculpture.
+        float streak = movingLights(reflected) * (0.15 + 0.28 * fresnel) * spreadLight;
+        float water = 0.013 + 0.013 * (1.0 - contact) + reflectedLight + streak;
+        if (mirror >= 0.0) {
+            float clarity = 0.58 + 0.31 * fresnel;
+            water = mix(water, metal(waterOrigin + reflected * mirror, reflected), clarity);
+        }
+        tone = mix(tone, water, distantFade);
     }
     float graded = pow(max(0.0,1.0-exp(-1.9*tone)),0.88);
     // Subtle spatial dither keeps near-black gradients from showing visible bands.
@@ -116,7 +156,7 @@ void main() {
     scene.className = 'liquid-scene';
     scene.setAttribute('aria-hidden', 'true');
     const video = document.createElement('video');
-    video.poster = '/static/chrome-poster-hd.webp';
+    video.poster = '/static/chrome-water-poster.webp';
     video.muted = true;
     video.loop = true;
     video.playsInline = true;
@@ -129,10 +169,10 @@ void main() {
         if (!video.getAttribute('src')) {
           video.addEventListener('error', () => {
             if (!scene.isConnected || motion.matches) return;
-            video.src = '/static/chrome-loop-60fps.mp4';
+            video.src = '/static/chrome-water-60fps.mp4';
             video.play().catch(() => {});
           }, {once: true});
-          video.src = '/static/chrome-loop-120fps.mp4';
+          video.src = '/static/chrome-water-120fps.mp4';
         }
         video.play().catch(() => {});
       }
