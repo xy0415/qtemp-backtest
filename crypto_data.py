@@ -1,5 +1,5 @@
 """Paginated crypto listings and curated CoinMarketCap datasets."""
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 from time import monotonic
 from urllib.error import HTTPError
@@ -141,6 +141,18 @@ RESOURCES = {
 }
 
 
+def _index_history(path, params):
+    today = datetime.now(timezone.utc).date()
+    end = (today - timedelta(days=1)).isoformat() + 'T23:59:59Z'
+    try:
+        return _cmc_request(path, {**params, 'time_end': end}, public=True)
+    except HTTPError as error:
+        if error.code not in (400, 422):
+            raise
+    start = (today - timedelta(days=10)).isoformat() + 'T00:00:00Z'
+    return _cmc_request(path, {'interval': 'daily', 'time_start': start, 'time_end': end}, public=True)
+
+
 @lru_cache(maxsize=192)
 def _resource(slot, name, asset_id, platform, address):
     path, public, defaults = RESOURCES[name]
@@ -151,7 +163,10 @@ def _resource(slot, name, asset_id, platform, address):
         params['symbol'] = address
     if name == 'dex-token':
         params.update(platform=platform, address=address)
-    response = _cmc_request(path, params, public=public)
+    if name in ('cmc20-history', 'cmc100-history'):
+        response = _index_history(path, params)
+    else:
+        response = _cmc_request(path, params, public=public)
     if 'data' not in response:
         raise ValueError('資料來源未回傳內容')
     data = response['data']

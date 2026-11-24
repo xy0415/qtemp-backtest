@@ -453,14 +453,14 @@ function metricGauge(out,{value,label,kind,left,right}){
  scale.append(node('span','0 · '+left),node('span',right+' · 100'));
  meter.append(arc,scale);out.append(meter);
 }
-function metricHistory(out,records,series){
+function metricHistory(out,records,series,period='近 30 日'){
  const rows=records.filter(r=>r.day).sort((a,b)=>a.day.localeCompare(b.day));
  const bar=node('div',null,'terminal-actions metric-chart-controls');
  const chart=node('div',null,'terminal-chart metric-chart');
  function plot(index){
   const [label,key,format,bounds]=series[index];
   bar.querySelectorAll('button').forEach((chip,i)=>chip.setAttribute('aria-pressed',String(i===index)));
-  drawSeries(chart,rows,{field:key,title:label+'近 30 日走勢',valueFormat:format,bounds,compactDates:true});
+  drawSeries(chart,rows,{field:key,title:label+period+'走勢',valueFormat:format,bounds,compactDates:true});
  }
  if(series.length>1){
   series.forEach(([label],i)=>bar.append(button(label,()=>plot(i),'terminal-button')));
@@ -542,9 +542,10 @@ function showCryptoDashboard(host,requested){
    ],weights));
    out.append(constituents);
   });
-  cryptoPanel(host,name+' 近 30 日走勢',selected+'-history',(out,d)=>metricHistory(out,asList(d,'quotes','points','data').map(x=>({
+  cryptoPanel(host,name+' 歷史走勢',selected+'-history',(out,d)=>metricHistory(out,asList(d,'quotes','points','data').map(x=>({
    day:metricDate(x.update_time??x.timestamp??x.last_update),value:metricValue(x.value)
-  })),[[name,'value',points]]));
+  })),[[name,'value',points]],'歷史'));
+  host.append(externalLink('https://coinmarketcap.com/charts/'+selected+'/','在 CMC 查看'+name+'歷史圖'));
  }
  const sources=node('details',null,'terminal-method metric-history-table');
  sources.append(node('summary','資料來源與延伸資源'));
@@ -1092,3 +1093,4 @@ mountTapes();
 window.addEventListener('hashchange',route);
 route();
 })();
+
