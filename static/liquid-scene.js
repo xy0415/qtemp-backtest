@@ -36,16 +36,16 @@ float sculpture(vec3 p) {
     return body + 0.026 * sin(p.x * 8.0 + p.y * 7.0 + phase) * cos(p.z * 6.0 + p.y * 3.0);
 }
 vec3 normalAt(vec3 p) {
-    vec2 e = vec2(0.002, 0.0);
+    vec2 e = vec2(0.0015, 0.0);
     return normalize(vec3(sculpture(p+e.xyy)-sculpture(p-e.xyy),
                           sculpture(p+e.yxy)-sculpture(p-e.yxy),
                           sculpture(p+e.yyx)-sculpture(p-e.yyx)));
 }
 float trace(vec3 origin, vec3 ray, float limit) {
     float distance = 0.0;
-    for (int step = 0; step < 76; step++) {
+    for (int step = 0; step < 100; step++) {
         float gap = sculpture(origin + ray * distance);
-        if (gap < 0.002) return distance;
+        if (gap < 0.00075) return distance;
         distance += gap * 0.80;
         if (distance > limit) break;
     }
@@ -55,12 +55,15 @@ float softbox(vec3 reflected, vec3 direction, vec2 extent) {
     vec3 right = normalize(cross(vec3(0., 1., 0.), direction));
     vec3 up = cross(direction, right);
     vec2 edge = abs(vec2(dot(reflected, right), dot(reflected, up)));
-    return step(0.0,dot(reflected,direction)) *
-        (1.0-smoothstep(extent.x-0.024,extent.x,edge.x)) *
-        (1.0-smoothstep(extent.y-0.024,extent.y,edge.y));
+    vec2 position = edge / extent;
+    vec2 panel = 1.0 - smoothstep(vec2(0.79), vec2(1.04), position);
+    float falloff = 1.0 - 0.31 * dot(position, position) * 0.5;
+    return step(0.0,dot(reflected,direction)) * panel.x * panel.y * falloff;
 }
 float studio(vec3 r) {
-    float light = mix(0.014, 0.085, smoothstep(-0.2, 0.45, r.y));
+    float light = mix(0.009, 0.075, smoothstep(-0.2, 0.45, r.y));
+    light += 0.10 * pow(max(dot(r, normalize(vec3(-0.84,0.27,0.66))), 0.0), 7.0);
+    light += 0.15 * softbox(r,normalize(vec3(0.92,-0.31,0.78)),vec2(0.08,0.37));
     light += 1.15 * softbox(r,normalize(vec3(-0.55,0.78,0.7)),vec2(0.66,0.46));
     light += 0.98 * softbox(r,normalize(vec3(0.75,0.49,0.58)),vec2(0.38,0.21));
     light += 0.85 * softbox(r,normalize(vec3(0.28,0.70,-0.82)),vec2(0.55,0.16));
@@ -69,7 +72,9 @@ float studio(vec3 r) {
 }
 float metal(vec3 point, vec3 ray) {
     vec3 n = normalAt(point);
-    return studio(reflect(ray,n)) + 0.06 * pow(1.0-max(0.0,dot(n,-ray)),4.0);
+    vec3 reflected = reflect(ray,n);
+    float rim = pow(1.0-max(0.0,dot(n,-ray)),4.0);
+    return studio(reflected) + rim * (0.034 + 0.090 * max(n.y,0.0));
 }
 void main() {
     vec2 uv = (gl_FragCoord.xy - 0.5 * resolution) / resolution.y;
@@ -85,14 +90,22 @@ void main() {
         vec3 floorPoint = origin + ray * floorDist;
         vec2 ripple = floorPoint.xz - vec2(0.09,0.3);
         float radius = max(0.04,length(ripple));
-        float slope = 0.035 * cos(radius*17.0-phase*2.0) * exp(-radius*0.85);
-        vec3 n = normalize(vec3(slope*ripple.x/radius,1.0,slope*ripple.y/radius));
+        float slope = 0.023 * cos(radius*15.0-phase*2.0) * exp(-radius*0.95);
+        vec2 drift = vec2(0.0045 * cos(13.0 * floorPoint.x + 6.0 * floorPoint.z + phase),
+                          0.0035 * sin(9.0 * floorPoint.z - phase));
+        vec3 n = normalize(vec3(slope*ripple.x/radius + drift.x,1.0,slope*ripple.y/radius + drift.y));
         vec3 reflected = reflect(ray,n);
         float mirror = trace(floorPoint+vec3(0.0,0.006,0.0),reflected,6.0);
-        tone = mix(tone,0.022+0.11*studio(reflected),1.0-smoothstep(5.0,12.0,floorDist));
-        if (mirror >= 0.0) tone = 0.67*metal(floorPoint+reflected*mirror,reflected)+0.015;
+        float fresnel = pow(1.0 - abs(dot(n,ray)), 4.0);
+        float reflection = 0.43 + 0.42 * fresnel;
+        float glint = 0.14 * pow(max(dot(reflected,normalize(vec3(-0.45,0.43,0.78))),0.0),36.0);
+        tone = mix(tone,0.017+(0.085+0.08*fresnel)*studio(reflected)+glint,1.0-smoothstep(5.0,12.0,floorDist));
+        if (mirror >= 0.0) tone = mix(tone, metal(floorPoint+reflected*mirror,reflected), reflection);
     }
-    gl_FragColor = vec4(vec3(pow(clamp(tone,0.0,1.0),0.88)),1.0);
+    float graded = pow(max(0.0,1.0-exp(-1.9*tone)),0.88);
+    // Subtle spatial dither keeps near-black gradients from showing visible bands.
+    float dither = (fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056,0.00583715)))) - 0.5) / 255.0;
+    gl_FragColor = vec4(vec3(clamp(graded + dither,0.0,1.0)),1.0);
 }
 `;
 
@@ -103,7 +116,7 @@ void main() {
     scene.className = 'liquid-scene';
     scene.setAttribute('aria-hidden', 'true');
     const video = document.createElement('video');
-    video.poster = '/static/chrome-poster.webp';
+    video.poster = '/static/chrome-poster-hd.webp';
     video.muted = true;
     video.loop = true;
     video.playsInline = true;
@@ -113,7 +126,7 @@ void main() {
     function fallback() {
       delete scene.dataset.live;
       if (!motion.matches && scene.isConnected) {
-        video.src ||= '/static/chrome-loop.mp4';
+        video.src ||= '/static/chrome-loop-hd.mp4';
         video.play().catch(() => {});
       }
     }
@@ -183,7 +196,7 @@ void main() {
         return;
       }
       if (visible && !document.hidden && now - previous >= 1000 / 30) {
-        const scale = Math.min(1, 540 / Math.max(1, canvas.clientHeight));
+        const scale = Math.min(window.devicePixelRatio || 1, 1.5, 900 / Math.max(1, canvas.clientHeight), 1100 / Math.max(1, canvas.clientWidth));
         const width = Math.max(1, Math.round(canvas.clientWidth * scale));
         const height = Math.max(1, Math.round(canvas.clientHeight * scale));
         if (canvas.width !== width || canvas.height !== height) {
