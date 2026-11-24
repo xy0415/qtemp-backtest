@@ -298,3 +298,6 @@ body{background:#f6f6f3!important;color:#20242a!important}
 #qtemp_root .top-menu nav a[aria-current]::after,#qtemp_root .top-menu nav a:hover::after{transform:scaleX(1)}
 #qtemp_root .hero-copy h1{font-size:clamp(38px,5vw,68px)}
 @media(prefers-reduced-motion:reduce){#qtemp_root .top-menu nav a,#qtemp_root .top-menu nav a::after{transition:none}}
+
+#qtemp_root .eq-row:nth-of-type(even){background:#f7f8fa}
+#qtemp_root .eq-row:hover{background:#eef0f7}
