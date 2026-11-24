@@ -1,0 +1,188 @@
+body:has(#qtemp_root.rti-terminal) {
+  margin:0;
+  background:
+    radial-gradient(ellipse at 12% 0%, #713e2c9e, transparent 48%),
+    radial-gradient(ellipse at 88% 20%, #9b563d73, transparent 40%),
+    radial-gradient(ellipse at 40% 80%, #532e32a6, transparent 65%), #160e10;
+  background-attachment:fixed;
+}
+#qtemp_root.rti-terminal {
+  --glass-line:#fff0e333;
+  --glass-edge:#fff1e959;
+  --glass-text:#fff3eb;
+  --glass-muted:#dbc2b8;
+  --glass-accent:#ffc3a0;
+  --glass-panel:linear-gradient(139deg,#ffffff16,#eaa5860b 50%,#c5816510),#2a1619b8;
+  --glass-dark:linear-gradient(145deg,#332024dc,#1a1114ef);
+  --glass-shadow:inset 0 1px #fff8ec26,0 24px 60px #170b1260;
+  --market-accent:var(--glass-accent);
+  --market-muted:var(--glass-muted);
+  --market-line:var(--glass-line);
+  background:transparent;
+  color:var(--glass-text);
+  min-height:100dvh;
+  padding-bottom:100px!important;
+}
+#qtemp_root [hidden]{display:none!important}
+#qtemp_root :focus-visible{outline:2px solid var(--glass-accent);outline-offset:3px}
+#qtemp_root .terminal-header,#qtemp_root.landing-mode .terminal-header{
+  background:#271619bc;border-color:var(--glass-line);backdrop-filter:blur(18px) saturate(120%);
+}
+#qtemp_root .top-menu,#qtemp_root.landing-mode .top-menu {gap:12px;max-width:1440px;margin-inline:auto;justify-content:space-between}
+#qtemp_root .top-menu nav,#qtemp_root.landing-mode .top-menu nav{
+  position:relative;isolation:isolate;flex-wrap:nowrap;gap:2px;padding:4px;
+  border:1px solid var(--glass-line);border-radius:100px;background:#d89c8020;
+  box-shadow:inset 0 1px #ffedd529,0 6px 25px #170c1440;
+}
+#qtemp_root .top-menu nav a,#qtemp_root.landing-mode .top-menu nav a{
+  position:relative;z-index:1;border:0;border-radius:99px;white-space:nowrap;background:transparent;
+  padding:7px 15px;color:var(--glass-muted);font-size:14px;
+}
+#qtemp_root .top-menu nav a::after{display:none}
+#qtemp_root .top-menu nav a:is([aria-current],:hover){color:var(--glass-text)}
+#qtemp_root .glass-nav-highlight{
+  position:absolute;left:0;top:4px;bottom:4px;border:1px solid #ffe9d866;border-radius:99px;
+  background:linear-gradient(150deg,#fff1de42,#e7a2823a);box-shadow:inset 0 1px #fff5ed55,0 5px 16px #170b1259;
+  pointer-events:none;transform-origin:center;
+}
+#qtemp_root .terminal-layout{align-items:start;gap:18px}
+#qtemp_root :is(.terminal-sidebar,.terminal-page,.landing-card,.glass-module,.eq-feed){
+  background:var(--glass-panel);border:1px solid var(--glass-line);border-radius:25px;
+  box-shadow:var(--glass-shadow);backdrop-filter:blur(14px) saturate(120%);
+}
+#qtemp_root .terminal-sidebar{padding:16px}
+#qtemp_root .terminal-sidebar a{border-radius:13px;color:var(--glass-muted)}
+#qtemp_root .terminal-sidebar a:is([aria-current],:hover){color:var(--glass-text);border-color:var(--glass-line);background:#ffc8a522}
+#qtemp_root .terminal-page{padding:clamp(16px,3vw,36px)}
+#qtemp_root .terminal-page h1::after{background:linear-gradient(90deg,var(--glass-accent),transparent)}
+#qtemp_root.landing-mode .terminal-hero{background:transparent}
+#qtemp_root.landing-mode .hero-left {
+  border-radius:34px;border:1px solid var(--glass-edge);
+  box-shadow:var(--glass-shadow),0 13px 0 -6px #301c208f,0 24px 0 -11px #24161ad9;
+  background:radial-gradient(ellipse at 52% 31%,#754b39,#412922 49%,#201417 85%);
+}
+#qtemp_root.landing-mode .liquid-scene{mix-blend-mode:luminosity;opacity:.92}
+#qtemp_root.landing-mode .hero-copy{background:linear-gradient(90deg,#21141745,transparent)}
+#qtemp_root :is(.landing-card-visual,.terminal-notice,.terminal-method,.terminal-statistics,.terminal-chart,.rti-vitals,.eq-dialog,.eq-header,.eq-categories,.eq-footer,.terminal-form){
+  border-color:var(--glass-line);background:var(--glass-dark);border-radius:18px;
+}
+#qtemp_root .landing-card-visual{border-radius:24px 24px 0 0}
+#qtemp_root .landing-card{position:relative}
+#qtemp_root .landing-card-visual{background:radial-gradient(ellipse at 48% 45%,#724838,#382325 60%,#27191d)}
+#qtemp_root :is(.terminal-meta,.landing-label,.landing-card-body p,.terminal-footer,.landing-shortcuts a){color:var(--glass-muted)}
+#qtemp_root .terminal-table-wrap{border-color:var(--glass-line);border-radius:13px}
+#qtemp_root .terminal-table :is(td,th){border-color:var(--glass-line)}
+#qtemp_root .terminal-table th{background:#41292a;color:#f0d2c2}
+#qtemp_root .terminal-table tbody tr:nth-child(even),#qtemp_root .eq-row:nth-of-type(even),#qtemp_root .eq-row{background:#2e1c2178}
+#qtemp_root .terminal-table tbody tr:hover,#qtemp_root .eq-row:hover{background:#754c4250}
+#qtemp_root :is(.hero-links a,.terminal-button,.glass-search,.glass-expand,.glass-preview,.glass-filter-trigger,.glass-filter-option,.glass-close){
+  color:var(--glass-text);background:#fff4e817;border:1px solid var(--glass-line);border-radius:999px;
+}
+#qtemp_root :is(.hero-links a,.terminal-button).primary{
+  background:#f6bea0;color:#271319;border-color:#ffddc5;
+}
+#qtemp_root :is(.hero-links a,.terminal-button,.glass-search,.glass-expand,.glass-preview,.glass-filter-trigger,.glass-filter-option,.glass-close):hover{
+  border-color:var(--glass-edge);box-shadow:inset 0 1px #ffffff34;
+}
+#qtemp_root .glass-search{display:flex;align-items:center;gap:9px;padding:7px 11px}
+#qtemp_root .glass-search kbd{font:11px ui-monospace,monospace;color:var(--glass-muted)}
+#qtemp_root .glass-deck{align-items:start}
+#qtemp_root .glass-deck.glass-expanded{grid-template-columns:minmax(0,1fr)}
+#qtemp_root .glass-module{
+  position:relative;min-width:0;transform-origin:top left;
+  transition:transform .32s cubic-bezier(.2,.75,.25,1),border-color .25s,box-shadow .25s;
+  isolation:isolate;
+}
+#qtemp_root .glass-module::after{
+  position:absolute;inset:0;z-index:2;content:'';border-radius:inherit;pointer-events:none;
+  background:radial-gradient(circle at var(--light-x,50%) var(--light-y,50%),#ffd1ab22,transparent 52%);
+  opacity:0;transition:opacity .3s;
+}
+#qtemp_root .glass-module.glass-tracking{
+  transform:perspective(850px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y));border-color:var(--glass-edge);
+  box-shadow:var(--glass-shadow),0 1px 24px #ffc5a326;
+}
+#qtemp_root .glass-tracking::after{opacity:1}
+#qtemp_root .glass-expand{position:absolute;z-index:3;top:12px;right:12px;width:35px;height:35px;padding:0;font-size:19px}
+#qtemp_root .glass-module-active .landing-card-visual{height:clamp(190px,28vw,310px)}
+#qtemp_root .glass-strip{display:flex;flex-wrap:wrap;gap:8px;padding:8px;border:1px solid var(--glass-line);border-radius:19px;background:var(--glass-dark);box-shadow:var(--glass-shadow)}
+#qtemp_root .glass-preview{padding:7px 12px}
+#qtemp_root .glass-preview[aria-pressed=true],#qtemp_root .glass-filter-option[aria-pressed=true]{color:#2a1519;background:#f4bd9f}
+#qtemp_root .glass-data-deck{display:grid;gap:18px;margin-top:16px}
+#qtemp_root .glass-data-deck > section{margin:0;padding:18px}
+#qtemp_root .glass-data-panel > h2,#qtemp_root .glass-data-deck > section > h2{margin-right:40px}
+#qtemp_root .glass-data-deck > section > .terminal-actions{padding-right:42px}
+#qtemp_root .glass-filter{position:relative;display:inline-block;isolation:isolate;z-index:5}
+#qtemp_root .glass-filter-trigger,#qtemp_root .glass-filter-option{white-space:nowrap;padding:7px 13px}
+#qtemp_root .glass-filter-options{
+  position:absolute;z-index:9;top:calc(100% + 7px);left:0;display:grid;gap:4px;min-width:max-content;
+  padding:5px;border-radius:18px;border:1px solid var(--glass-line);background:#331e23f5;
+  box-shadow:var(--glass-shadow);transform-origin:top left;transform:translateY(-14px) scale(.89,.3);
+  opacity:0;transition:transform .22s,opacity .18s;
+}
+#qtemp_root .glass-filter-options.is-open{opacity:1;transform:none;animation:glass-split .32s cubic-bezier(.2,.8,.3,1) both}
+#qtemp_root .glass-filter-options.is-open button{animation:glass-drop .34s cubic-bezier(.2,.8,.3,1) both;animation-delay:calc(var(--drop-index) * 22ms)}
+@keyframes glass-split{from{transform:translateY(-17px) scale(.88,.3)}65%{transform:translateY(2px) scale(1.025,1.02)}to{transform:none}}
+@keyframes glass-drop{from{opacity:0;transform:translateY(-9px) scale(.94,.72)}to{opacity:1;transform:none}}
+#qtemp_root .glass-count{font-variant-numeric:tabular-nums;color:var(--glass-accent)}
+#qtemp_root .glass-command{
+  width:min(560px,calc(100vw - 30px));max-height:75dvh;box-sizing:border-box;padding:14px;
+  background:linear-gradient(147deg,#a9726390,#3b242ae8 52%,#2b1a20f5);
+  color:var(--glass-text);border:1px solid var(--glass-edge);border-radius:26px;box-shadow:0 30px 110px #10060bd0;
+  backdrop-filter:blur(30px) saturate(125%);
+}
+#qtemp_root .glass-command::backdrop{background:#10080d91;backdrop-filter:blur(7px)}
+#qtemp_root .glass-command-input{display:flex;gap:8px;align-items:center;padding-bottom:9px}
+#qtemp_root .glass-command input{width:100%;min-width:0;border-radius:15px;padding:12px;background:#22151bc7;color:var(--glass-text);border:1px solid var(--glass-line);font:inherit}
+#qtemp_root .glass-close{width:37px;flex:0 0 37px;height:37px;font-size:21px}
+#qtemp_root .glass-command-results{max-height:min(48dvh,390px);overflow:auto}
+#qtemp_root .glass-result{display:block;padding:9px 12px;border-radius:11px;color:var(--glass-text);text-decoration:none}
+#qtemp_root .glass-result:is(:hover,.is-selected){background:#ffd3b532}
+#qtemp_root .glass-result mark{background:transparent;color:#ffba91;font-weight:750}
+#qtemp_root .glass-dock{
+  position:fixed;z-index:20;left:50%;bottom:max(13px,env(safe-area-inset-bottom));translate:-50% 0;
+  display:flex;align-items:end;gap:5px;padding:6px;border-radius:21px;border:1px solid var(--glass-edge);
+  background:linear-gradient(145deg,#a473606c,#2f1b26d9);backdrop-filter:blur(20px) saturate(145%);box-shadow:var(--glass-shadow);
+}
+#qtemp_root .glass-dock-item{
+  width:clamp(35px,7vw,46px);height:clamp(35px,7vw,46px);display:grid;place-items:center;position:relative;
+  box-sizing:border-box;border-radius:14px;background:#fff3e512;border:1px solid #fff2e72a;
+  color:var(--glass-text);padding:0;font:24px/1 system-ui;text-decoration:none;
+  transform-origin:bottom;transition:transform .26s cubic-bezier(.22,.82,.31,1.3),background .2s;
+}
+#qtemp_root .glass-dock-wide{margin-right:4px}
+#qtemp_root .glass-dock-item:is([aria-current],[aria-pressed=true]){background:#ffbe9259;border-color:#ffe3ce71}
+#qtemp_root .glass-dock-item:is(:hover,:focus-visible){transform:scale(1.27) translateY(-4px);z-index:2}
+#qtemp_root .glass-dock-item:has(+ :is(:hover,:focus-visible)),#qtemp_root .glass-dock-item:is(:hover,:focus-visible) + .glass-dock-item {transform:scale(1.13) translateY(-2px)}
+#qtemp_root .glass-dock-item::before{
+  content:attr(data-label);position:absolute;bottom:calc(100% + 7px);left:50%;translate:-50% 0;
+  white-space:nowrap;pointer-events:none;opacity:0;background:#322029;color:var(--glass-text);
+  border:1px solid var(--glass-edge);border-radius:9px;padding:4px 7px;font:11px/1.4 system-ui;
+}
+#qtemp_root .glass-dock-item:is(:hover,:focus-visible)::before{opacity:1}
+#qtemp_root.glass-wide{max-width:none!important}
+#qtemp_root.glass-wide :is(.terminal-header,.terminal-sidebar,.terminal-footer){display:none}
+#qtemp_root.glass-wide .terminal-layout{grid-template-columns:minmax(0,1fr)}
+@media(max-width:700px){
+  #qtemp_root.rti-terminal:not(.landing-mode){padding-inline:12px}
+  #qtemp_root .terminal-sidebar{padding:8px}
+  #qtemp_root .terminal-page{padding:14px}
+  #qtemp_root .top-menu .terminal-brand span span,#qtemp_root .glass-search kbd{display:none}
+  #qtemp_root .top-menu nav a,#qtemp_root.landing-mode .top-menu nav a{font-size:12px;padding:6px 10px}
+  #qtemp_root.landing-mode .hero-left{border-radius:23px}
+  #qtemp_root.landing-mode .liquid-scene{mix-blend-mode:normal;opacity:.87}
+  #qtemp_root .landing-cards{grid-template-columns:minmax(0,1fr)}
+}
+@media(prefers-reduced-motion:reduce){
+  #qtemp_root :is(.glass-module,.glass-filter-options,.glass-filter-option,.glass-dock-item){transition:none;animation:none}
+  #qtemp_root .glass-filter-options.is-open button,#qtemp_root .glass-filter-options.is-open{animation:none}
+}
+body #qtemp_root.rti-terminal,body #qtemp_root.rti-terminal.landing-mode{
+  --market-ink:var(--glass-text);padding-bottom:100px!important;
+}
+#qtemp_root.rti-terminal.landing-mode .terminal-hero{overflow:visible}
+#qtemp_root:fullscreen{overflow:auto;background:radial-gradient(ellipse at 80% 5%,#754535,#201419 68%)}
+#qtemp_root .terminal-actions :is(input[type=search],input:not([type])){
+  min-width:0;max-width:100%;padding:8px 12px;border:1px solid var(--glass-line);
+  border-radius:999px;background:#261820;color:var(--glass-text);
+}

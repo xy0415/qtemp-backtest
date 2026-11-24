@@ -249,9 +249,17 @@ function showCryptoAssets(host){
   const search=node('input');search.placeholder='搜尋名稱或代號';search.setAttribute('aria-label','搜尋加密資產');
   const details=node('div',null,'terminal-method');details.append(node('h2','資產詳情'),node('p','選擇表格中的資產查看供給與估值。'));
   const view=node('div');
+  const filter=node('select',null,'glass-select');filter.setAttribute('aria-label','加密資產漲跌篩選');
+  for(const [label,value] of [['全部資產','all'],['24H 上漲','up'],['24H 下跌','down']])filter.add(new Option(label,value));
+  const count=node('output',null,'glass-count');
+  const controls=node('div',null,'terminal-actions');
+  const total=node('span','符合資產數 ','terminal-meta');total.append(count);
+  controls.append(search,filter,total);
   function render(){
    const query=search.value.toLowerCase();
-   const rows=data.items.filter(x=>(x.symbol+' '+x.name).toLowerCase().includes(query));
+   const rows=data.items.filter(x=>(x.symbol+' '+x.name).toLowerCase().includes(query)
+    && (filter.value==='all'||(filter.value==='up'?x.change24h>0:x.change24h<0)));
+   if(window.rtiGlass)window.rtiGlass.count(count,rows.length);else count.textContent=rows.length;
    const columns=[['排名',x=>x.rank],['資產',x=>{const b=button(x.symbol+' · '+x.name,()=>detail(x),'terminal-link');return b}],
     ['價格 USD',x=>quantity(x.price)],['1H',x=>move(x.change1h),x=>direction(x.change1h)],
     ['24H',x=>move(x.change24h),x=>direction(x.change24h)],['7D',x=>move(x.change7d),x=>direction(x.change7d)],
@@ -265,8 +273,8 @@ function showCryptoAssets(host){
     ['分類',(x.tags||[]).join('、')||'—'],['更新時間',dateTime(x.lastUpdated)]]),
     anchor('查看價格與 RTI',marketLink('crypto','lookup',x.symbol+'-USD'),'terminal-button'));
   }
-  search.oninput=render;render();
-  host.replaceChildren(intro,search,timestamp(data),view,details);
+  search.oninput=render;filter.onchange=render;render();
+  host.replaceChildren(intro,controls,timestamp(data),view,details);
  }).catch(error=>{if(host.isConnected)notice(host,error.message,()=>showCryptoAssets(host))});
 }
 function showBacktest(host,symbol){
@@ -567,6 +575,7 @@ function renderRTI(host,data){
   valuation.append(node('h2','歷史本益比'),button('讀取已公布 EPS',load,'terminal-button'),payload);
   host.append(valuation);
  }
+ window.rtiGlass?.modules(host);
 }
 function rtiResearch(host,view,symbol){
  const form=node('form',null,'terminal-form');
@@ -580,11 +589,12 @@ function rtiResearch(host,view,symbol){
    if(!output.isConnected)return;
    const all=data.rows;const selector=node('select');selector.setAttribute('aria-label','統計期間');
    for(const n of [1,3,5,10,15,0])selector.add(new Option(n?'近 '+n+' 年':'全部歷史',String(n)));
-   selector.value='10';const panel=node('div',null,'rti-research-results');const header=node('div',null,'terminal-actions rti-research-controls');header.append(node('strong',data.symbol),selector,button('匯出日線 CSV',()=>downloadRows(all,data.symbol),'terminal-button'));
+   selector.value='10';const panel=node('div',null,'rti-research-results');const header=node('div',null,'terminal-actions rti-research-controls');const count=node('output',null,'glass-count');const total=node('span','日線筆數 ','terminal-meta');total.append(count);header.append(node('strong',data.symbol),selector,total,button('匯出日線 CSV',()=>downloadRows(all,data.symbol),'terminal-button'));
    output.replaceChildren(header,node('p',[data.priceBasis,'資料日 '+data.asOf,data.stale?'上次成功資料':null].filter(Boolean).join(' · '),'terminal-meta'),panel);
    function update(){
     const years=Number(selector.value);const end=new Date(all.at(-1).day+'T00:00:00Z');end.setUTCFullYear(end.getUTCFullYear()-years);
     const rows=all.filter(r=>!years||r.day>=end.toISOString().slice(0,10));const formal=rows.filter(r=>r.stage==='formal'&&Number.isFinite(r.score));
+    if(window.rtiGlass)window.rtiGlass.count(count,rows.length);else count.textContent=rows.length;
     panel.replaceChildren();
     if(view==='zones'){
      const zones=[['極端低溫',-Infinity,-95],['低溫',-95,-75],['偏弱',-75,-35],['中性',-35,35.0000001],['偏強',35.0000001,75.0000001],['高溫',75.0000001,95.0000001],['極端高溫',95.0000001,Infinity]];
@@ -605,6 +615,7 @@ function rtiResearch(host,view,symbol){
      panel.append(node('h2','資料品質'),node('p','日線 '+rows.length+' 筆 · 正式分位 '+formal.length+' 筆 · 最新資料 '+latest.day+' · 正式最低樣本 '+data.minimum+' · '+data.priceBasis,'terminal-meta'),node('p','所有歷史計算以資料來源已結束日線為基礎；資料不足時不補虛構價格。','terminal-meta'),node('h2','日線與 RTI 資料（最近 200 筆）'),table([['日期',x=>x.day],['開盤',x=>quantity(x.open)],['最高',x=>quantity(x.high)],['最低',x=>quantity(x.low)],['收盤',x=>quantity(x.close)],['RTI 分數',x=>quantity(x.score)],['分位',x=>quantity(x.percentile)],['訊號',x=>x.entry==='buy'?'買入':x.entry==='sell'?'賣出':'—']],history),node('h2','指標公式與 TradingView 對照'),node('p','可匯出完整日線及 RTI 欄位，與 TradingView 匯出的同標的、同週期及同價格口徑資料逐日核對。TradingView 盤中資料與網站已收盤日線可能不同。','terminal-meta'),anchor('查看 RTI 計算方式','#rti/method','terminal-button'));
      addCsvAudit(panel,rows);
     }
+    window.rtiGlass?.modules(panel);
    }
    selector.onchange=update;update();
   }).catch(e=>{if(output.isConnected)notice(output,e.message,load)});
@@ -691,5 +702,6 @@ mountTapes();
 window.addEventListener('hashchange',route);
 route();
 })();
+
 
 
