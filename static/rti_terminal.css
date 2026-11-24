@@ -427,3 +427,28 @@ body #qtemp_root.rti-terminal{max-width:1500px;margin:0 auto;padding:0 clamp(18p
  #qtemp_root .liquid-scene{width:100%;height:100%;opacity:.7;mask-image:none}
  #qtemp_root .hero-metrics{grid-template-columns:repeat(2,1fr)}
 }
+
+/* Minimal cover: market content begins inside the market section. */
+body #qtemp_root.rti-terminal.landing-mode{max-width:none;min-height:100dvh;padding:0!important}
+#qtemp_root.landing-mode .market-tapes,#qtemp_root.landing-mode .terminal-footer{display:none}
+#qtemp_root.landing-mode .terminal-header{position:absolute;z-index:5;left:0;right:0;padding:0 clamp(24px,5vw,80px);border:0}
+#qtemp_root.landing-mode .top-menu{min-height:74px}
+#qtemp_root.landing-mode .top-menu nav a[aria-current]::after{transform:scaleX(0)}
+#qtemp_root.landing-mode #content{min-height:100dvh}
+#qtemp_root.landing-mode .terminal-hero{margin:0;min-height:100dvh;border:0;border-radius:0;background:#080808}
+#qtemp_root.landing-mode .hero-left{min-height:100dvh;border:0;background:linear-gradient(180deg,#090909 0%,#171718 43%,#060606 100%)}
+#qtemp_root.landing-mode .hero-copy{position:relative;z-index:3;min-height:100dvh;max-width:none;width:62%;padding:100px 0 100px clamp(32px,9vw,150px);background:linear-gradient(90deg,#050505c4,#08080832 75%,transparent)}
+#qtemp_root.landing-mode .hero-copy h1{max-width:720px;font-size:clamp(48px,6.6vw,98px);font-weight:720;line-height:1.03;letter-spacing:-.055em}
+#qtemp_root.landing-mode .hero-links{margin-top:34px}
+#qtemp_root.landing-mode .liquid-scene{z-index:0;width:70%;height:100%;top:0;right:0;mask-image:linear-gradient(90deg,transparent,#000 22%);background:radial-gradient(ellipse at 57% 42%,#343437 0,#171718 34%,#080808 75%)}
+#qtemp_root.landing-mode .liquid-scene:before{top:25%;right:23%;width:min(38%,350px);aspect-ratio:1.16;border-radius:44% 56% 60% 40% / 45% 42% 58% 55%;background:linear-gradient(150deg,#eeeeef 0%,#919193 9%,#0c0c0d 12%,#050505 18%,#ececed 23%,#7d7d80 28%,#1a1a1b 34%,#050505 51%,#d8d8da 55%,#fff 60%,#303032 64%,#080808 76%,#888 84%,#101010 92%);box-shadow:inset -16px -22px 35px #000b,inset 7px 8px 16px #fff8,0 25px 70px #0009;filter:contrast(1.1);animation:cover-morph 11s ease-in-out infinite alternate}
+#qtemp_root.landing-mode .liquid-scene:after{bottom:12%;right:0;width:95%;height:25%;opacity:.62;filter:blur(5px);background:repeating-radial-gradient(ellipse at 49% 45%,#e7e7e78c 0 1%,#7373734d 3%,#07070700 7%,#c4c4c444 8%,#08080800 12%);animation:liquid-ripple 7s ease-in-out infinite alternate}
+#qtemp_root .chrome-drop{position:absolute;z-index:1;display:block;aspect-ratio:1;border-radius:50%;background:linear-gradient(140deg,#fdfdfd 1%,#666 15%,#090909 21%,#eee 27%,#777 31%,#090909 40%,#191919 62%,#f5f5f5 67%,#333 77%,#090909 87%);box-shadow:inset -5px -8px 12px #0009,0 12px 25px #0009;animation:drop-float 7s ease-in-out infinite alternate}
+#qtemp_root .chrome-drop-0{width:9%;top:44%;right:18%}
+#qtemp_root .chrome-drop-1{width:7%;top:31%;right:57%;animation-delay:-2s}
+#qtemp_root .chrome-drop-2{width:6%;top:54%;right:55%;animation-delay:-4s}
+#qtemp_root .chrome-drop-3{width:5%;top:55%;right:15%;animation-delay:-1s}
+@keyframes cover-morph{from{transform:translateY(0) rotate(-15deg);border-radius:44% 56% 60% 40% / 45% 42% 58% 55%}to{transform:translateY(-14px) rotate(10deg);border-radius:56% 44% 43% 57% / 40% 56% 44% 60%}}
+@keyframes drop-float{from{transform:translateY(0)}to{transform:translateY(-16px)}}
+@media(max-width:700px){#qtemp_root.landing-mode .terminal-header{padding:0 20px}#qtemp_root.landing-mode .top-menu{gap:6px}#qtemp_root.landing-mode .hero-copy{width:100%;justify-content:flex-end;min-height:100svh;padding:110px 24px 72px;background:linear-gradient(0deg,#050505ed 0%,#050505a8 31%,transparent 70%)}#qtemp_root.landing-mode .hero-copy h1{max-width:9ch;font-size:clamp(46px,12vw,68px)}#qtemp_root.landing-mode .liquid-scene{width:100%;height:74%;top:10%;mask-image:none}#qtemp_root.landing-mode .liquid-scene:before{top:23%;right:20%;width:48%}#qtemp_root.landing-mode .liquid-scene:after{bottom:12%}}
+@media(prefers-reduced-motion:reduce){#qtemp_root.landing-mode .liquid-scene:before,#qtemp_root.landing-mode .liquid-scene:after,#qtemp_root .chrome-drop{animation:none}}

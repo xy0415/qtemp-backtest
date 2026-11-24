@@ -9,6 +9,7 @@
     wrap.className = 'liquid-scene';
     wrap.setAttribute('aria-hidden', 'true');
     const canvas = document.createElement('canvas');
+    for (let i=0;i<4;i++) { const drop=document.createElement('i'); drop.className='chrome-drop chrome-drop-'+i; wrap.append(drop); }
     wrap.append(canvas);
     host.prepend(wrap);
     let gl;
