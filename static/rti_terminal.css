@@ -301,3 +301,102 @@ body{background:#f6f6f3!important;color:#20242a!important}
 
 #qtemp_root .eq-row:nth-of-type(even){background:#f7f8fa}
 #qtemp_root .eq-row:hover{background:#eef0f7}
+
+/* Open Slide-inspired dark interface: restrained surfaces, fine rules, red accents. */
+:root{--market-bg:#090909;--market-panel:#111111;--market-raised:#191919;--market-line:#303030;--market-ink:#f1f1f2;--market-muted:#aaa9ad;--market-accent:#e65b5c;--market-up:#50d3a0;--market-down:#f2777c}
+html body{background:#090909!important;color:#f1f1f2!important}
+body #qtemp_root.rti-terminal{max-width:1500px;margin:0 auto;padding:0 clamp(18px,3.5vw,52px) 36px!important;background:transparent!important;color:var(--market-ink)!important;font-family:Inter,'Noto Sans TC',system-ui,sans-serif}
+#qtemp_root .market-tapes{margin:0 calc(-1 * clamp(18px,3.5vw,52px));padding:0 clamp(18px,3.5vw,52px);background:#111;border-color:#292929}
+#qtemp_root .tape-label,#qtemp_root .tape-item{color:#e7e7e8!important}
+#qtemp_root .tape-group{color:#f07779}
+#qtemp_root #pause-tapes{right:clamp(18px,3.5vw,52px);background:#111;color:#c6c6c8}
+#qtemp_root .terminal-header,#qtemp_root .terminal-sidebar,#qtemp_root .hero-left,#qtemp_root .hero-metrics,#qtemp_root .home-listing-header{border-color:var(--market-line)}
+#qtemp_root .top-menu{min-height:70px;gap:38px}
+#qtemp_root .terminal-brand{font-size:16px;letter-spacing:-.02em}
+#qtemp_root .top-menu nav{box-shadow:none;gap:14px}
+#qtemp_root .top-menu nav a{color:#aaa9ad;padding:12px 7px}
+#qtemp_root .top-menu nav a[aria-current],#qtemp_root .top-menu nav a:hover{color:#fff}
+#qtemp_root .top-menu nav a::after{background:#e65b5c}
+#qtemp_root .terminal-layout{grid-template-columns:190px minmax(0,1fr);gap:38px}
+#qtemp_root .terminal-sidebar{padding-top:40px}
+#qtemp_root .terminal-sidebar strong{color:#e9e9eb}
+#qtemp_root .terminal-sidebar nav{gap:5px}
+#qtemp_root .terminal-sidebar nav a{border-radius:8px;color:#aaa9ad}
+#qtemp_root .terminal-sidebar a[aria-current],#qtemp_root .terminal-sidebar a:hover{background:#1b1b1c;border-color:#353536;color:#fff}
+#qtemp_root .terminal-page{padding:40px 0 48px}
+#qtemp_root .terminal-page h1{font-size:clamp(32px,3.3vw,48px);letter-spacing:-.045em;margin-bottom:28px}
+#qtemp_root .terminal-page h2{letter-spacing:-.025em}
+#qtemp_root .terminal-hero{margin:35px 0 0;grid-template-columns:minmax(0,1fr) minmax(0,1fr);background:#0d0d0e;border:1px solid var(--market-line);border-radius:18px;overflow:hidden}
+#qtemp_root .hero-copy{min-height:290px;padding:56px 42px 25px}
+#qtemp_root .hero-regions{color:#d57a7b;letter-spacing:.06em;margin-bottom:22px}
+#qtemp_root .hero-regions::before{color:#e65b5c}
+#qtemp_root .hero-copy h1{font-size:clamp(36px,4vw,60px);line-height:1.12;color:#f4f4f4}
+#qtemp_root .hero-description{color:#b5b5b8}
+#qtemp_root .hero-metrics{padding:25px 42px 32px}
+#qtemp_root .hero-metrics>div,#qtemp_root .hero-quote-metrics>div{border-color:var(--market-line)}
+#qtemp_root .hero-metrics small,#qtemp_root .hero-quote-metrics small,#qtemp_root .hero-footnote{color:#aaa9ad}
+#qtemp_root .hero-terminal{margin:18px;padding:28px;background:#151516;border:1px solid #303031;border-radius:14px;box-shadow:none}
+#qtemp_root .hero-terminal-title{color:#b7b7ba}
+#qtemp_root .hero-live{color:#69d4ae}
+#qtemp_root .hero-quote .hero-price,#qtemp_root .terminal-link{color:#f0787a!important}
+#qtemp_root .hero-quote-metrics,#qtemp_root .hero-preview .terminal-table-wrap{border-color:#333;border-radius:9px;overflow:hidden}
+#qtemp_root .hero-preview .terminal-table-wrap{overflow-x:auto}
+#qtemp_root .home-listing{padding:64px 0 20px}
+#qtemp_root .home-listing-header h2{font-size:clamp(27px,3vw,38px)}
+#qtemp_root .home-market{background:transparent;border-color:var(--market-line)}
+#qtemp_root :is(.terminal-button,.eq-button){border:1px solid #3a3a3c;border-radius:999px;background:#171718;color:#eee;padding:9px 16px;box-shadow:none;transition:background .18s,border-color .18s}
+#qtemp_root :is(.terminal-button,.eq-button):hover{transform:none;background:#252526;border-color:#666;box-shadow:none}
+#qtemp_root .terminal-button.primary,#qtemp_root button.primary,#qtemp_root button.eq-submit{background:#f0f0f0!important;border-color:#f0f0f0!important;color:#171717!important}
+#qtemp_root button:is(.primary,.eq-submit):hover:not(:disabled){background:#d8d8d8!important}
+#qtemp_root :is(input:not([type=checkbox]):not([type=radio]),select,textarea),#qtemp_root .terminal-form input,#qtemp_root input[aria-label="搜尋加密資產"]{background:#171718;color:#f0f0f0;border:1px solid #3a3a3c;border-radius:8px;padding:8px 10px;min-height:36px}
+#qtemp_root :is(input,textarea)::placeholder{color:#a6a6aa}
+#qtemp_root :is(.terminal-notice,.terminal-method,.terminal-statistics,.terminal-chart,.rti-vitals div){background:#121213;border-color:#303031}
+#qtemp_root :is(.terminal-notice,.terminal-method,.terminal-statistics,.terminal-chart){border-radius:12px}
+#qtemp_root .terminal-method,#qtemp_root .terminal-statistics{margin-top:32px;padding:20px}
+#qtemp_root .rti-vitals{border-color:#303031;border-radius:12px;overflow:hidden;gap:1px;background:#303031}
+#qtemp_root .terminal-table{color:#ededee}
+#qtemp_root .terminal-table :is(th,td){border-color:#303031;padding-top:9px;padding-bottom:9px}
+#qtemp_root .terminal-table th{background:#171718;color:#aaa9ad}
+#qtemp_root .terminal-table tbody tr:nth-child(even){background:#121213}
+#qtemp_root .terminal-table tbody tr:hover{background:#202021}
+#qtemp_root .terminal-meta,#qtemp_root .terminal-notice,#qtemp_root .symbol-stack small{color:#aaa9ad}
+#qtemp_root .rise{color:#50d3a0}#qtemp_root .fall{color:#f2777c}
+#qtemp_root .eq-feed{background:#111;border:1px solid #303031;border-radius:14px;overflow:hidden}
+#qtemp_root :is(.eq-header,.eq-footer,.eq-categories,.eq-controls,.eq-channel-group,.eq-row){border-color:#303031}
+#qtemp_root .eq-day{background:#1b1b1c;color:#bdbdc1}
+#qtemp_root .eq-row,#qtemp_root .eq-row:nth-of-type(even){background:#111}
+#qtemp_root .eq-row:hover{background:#1b1b1c}
+#qtemp_root button.eq-story-title{color:#f1f1f2;background:transparent}
+#qtemp_root button.eq-story-title:hover{color:#f17b7c;background:transparent}
+#qtemp_root :is(.eq-row-meta,.eq-story-meta,.eq-muted,.eq-row-summary,.eq-message,.eq-row time){color:#aaa9ad}
+#qtemp_root :is(.eq-row-meta .eq-token,.eq-story-meta .eq-token,.eq-row-meta span+span,.eq-link){color:#f0787a}
+#qtemp_root .eq-channel{background:transparent;color:#c7c7ca;border-radius:7px}
+#qtemp_root .eq-channel[aria-pressed=true]{background:#252526;color:#fff;box-shadow:inset 2px 0 #e65b5c}
+#qtemp_root .eq-channel:hover{background:#242425}
+#qtemp_root .eq-dialog{background:#141415;color:#f1f1f2;border:1px solid #444;border-radius:14px}
+#qtemp_root .eq-dialog-bar{background:#19191a}
+#qtemp_root .terminal-footer{border-color:#303031;color:#aaa9ad}
+@media(max-width:850px){
+ #qtemp_root .top-menu{min-height:60px;gap:12px}
+ #qtemp_root .terminal-layout{grid-template-columns:1fr;gap:0}
+ #qtemp_root .terminal-sidebar{padding:12px 0;min-height:0;border-right:0;border-bottom:1px solid #303031}
+ #qtemp_root .terminal-sidebar nav{display:flex;overflow:auto}
+ #qtemp_root .terminal-sidebar nav a{white-space:nowrap}
+ #qtemp_root .terminal-page{padding:28px 0}
+ #qtemp_root .terminal-hero{margin:20px 0 0;grid-template-columns:1fr}
+ #qtemp_root .hero-left{border-right:0;border-bottom:1px solid #303031}
+ #qtemp_root .hero-copy{min-height:0;padding:32px 24px 20px}
+ #qtemp_root .hero-metrics{padding:22px 24px;grid-template-columns:repeat(2,1fr);gap:18px 0}
+ #qtemp_root .hero-terminal{margin:14px;padding:20px}
+}
+@media(max-width:540px){
+ body #qtemp_root.rti-terminal{padding-left:16px!important;padding-right:16px!important}
+ #qtemp_root .market-tapes{margin:0 -16px;padding:0 16px}
+ #qtemp_root #pause-tapes{right:16px}
+ #qtemp_root .terminal-hero{border-radius:14px}
+ #qtemp_root .hero-metrics strong{font-size:20px}
+ #qtemp_root .eq-controls{padding:12px;gap:8px}
+ #qtemp_root .eq-controls input,#qtemp_root .eq-controls select{max-width:100%}
+ #qtemp_root .terminal-table-wrap{max-width:100%;overflow-x:auto}
+}
+@media(prefers-reduced-motion:reduce){#qtemp_root :is(.terminal-button,.eq-button,.top-menu nav a,.top-menu nav a::after){transition:none}}
