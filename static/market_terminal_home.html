@@ -12,6 +12,14 @@
   <script defer src="/static/equation_news.js?v=20261123-markets"></script>
   <script defer src="/static/rti_terminal.js?v=20261124-liquid"></script>
   <script defer src="/static/liquid-scene.js?v=20261124"></script>
+<style>
+#qtemp_root .liquid-scene:before{content:'';position:absolute;z-index:0;top:15%;right:19%;width:min(42%,330px);aspect-ratio:1;border-radius:46% 54% 62% 38% / 53% 39% 61% 47%;background:radial-gradient(ellipse at 34% 22%,#fff 0 3%,#bcbcbf 4% 7%,#171719 9% 17%,#eee 19% 25%,#29292c 29% 34%,#030303 40% 49%,#b8b8ba 55% 58%,#171719 64%,#ececed 69%,#1c1c1e 78%);box-shadow:inset -22px -23px 35px #0009,inset 5px 8px 20px #fff5,0 24px 55px #000a;filter:contrast(1.24);transform:rotate(-18deg);animation:liquid-morph 9s ease-in-out infinite alternate}
+#qtemp_root .liquid-scene:after{content:'';position:absolute;z-index:0;right:4%;bottom:9%;width:75%;height:20%;border-radius:50%;background:repeating-radial-gradient(ellipse at 50% 35%,#e6e6e7a0 0 1%,#26262877 3%,#06060600 7%,#aaa6 8%,#08080800 12%);filter:blur(5px);transform:perspective(240px) rotateX(54deg);opacity:.72;animation:liquid-ripple 7s ease-in-out infinite alternate}
+#qtemp_root .liquid-scene canvas{position:relative;z-index:2}
+@keyframes liquid-morph{0%{transform:translateY(0) rotate(-18deg) scale(1);border-radius:46% 54% 62% 38% / 53% 39% 61% 47%}100%{transform:translateY(-12px) rotate(12deg) scale(1.06);border-radius:58% 42% 43% 57% / 40% 57% 43% 60%}}
+@keyframes liquid-ripple{from{transform:perspective(240px) rotateX(54deg) scale(.94);opacity:.5}to{transform:perspective(240px) rotateX(54deg) scale(1.05);opacity:.78}}
+@media(prefers-reduced-motion:reduce){#qtemp_root .liquid-scene:before,#qtemp_root .liquid-scene:after{animation:none}}
+</style>
 </head>
 <body>
 <div id="qtemp_root" class="rti-terminal">
