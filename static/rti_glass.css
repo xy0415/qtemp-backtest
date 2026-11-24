@@ -3,7 +3,7 @@ body:has(#qtemp_root.rti-terminal) {
   background:
     radial-gradient(ellipse at 12% 0%, #713e2c9e, transparent 48%),
     radial-gradient(ellipse at 88% 20%, #9b563d73, transparent 40%),
-    radial-gradient(ellipse at 40% 80%, #532e32a6, transparent 65%), #160e10;
+    radial-gradient(ellipse at 40% 80%, #532e32a6, transparent 65%), #160e10!important;
   background-attachment:fixed;
 }
 #qtemp_root.rti-terminal {
@@ -181,8 +181,13 @@ body #qtemp_root.rti-terminal,body #qtemp_root.rti-terminal.landing-mode{
   --market-ink:var(--glass-text);padding-bottom:100px!important;
 }
 #qtemp_root.rti-terminal.landing-mode .terminal-hero{overflow:visible}
-#qtemp_root:fullscreen{overflow:auto;background:radial-gradient(ellipse at 80% 5%,#754535,#201419 68%)}
+body #qtemp_root.rti-terminal:fullscreen{overflow:auto;background:radial-gradient(ellipse at 80% 5%,#754535,#201419 68%)!important}
 #qtemp_root .terminal-actions :is(input[type=search],input:not([type])){
   min-width:0;max-width:100%;padding:8px 12px;border:1px solid var(--glass-line);
   border-radius:999px;background:#261820;color:var(--glass-text);
+}
+
+@media(max-width:370px){
+  #qtemp_root .top-menu nav{order:3;margin-inline:auto}
+  #qtemp_root .top-menu,#qtemp_root.landing-mode .top-menu{gap:7px;padding-block:8px}
 }
