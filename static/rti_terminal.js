@@ -196,9 +196,9 @@ function showHome(){
  const hero=node('section',null,'terminal-hero');
  const left=node('div',null,'hero-left');
  const copy=node('div',null,'hero-copy');
- const eyebrow=node('p','MARKET INTELLIGENCE  ·  加密貨幣 / RTI 量化研究','hero-regions');
+ const eyebrow=node('p','CRYPTO MARKETS / QUANTITATIVE RESEARCH','hero-regions');
  const title=node('h1',null,'hero-headline');
- title.append(node('span','加密貨幣市場'));
+ title.append(node('span','RTI Market Terminal'));
  const intro=node('p','行情排行、加密快訊與 RTI 指標回測。','hero-description');
  const links=node('div',null,'hero-links');
  links.append(anchor('探索市場','#crypto','terminal-button primary'),anchor('RTI 深度回測','#rti/backtest','terminal-button'));
@@ -709,3 +709,4 @@ mountTapes();
 window.addEventListener('hashchange',route);
 route();
 })();
+
