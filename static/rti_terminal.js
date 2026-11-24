@@ -198,8 +198,8 @@ function showHome(){
  const copy=node('div',null,'hero-copy');
  const eyebrow=node('p','MARKET INTELLIGENCE  ·  加密貨幣 / RTI 量化研究','hero-regions');
  const title=node('h1',null,'hero-headline');
- title.append(node('span','掌握市場。'),node('span','洞悉溫度。'),node('span','從數據開始。','hero-highlight'));
- const intro=node('p','整合加密貨幣行情、鏈上市場與即時快訊，搭配 RTI 歷史溫度分析，讓每一次研究都有清楚依據。','hero-description');
+ title.append(node('span','加密貨幣市場'));
+ const intro=node('p','行情排行、加密快訊與 RTI 指標回測。','hero-description');
  const links=node('div',null,'hero-links');
  links.append(anchor('探索市場','#crypto','terminal-button primary'),anchor('RTI 深度回測','#rti/backtest','terminal-button'));
  copy.append(eyebrow,title,intro,links);
