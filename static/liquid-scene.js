@@ -126,7 +126,14 @@ void main() {
     function fallback() {
       delete scene.dataset.live;
       if (!motion.matches && scene.isConnected) {
-        video.src ||= '/static/chrome-loop-hd.mp4';
+        if (!video.getAttribute('src')) {
+          video.addEventListener('error', () => {
+            if (!scene.isConnected || motion.matches) return;
+            video.src = '/static/chrome-loop-60fps.mp4';
+            video.play().catch(() => {});
+          }, {once: true});
+          video.src = '/static/chrome-loop-120fps.mp4';
+        }
         video.play().catch(() => {});
       }
     }
@@ -134,7 +141,7 @@ void main() {
     const canvas = document.createElement('canvas');
     if (motion.matches) return;
     let gl;
-    try { gl = canvas.getContext('webgl', {alpha: false, antialias: false, powerPreference: 'low-power'}); }
+    try { gl = canvas.getContext('webgl', {alpha: false, antialias: false, powerPreference: 'high-performance'}); }
     catch { fallback(); return; }
     if (!gl) { fallback(); return; }
 
@@ -177,8 +184,8 @@ void main() {
     const resolution = gl.getUniformLocation(program, 'resolution');
     const phase = gl.getUniformLocation(program, 'phase');
     const start = performance.now();
-    let previous = -Infinity;
     let frame;
+    let live = false;
     let visible = true;
     const observer = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; });
     observer.observe(canvas);
@@ -195,22 +202,26 @@ void main() {
         gl.deleteProgram(program);
         return;
       }
-      if (visible && !document.hidden && now - previous >= 1000 / 30) {
-        const scale = Math.min(window.devicePixelRatio || 1, 1.5, 900 / Math.max(1, canvas.clientHeight), 1100 / Math.max(1, canvas.clientWidth));
-        const width = Math.max(1, Math.round(canvas.clientWidth * scale));
-        const height = Math.max(1, Math.round(canvas.clientHeight * scale));
-        if (canvas.width !== width || canvas.height !== height) {
+      if (visible && !document.hidden) {
+        const cssWidth = Math.max(1, canvas.clientWidth);
+        const cssHeight = Math.max(1, canvas.clientHeight);
+        const scale = Math.min(window.devicePixelRatio || 1, 1.5, 900 / cssHeight, 1100 / cssWidth);
+        const width = Math.max(1, Math.round(cssWidth * scale));
+        const height = Math.max(1, Math.round(cssHeight * scale));
+        if (!live || canvas.width !== width || canvas.height !== height) {
           canvas.width = width;
           canvas.height = height;
+          gl.viewport(0, 0, width, height);
+          gl.uniform2f(resolution, width, height);
         }
-        gl.viewport(0, 0, canvas.width, canvas.height);
-        gl.uniform2f(resolution, canvas.width, canvas.height);
         gl.uniform1f(phase, motion.matches ? 0 : ((now - start) % 6000) * Math.PI / 3000);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-        scene.dataset.live = '';
-        previous = now;
+        if (!live) {
+          live = true;
+          scene.dataset.live = '';
+        }
       }
-      if (!motion.matches || !scene.hasAttribute('data-live')) frame = requestAnimationFrame(render);
+      if (!motion.matches || !live) frame = requestAnimationFrame(render);
       else observer.disconnect();
     }
     frame = requestAnimationFrame(render);
