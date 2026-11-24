@@ -1,0 +1,79 @@
+body:has(#qtemp_root.landing-mode) { margin: 0; }
+
+#qtemp_root.landing-mode .terminal-header {
+  position: relative;
+  padding-inline: clamp(20px, 5vw, 76px);
+  background: #0b0b0b;
+}
+#qtemp_root.landing-mode .terminal-hero {
+  min-height: 0;
+  padding: clamp(24px, 5vw, 74px) clamp(16px, 6vw, 96px);
+  background: #080808;
+}
+#qtemp_root.landing-mode .hero-left {
+  max-width: 1440px;
+  margin-inline: auto;
+  min-height: 0;
+  aspect-ratio: 16 / 9;
+  border: 1px solid #252525;
+  border-radius: 12px;
+  display: grid;
+  align-items: center;
+  background: radial-gradient(ellipse at 63% 37%, #252525, #111 56%, #090909 88%);
+}
+#qtemp_root.landing-mode .hero-copy {
+  width: 66%;
+  min-height: 0;
+  padding: 32px clamp(24px, 5vw, 92px);
+  background: none;
+}
+#qtemp_root.landing-mode .hero-copy h1 {
+  max-width: 14ch;
+  font-size: clamp(43px, 5.45vw, 84px);
+  line-height: 1.03;
+  letter-spacing: -.058em;
+}
+#qtemp_root.landing-mode .hero-links { margin-top: 27px; gap: 10px; }
+#qtemp_root.landing-mode .liquid-scene {
+  inset: 0 0 0 auto;
+  width: 55%;
+  height: 100%;
+  opacity: 1;
+  background: none;
+  mask-image: linear-gradient(90deg, transparent, black 23%);
+}
+#qtemp_root.landing-mode .liquid-scene::before,
+#qtemp_root.landing-mode .liquid-scene::after { content: none; }
+#qtemp_root .liquid-scene :is(video, canvas) {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+#qtemp_root .liquid-scene canvas { z-index: 2; opacity: 0; }
+#qtemp_root .liquid-scene[data-live] canvas { opacity: 1; }
+#qtemp_root.landing-mode .landing-sections { padding-top: clamp(38px, 6vw, 84px); }
+@media (max-width: 700px) {
+  #qtemp_root.landing-mode .hero-left {
+    aspect-ratio: auto;
+    min-height: 535px;
+    align-items: end;
+  }
+  #qtemp_root.landing-mode .liquid-scene {
+    inset: 0 0 auto;
+    width: 100%;
+    height: 70%;
+    mask-image: linear-gradient(180deg, black 78%, transparent);
+  }
+  #qtemp_root.landing-mode .hero-copy {
+    width: 100%;
+    padding: 290px 20px 28px;
+    box-sizing: border-box;
+  }
+  #qtemp_root.landing-mode .hero-copy h1 {
+    max-width: 12ch;
+    font-size: clamp(36px, 9vw, 56px);
+  }
+}

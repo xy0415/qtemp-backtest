@@ -197,12 +197,10 @@ function showHome(){
  const hero=node('section',null,'terminal-hero');
  const left=node('div',null,'hero-left');
  const copy=node('div',null,'hero-copy');
- const eyebrow=node('span','RTI MARKET TERMINAL','landing-eyebrow');
  const title=node('h1','RTI Market Terminal','hero-headline');
  const links=node('div',null,'hero-links');
  links.append(anchor('加密貨幣','#crypto','terminal-button primary'),anchor('RTI 指標回測','#rti','terminal-button'));
- const jump=button('瀏覽功能',()=>document.getElementById('landing-sections')?.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'}),'landing-scroll');
- copy.append(eyebrow,title,links,jump);left.append(copy);hero.append(left);content.append(hero);
+ copy.append(title,links);left.append(copy);hero.append(left);content.append(hero);
 
  const sections=node('section',null,'landing-sections');sections.id='landing-sections';
  const intro=node('div',null,'landing-intro');
@@ -693,4 +691,5 @@ mountTapes();
 window.addEventListener('hashchange',route);
 route();
 })();
+
 
