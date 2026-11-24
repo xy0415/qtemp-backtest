@@ -197,10 +197,34 @@ function showHome(){
  const hero=node('section',null,'terminal-hero');
  const left=node('div',null,'hero-left');
  const copy=node('div',null,'hero-copy');
+ const eyebrow=node('span','RTI MARKET TERMINAL','landing-eyebrow');
  const title=node('h1','RTI Market Terminal','hero-headline');
  const links=node('div',null,'hero-links');
  links.append(anchor('加密貨幣','#crypto','terminal-button primary'),anchor('RTI 指標回測','#rti','terminal-button'));
- copy.append(title,links);left.append(copy);hero.append(left);content.append(hero);
+ const jump=button('瀏覽功能',()=>document.getElementById('landing-sections')?.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'}),'landing-scroll');
+ copy.append(eyebrow,title,links,jump);left.append(copy);hero.append(left);content.append(hero);
+
+ const sections=node('section',null,'landing-sections');sections.id='landing-sections';
+ const intro=node('div',null,'landing-intro');
+ intro.append(node('span','MARKET & RESEARCH','landing-label'),node('h2','網站功能'),node('p','選擇專區，查看市場資料與指標研究。'));
+ const grid=node('div',null,'landing-cards');
+ const card=(label,title,description,href,shortcuts,visual)=>{
+  const article=node('article',null,'landing-card '+visual);
+  const visualHost=node('div',null,'landing-card-visual');visualHost.setAttribute('aria-hidden','true');
+  for(let i=0;i<3;i++)visualHost.append(node('i'));
+  const body=node('div',null,'landing-card-body');
+  body.append(node('span',label,'landing-label'),node('h3',title),node('p',description),anchor('進入專區',href,'landing-open'));
+  const shortcutsRow=node('nav',null,'landing-shortcuts');shortcutsRow.setAttribute('aria-label',title+'快速入口');
+  for(const [name,link] of shortcuts)shortcutsRow.append(anchor(name,link));
+  article.append(visualHost,body,shortcutsRow);return article;
+ };
+ grid.append(card('CRYPTO','加密貨幣','市值排行、資產資料與繁體中文快訊。','#crypto',
+  [['市值排行','#crypto/rank'],['加密快訊','#crypto/news']],'landing-card-crypto'),
+  card('RTI RESEARCH','RTI 指標回測','查看技術溫度、歷史訊號及策略研究。','#rti',
+  [['訊號研究','#rti/signals'],['買賣策略','#rti/backtest']],'landing-card-rti'));
+ sections.append(intro,grid);
+ const foot=node('div',null,'landing-bottom');foot.append(node('strong','RTI Market Terminal'),node('span','加密貨幣・指標研究'));sections.append(foot);
+ content.append(sections);
 }
 function frame(market,category){
  const wrapper=node('div',null,'terminal-layout');
