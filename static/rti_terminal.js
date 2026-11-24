@@ -414,43 +414,145 @@ function showCryptoAssets(host,symbol){
  updateSort();load(true);
  if(symbol){search.value=symbol.replace(/-USD$/i,'');lookupAsset(search.value);}
 }
-function showCryptoDashboard(host){
- const grid=node('div',null,'crypto-grid');host.append(grid);
- const pct=value=>value==null?'—':move(Number(value));
- cryptoPanel(grid,'全市場概況','global',(out,d)=>{
-  const quote=usdQuote(d);
-  textList(out,[['總市值 USD',numerical(quote.total_market_cap,true)],['24H 成交額 USD',numerical(quote.total_volume_24h,true)],
-   ['BTC 市占率',numerical(d.btc_dominance)+'%'],['ETH 市占率',numerical(d.eth_dominance)+'%'],['山寨幣市值 USD',numerical(quote.altcoin_market_cap,true)],
-   ['山寨幣成交額 USD',numerical(quote.altcoin_volume_24h,true)],['活躍幣種',numerical(d.active_cryptocurrencies)],['活躍交易所',numerical(d.active_exchanges)],['活躍交易對',numerical(d.active_market_pairs)]]);
- });
- const moods={'extreme fear':'極度恐懼',fear:'恐懼',neutral:'中性',greed:'貪婪','extreme greed':'極度貪婪'};
- const mood=value=>moods[String(value||'').trim().toLowerCase().replace(/[_-]+/g,' ')]||'—';
- cryptoPanel(grid,'恐懼與貪婪','fear',(out,d)=>textList(out,[['指數',numerical(d.value)],['情緒',mood(d.value_classification??d.valueClassification??d.classification)],['更新',cryptoDate(d.update_time||d.timestamp)]]));
- cryptoPanel(grid,'山寨幣季節','altseason',(out,d)=>textList(out,[['指數',numerical(d.altcoin_index)],['一年最高',numerical(d.yearly_high)],['一年最低',numerical(d.yearly_low)],['山寨幣總市值 USD',numerical(d.altcoin_marketcap,true)]]));
- for(const index of ['cmc20','cmc100']){
-  const name=index.toUpperCase().replace('CMC','CMC ');
-  cryptoPanel(grid,name,index,(out,d)=>{
-   textList(out,[['指數',numerical(d.value)],['24H 漲跌',pct(d.value_24h_percentage_change)]]);
-   const weights=asList(d,'constituents').slice().sort((a,b)=>b.weight-a.weight);
-   out.append(table([['成分幣',r=>r.symbol+' · '+r.name],['權重',r=>r.weight==null?'—':numerical(r.weight)+'%']],weights));
-  });
+const cryptoMetrics=[
+ ['global','全市場概況'],['fear','恐懼與貪婪'],['altseason','山寨幣季節'],['cmc20','CMC 20'],['cmc100','CMC 100']
+];
+function metricValue(value){
+ return value==null||value===''||!Number.isFinite(Number(value))?null:Number(value);
+}
+function metricPercent(value){
+ return metricValue(value)===null?'—':numerical(value)+'%';
+}
+function metricDate(value){
+ const time=/^\d{10}$/.test(String(value))?Number(value)*1000:Date.parse(value);
+ return Number.isFinite(time)?new Date(time).toISOString().slice(0,10):'';
+}
+function metricCards(out,entries){
+ const list=node('dl',null,'metric-cards');
+ for(const [label,value] of entries){
+  const card=node('div');
+  card.append(node('dt',label),node('dd',value??'—'));
+  list.append(card);
  }
- const history=button('顯示市場歷史資料',()=>{
-  history.remove();
-  cryptoPanel(host,'近 30 日恐懼與貪婪','fear-history',(out,d)=>out.append(table([['日期',x=>cryptoDate(x.timestamp)],['分數',x=>x.value],['情緒',x=>mood(x.value_classification??x.valueClassification??x.classification)]],asList(d,'data'))));
-  cryptoPanel(host,'近 30 日山寨幣季節','altseason-history',(out,d)=>out.append(table([['日期',x=>cryptoDate(x.timestamp??x.time??x.snapshot_time)],['分數',x=>x.altcoin_index??x.altcoinIndex??x.value]],asList(d,'historical','points','data','altcoinSeasonIndex'))));
-  cryptoPanel(host,'近 30 日全市場指標','global-history',(out,d)=>out.append(table([['日期',x=>cryptoDate(x.timestamp)],['總市值 USD',x=>numerical(usdQuote(x).total_market_cap,true)],['成交額 USD',x=>numerical(usdQuote(x).total_volume_24h,true)],['BTC 市占率',x=>pct(x.btc_dominance)]],asList(d,'quotes').slice().reverse())));
-  for(const index of ['cmc20','cmc100'])cryptoPanel(host,index.toUpperCase()+' 歷史指數',index+'-history',(out,d)=>out.append(table([['日期',x=>cryptoDate(x.update_time??x.timestamp??x.last_update)],['指數',x=>numerical(x.value)]],asList(d,'quotes','points','data').slice().reverse())));
- },'terminal-button');
- host.append(history);
- const sources=node('section',null,'terminal-method');
- sources.append(node('h2','資料來源與延伸資源'),
-  node('p','本站市場數值來自 CoinMarketCap，事件與公告來自方程式新聞。以下可查資料定義、更新頻率與其餘資料的方案限制。','terminal-meta'));
- const links=node('div',null,'terminal-actions');
- links.append(externalLink('https://coinmarketcap.com/api/documentation/pro-api-reference/','CMC 資料目錄'),
+ out.append(list);
+}
+function metricGauge(out,{value,label,kind,left,right}){
+ const score=metricValue(value);
+ if(score===null||score<0||score>100){notice(out,'來源目前未提供有效的指數值。');return;}
+ const meter=node('div',null,'metric-gauge '+kind);
+ meter.setAttribute('role','img');meter.setAttribute('aria-label',label+'，'+score+' 分，滿分 100');
+ const arc=node('div',null,'metric-gauge-arc');
+ const pin=node('span',null,'metric-gauge-pin');pin.style.setProperty('--angle',(score*1.8-90)+'deg');
+ arc.append(pin);
+ const reading=node('div',null,'metric-gauge-reading');
+ const scoreLine=node('div',null,'metric-gauge-score');
+ scoreLine.append(node('strong',String(score)),node('small',' / 100'));
+ reading.append(scoreLine,node('span',label));
+ arc.append(reading);
+ const scale=node('div',null,'metric-gauge-scale');
+ scale.append(node('span','0 · '+left),node('span',right+' · 100'));
+ meter.append(arc,scale);out.append(meter);
+}
+function metricHistory(out,records,series){
+ const rows=records.filter(r=>r.day).sort((a,b)=>a.day.localeCompare(b.day));
+ const bar=node('div',null,'terminal-actions metric-chart-controls');
+ const chart=node('div',null,'terminal-chart metric-chart');
+ function plot(index){
+  const [label,key,format,bounds]=series[index];
+  bar.querySelectorAll('button').forEach((chip,i)=>chip.setAttribute('aria-pressed',String(i===index)));
+  drawSeries(chart,rows,{field:key,title:label+'近 30 日走勢',valueFormat:format,bounds,compactDates:true});
+ }
+ if(series.length>1){
+  series.forEach(([label],i)=>bar.append(button(label,()=>plot(i),'terminal-button')));
+  out.append(bar);
+ }
+ out.append(chart);plot(0);
+ const details=node('details',null,'metric-history-table');
+ details.append(node('summary','查看歷史數據'),table(
+  [['日期（UTC）',r=>r.day],...series.map(([label,key,format])=>[label,r=>format(r[key])])],
+  rows.slice().reverse()));
+ out.append(details);
+}
+function showCryptoDashboard(host,requested){
+ const selected=cryptoMetrics.some(([key])=>key===requested)?requested:'global';
+ const links=node('nav',null,'crypto-sort metric-nav');
+ links.setAttribute('aria-label','市場指標分類');
+ for(const [key,label] of cryptoMetrics){
+  const link=anchor(label,'#crypto/overview?metric='+key,'terminal-button');
+  if(key===selected)link.setAttribute('aria-current','page');
+  links.append(link);
+ }
+ host.append(links);
+ const usd=value=>metricValue(value)===null?'—':'US$ '+numerical(value,true);
+ const points=value=>numerical(value);
+ const mood=value=>({'extreme fear':'極度恐懼',fear:'恐懼',neutral:'中性',greed:'貪婪','extreme greed':'極度貪婪'}[String(value||'').trim().toLowerCase().replace(/[_-]+/g,' ')]);
+ if(selected==='global'){
+  cryptoPanel(host,'全市場概況','global',(out,d)=>{
+   const q=usdQuote(d);
+   metricCards(out,[['總市值',usd(q.total_market_cap)],['24H 成交額',usd(q.total_volume_24h)],['BTC 市占率',metricPercent(d.btc_dominance)],['ETH 市占率',metricPercent(d.eth_dominance)]]);
+   const btc=metricValue(d.btc_dominance),eth=metricValue(d.eth_dominance);
+   if(btc!==null&&eth!==null&&btc>=0&&eth>=0&&btc+eth<=100){
+    const share=node('div',null,'metric-share');
+    share.setAttribute('role','img');share.setAttribute('aria-label','BTC '+btc+'%，ETH '+eth+'%，其餘資產 '+numerical(100-btc-eth)+'%');
+    for(const [name,value] of [['BTC',btc],['ETH',eth],['其他',100-btc-eth]]){
+     const part=node('span',name+' '+numerical(value)+'%');
+     part.style.flexBasis=value+'%';share.append(part);
+    }
+    out.append(share);
+   }
+   const details=node('details',null,'metric-history-table');details.append(node('summary','查看其他市場統計'));
+   textList(details,[['山寨幣市值',usd(q.altcoin_market_cap)],['山寨幣 24H 成交額',usd(q.altcoin_volume_24h)],['活躍幣種',points(d.active_cryptocurrencies)],['活躍交易所',points(d.active_exchanges)],['活躍交易對',points(d.active_market_pairs)]]);
+   out.append(details);
+  });
+  cryptoPanel(host,'近 30 日市場走勢','global-history',(out,d)=>metricHistory(out,asList(d,'quotes').map(x=>({
+   day:metricDate(x.timestamp),marketCap:metricValue(usdQuote(x).total_market_cap),volume:metricValue(usdQuote(x).total_volume_24h),
+   btc:metricValue(x.btc_dominance),eth:metricValue(x.eth_dominance)
+  })),[['總市值','marketCap',usd],['24H 成交額','volume',usd],['BTC 市占率','btc',metricPercent],['ETH 市占率','eth',metricPercent]]));
+ }else if(selected==='fear'){
+  cryptoPanel(host,'恐懼與貪婪','fear',(out,d)=>{
+   const label=mood(d.value_classification??d.valueClassification??d.classification)||'市場情緒';
+   metricGauge(out,{value:d.value,label,kind:'metric-fear',left:'恐懼',right:'貪婪'});
+   out.append(node('p','指數時間 '+cryptoDate(d.update_time||d.timestamp),'terminal-meta'));
+  });
+  cryptoPanel(host,'近 30 日市場情緒','fear-history',(out,d)=>metricHistory(out,asList(d,'data','points').map(x=>({
+   day:metricDate(x.timestamp),value:metricValue(x.value)
+  })),[['恐懼與貪婪','value',points,[0,100]]]));
+ }else if(selected==='altseason'){
+  cryptoPanel(host,'山寨幣季節','altseason',(out,d)=>{
+   metricGauge(out,{value:d.altcoin_index,label:'山寨幣季節指數',kind:'metric-alt',left:'比特幣季節',right:'山寨幣季節'});
+   metricCards(out,[['一年最高',points(d.yearly_high)],['一年最低',points(d.yearly_low)],['山寨幣市值',usd(d.altcoin_marketcap)]]);
+  });
+  cryptoPanel(host,'近 30 日山寨幣季節','altseason-history',(out,d)=>metricHistory(out,asList(d,'points','historical','data','altcoinSeasonIndex').map(x=>({
+   day:metricDate(x.timestamp??x.time??x.snapshot_time),value:metricValue(x.altcoin_index??x.altcoinIndex??x.value)
+  })),[['山寨幣季節指數','value',points,[0,100]]]));
+ }else{
+  const name=cryptoMetrics.find(([key])=>key===selected)[1];
+  cryptoPanel(host,name,selected,(out,d)=>{
+   const weights=asList(d,'constituents').slice().sort((a,b)=>b.weight-a.weight);
+   metricCards(out,[['最新指數',points(d.value)],['24H 漲跌',d.value_24h_percentage_change==null?'—':move(Number(d.value_24h_percentage_change))],['成分幣數',String(weights.length)]]);
+   const constituents=node('details',null,'metric-history-table');
+   constituents.append(node('summary','查看成分幣與權重'),table([
+    ['成分幣',r=>anchor(r.symbol+' · '+r.name,marketLink('crypto','assets',r.symbol))],
+    ['權重',r=>{
+     const cell=node('span',null,'metric-weight');const weight=metricValue(r.weight);
+     cell.append(node('span',metricPercent(weight)));
+     if(weight!==null){const bar=node('meter');bar.min=0;bar.max=100;bar.value=Math.max(0,Math.min(100,weight));bar.setAttribute('aria-label',r.symbol+' 指數權重');cell.append(bar);}
+     return cell;
+    }]
+   ],weights));
+   out.append(constituents);
+  });
+  cryptoPanel(host,name+' 近 30 日走勢',selected+'-history',(out,d)=>metricHistory(out,asList(d,'quotes','points','data').map(x=>({
+   day:metricDate(x.update_time??x.timestamp??x.last_update),value:metricValue(x.value)
+  })),[[name,'value',points]]));
+ }
+ const sources=node('details',null,'terminal-method metric-history-table');
+ sources.append(node('summary','資料來源與延伸資源'));
+ const resources=node('div',null,'terminal-actions');
+ resources.append(externalLink('https://coinmarketcap.com/api/documentation/pro-api-reference/','CMC 資料目錄'),
   externalLink('https://coinmarketcap.com/api/pricing/','CMC 資料方案'),
   externalLink('https://eqn.news/api-docs','方程式新聞 API'));
- sources.append(links);host.append(sources);
+ sources.append(resources);host.append(sources);
 }
 function showCryptoSectors(host){
  const detail=node('div');
@@ -621,7 +723,7 @@ function showNews(host,market,symbol,channel){
  }
 }
 const edges=[['1mo','1 月',23],['3mo','3 月',66],['6mo','6 月',130],['1y','1 年',260],['2y','2 年',520],['5y','5 年',1300]];
-function drawSeries(host,rows,{field='close',title,temperature=false,divergences=[]}={}){
+function drawSeries(host,rows,{field='close',title,temperature=false,divergences=[],valueFormat=quantity,bounds,compactDates=false}={}){
  const ns='http://www.w3.org/2000/svg';
  function svg(tag,attributes,value){
   const element=document.createElementNS(ns,tag);
@@ -634,21 +736,21 @@ function drawSeries(host,rows,{field='close',title,temperature=false,divergences
  const points=usable.map(row=>row[field]);
  const rawMin=Math.min(...points),rawMax=Math.max(...points);
  const margin=(rawMax-rawMin||Math.max(rawMax*.01,.01))*.09;
- const lower=temperature?-7:rawMin-margin;
- const upper=temperature?107:rawMax+margin;
+ const lower=bounds?.[0]??(temperature?-7:rawMin-margin);
+ const upper=bounds?.[1]??(temperature?107:rawMax+margin);
  const width=1024,height=temperature?250:280;
- const left=92,right=width-25,top=18,bottom=height-32;
+ const left=compactDates?145:92,right=width-25,top=18,bottom=height-32;
  const x=i=>left+i*(right-left)/(rows.length-1);
  const y=value=>bottom-(value-lower)*(bottom-top)/(upper-lower);
  const chart=svg('svg',{viewBox:'0 0 '+width+' '+height,role:'img','aria-label':title});
  for(const step of temperature?[0,50,100]:Array.from({length:5},(_,i)=>lower+i*(upper-lower)/4)){
   chart.append(svg('line',{x1:left,x2:right,y1:y(step),y2:y(step),class:'chart-grid'}),
-   svg('text',{x:left-7,y:y(step)+5,'text-anchor':'end'},quantity(step)));
+   svg('text',{x:left-7,y:y(step)+5,'text-anchor':'end'},valueFormat(step)));
  }
  const labelStep=Math.max(1,Math.floor((rows.length-1)/4));
  for(let index=0;index<rows.length;index+=labelStep){
   if(index!==0&&rows.length-index<labelStep*.35)break;
-  chart.append(svg('text',{x:x(index),y:height-8,'text-anchor':'middle'},rows[index].day));
+  chart.append(svg('text',{x:x(index),y:height-8,'text-anchor':'middle'},compactDates?rows[index].day.slice(5).replace('-','/'):rows[index].day));
  }
  let from=null;
  const visible=new Map();
@@ -675,7 +777,7 @@ function drawSeries(host,rows,{field='close',title,temperature=false,divergences
  const read=index=>{
   const row=rows[index];
   const signal=row.entry==='buy'?'買入訊號':row.entry==='sell'?'賣出訊號':row.cold?'相對低溫':row.hot?'相對高溫':'';
-  readout.textContent=[row.day,quantity(row[field]),signal].filter(Boolean).join(' · ');
+  readout.textContent=[row.day,valueFormat(row[field]),signal].filter(Boolean).join(' · ');
  };
  chart.onpointermove=event=>{
   const box=chart.getBoundingClientRect();
@@ -966,6 +1068,7 @@ function route(){
   if(a.hash==='#'+market)a.setAttribute('aria-current','page');
   else a.removeAttribute('aria-current');
  }
+ const focusedMetric=document.activeElement?.closest('.metric-nav');
  content.replaceChildren();
  if(!['crypto','rti'].includes(market))showHome();
  else {
@@ -974,7 +1077,7 @@ function route(){
   if(market==='rti'){if(category==='method')showMethod(host);else if(category==='backtest')showBacktest(host,symbol);else if(category==='capital')showCapital(host);else if(category==='compare')showComparison(host);else if(['signals','zones','resources'].includes(category))rtiResearch(host,category,symbol);else showRTI(host,symbol);}
   else if(category==='news')showNews(host,market,symbol,params.get('channel'));
   else if(category==='assets')showCryptoAssets(host,symbol);
-  else if(category==='overview')showCryptoDashboard(host);
+  else if(category==='overview')showCryptoDashboard(host,params.get('metric'));
   else if(category==='sectors')showCryptoSectors(host);
   else if(category==='derivatives')showCryptoDerivatives(host);
   else if(category==='chain')showCryptoChain(host);
@@ -982,6 +1085,7 @@ function route(){
   else if(category==='disclosures')showDisclosures(host);
   else marketBoard(host,market,category);
  }
+ if(focusedMetric)content.querySelector('.metric-nav [aria-current]')?.focus({preventScroll:true});
  if(window.scrollY>0)window.scrollTo({top:0,behavior:'instant'});
 }
 mountTapes();

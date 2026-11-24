@@ -208,3 +208,40 @@ body #qtemp_root.rti-terminal:fullscreen{overflow:auto;background:radial-gradien
  #qtemp_root .crypto-sort{flex-wrap:nowrap;overflow-x:auto}
  #qtemp_root .crypto-sort button{flex:none}
 }
+
+
+#qtemp_root .metric-nav a{white-space:nowrap}
+#qtemp_root .metric-nav a[aria-current]{background:#ededed;color:#161616!important;border-color:#fff}
+#qtemp_root .metric-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr));gap:10px;margin:0 0 16px}
+#qtemp_root .metric-cards > div{min-width:0;border:1px solid var(--glass-line);border-radius:14px;padding:12px 14px;background:#ffffff09}
+#qtemp_root .metric-cards dt{color:var(--glass-muted);font-size:.86rem}
+#qtemp_root .metric-cards dd{margin:5px 0 0;font:700 clamp(1.18rem,2.45vw,1.75rem) var(--market-mono);overflow-wrap:anywhere}
+#qtemp_root .metric-share{display:flex;gap:2px;background:#101010;border:1px solid var(--glass-line);border-radius:10px;overflow:hidden;margin:0 0 14px}
+#qtemp_root .metric-share span{box-sizing:border-box;flex-shrink:1;min-width:0;padding:7px 3px;text-align:center;font-size:clamp(.63rem,1.3vw,.87rem);background:#dadada;color:#151515;overflow:hidden}
+#qtemp_root .metric-share span:nth-child(2){background:#969696}
+#qtemp_root .metric-share span:nth-child(3){background:#464646;color:#fff}
+#qtemp_root .metric-gauge{max-width:310px;margin:12px auto 22px}
+#qtemp_root .metric-gauge-arc{position:relative;aspect-ratio:2/1;isolation:isolate;overflow:hidden;border-radius:100% 100% 0 0 / 200% 200% 0 0}
+#qtemp_root .metric-gauge-arc::before,#qtemp_root .metric-gauge-arc::after{content:'';position:absolute;inset:0;pointer-events:none}
+#qtemp_root .metric-gauge-arc::before{background:conic-gradient(from -90deg at 50% 100%,#e65f65 0deg,#e79e70 48deg,#e7cb83 90deg,#a6bf8b 135deg,#5dcead 180deg,transparent 180deg)}
+#qtemp_root .metric-alt .metric-gauge-arc::before{background:conic-gradient(from -90deg at 50% 100%,#626262 0deg,#a6a6a6 90deg,#e7e7e7 180deg,transparent 180deg)}
+#qtemp_root .metric-gauge-arc::after{inset:11% 6% 0;border-radius:100% 100% 0 0 / 200% 200% 0 0;background:#191919}
+#qtemp_root .metric-gauge-pin{position:absolute;z-index:1;inset:4% auto 0 50%;width:3px;transform:translateX(-50%) rotate(var(--angle));transform-origin:center bottom;pointer-events:none}
+#qtemp_root .metric-gauge-pin::before{content:'';position:absolute;inset:0 -3px auto;display:block;height:12%;background:white;border:1px solid #262626;border-radius:12px;box-shadow:0 0 5px #2229}
+#qtemp_root .metric-gauge-reading{position:absolute;z-index:2;inset:auto 0 3% ;display:grid;place-content:center;gap:2px;text-align:center}
+#qtemp_root .metric-gauge-score strong{font:770 clamp(2.2rem,6vw,4rem)/1 var(--market-mono)}
+#qtemp_root .metric-gauge-score small,#qtemp_root .metric-gauge-scale{color:var(--glass-muted)}
+#qtemp_root .metric-gauge-scale{display:flex;justify-content:space-between;gap:8px;margin-top:7px;font-size:.82rem}
+#qtemp_root .metric-history-table{margin-top:13px}
+#qtemp_root .metric-history-table > summary{cursor:pointer;color:var(--glass-text);font-weight:650}
+#qtemp_root .metric-history-table .terminal-actions{margin-top:10px}
+#qtemp_root .metric-chart-controls .terminal-button[aria-pressed=true]{color:#141414;background:#e5e5e5}
+#qtemp_root .metric-chart svg{display:block;width:100%;height:auto}
+#qtemp_root .metric-chart svg .chart-path{stroke:#e1e1e1}
+#qtemp_root .metric-chart svg text{font-size:17px}
+#qtemp_root .metric-weight{display:flex;align-items:center;justify-content:flex-end;gap:8px}
+#qtemp_root .metric-weight meter{width:clamp(36px,10vw,110px)}
+@media(max-width:650px){
+ #qtemp_root .metric-chart svg text{font-size:24px}
+ #qtemp_root .metric-gauge{max-width:230px}
+}
