@@ -237,6 +237,8 @@
       const name = card.querySelector('h2,h3').textContent;
       const expand = control('展開' + name, 'glass-expand', '↗');
       const collapse = control('收合' + name, 'glass-expand', '×');
+      opens.set(card, expand);
+      closers.set(card, collapse);
       collapse.hidden = true;
       expand.setAttribute('aria-expanded', 'false');
       expand.onclick = () => focusCard(card, card);
