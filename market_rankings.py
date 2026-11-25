@@ -118,9 +118,10 @@ def _nasdaq_equities():
     address = 'https://api.nasdaq.com/api/screener/stocks?tableonly=true&limit=10000&offset=0&download=true'
     data = _json(address, {'User-Agent':'Mozilla/5.0 (compatible; MarketResearch/1.0)',
                            'Origin':'https://www.nasdaq.com', 'Referer':'https://www.nasdaq.com/'})
-    table = (data.get('data') or {}).get('table') or {}
+    payload = data.get('data') or {}
+    table = payload.get('table') or payload
     rows=[]
-    for row in table.get('rows', []):
+    for row in table.get('rows') or []:
         ticker=str(row.get('symbol') or '').upper()
         cap=_numeric(row.get('marketCap'))
         value=_numeric(row.get('lastsale'))
@@ -188,7 +189,7 @@ def rankings(market):
             _cache[market] = (monotonic() + (300 if market=='crypto' else 180), result)
             return result
         except Exception:
-            if prior:
+            if prior and prior[1].get('items'):
                 result = dict(prior[1],stale=True)
             else:
                 result = dict(items=[], source=None, checkedAt=None, error='市值排名來源暫時無法取得')
@@ -249,3 +250,4 @@ def taiwan_disclosures():
             rows=[row for group in pool.map(read,feeds) for row in group]
         return dict(items=sorted(rows,key=lambda row:row['asOf'] or '',reverse=True)[:30],source='證交所／櫃買中心 OpenAPI')
     return _cache_get(('taiwan-disclosures',),180,load)
+

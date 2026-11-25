@@ -11,7 +11,7 @@ const tapeNames={crypto:'加密貨幣'};
 const marketNames={...tapeNames,tw:'台股',us:'美股',rti:'RTI'};
 const menus={
  tw:[['listed','上市收盤'],['otc','上櫃收盤'],['rank','市值排行'],['index','大盤指數'],['etf','台股 ETF'],['lookup','個股查詢'],['disclosures','公司重大訊息'],['news','台股快訊']],
- us:[['rank','市值排行'],['index','主要指數'],['etf','產業與 ETF'],['lookup','個股查詢'],['news','美股快訊']],
+ us:[['index','主要指數'],['rank','市值排行'],['etf','產業與 ETF'],['lookup','個股查詢'],['news','美股快訊']],
  crypto:[['assets','加密資產總覽'],['workbench','單幣研究'],['events','事件研究'],['overview','市場指標'],['sectors','板塊輪動'],['derivatives','衍生品監控'],['chain','鏈上與交易所'],['news','快訊與公告']],
  rti:[['analysis','行情與 RTI'],['signals','訊號研究'],['zones','區間統計'],['backtest','買賣策略'],['capital','投入策略比較'],['compare','多資產比較'],['resources','研究資源'],['method','指標說明'],['quality','資料品質']]
 };
@@ -735,6 +735,7 @@ function dataQuality(host){
  const groups=[
   ['台股上市收盤','/api/market/tw/close/listed','臺灣證券交易所','官方盤後行情'],
   ['台股上櫃收盤','/api/market/tw/close/otc','證券櫃檯買賣中心','官方盤後行情'],
+  ['美股指數日線','/api/market/segment/us/index','Yahoo Finance','美股已確認收盤日線'],
   ['美股市值榜','/api/market/rankings/us','Yahoo Finance／Nasdaq','報價延遲視來源'],
   ['加密行情','/api/market/rankings/crypto','CoinMarketCap 等','聚合行情'],
   ['方程式快訊','/api/market/crypto/events/BTC?channel=main','方程式新聞','事件發布時間'],
@@ -755,7 +756,7 @@ function dataQuality(host){
     const data=await get(group[1],0);
     const item=data.items?.find(x=>x.asOf);
     const asOf=data.asOf||item?.asOf||data.events?.[0]?.time;
-    const usable=data.items?.length??data.events?.length??data.rows?.length??0;
+    const usable=data.items?.filter(x=>!x.error&&x.value!=null).length??data.events?.length??data.rows?.length??0;
     row.cells[1].textContent=data.source||data.priceBasis||group[2];
     row.cells[3].textContent=!usable?'來源無資料':data.stale?'上次成功資料':'可用';
     row.cells[4].textContent=asOf?dateTime(asOf):'未提供';
@@ -915,7 +916,7 @@ function showBacktest(host,symbol){
  const slippage=field('單次滑價 %','0','number');slippage.min='0';slippage.max='5';slippage.step='0.01';
  const delay=field('成交延遲（日 K）','1','number');delay.min='1';delay.max='10';delay.step='1';
  const split=field('前後段切分日（選填）','','date');split.required=false;
- const audit=field('檢查未來資料與暖機','1','checkbox');
+ const audit=field('檢查未來資料與暖機','1','checkbox');audit.required=false;
  const submit=node('button','執行回測','terminal-button primary');submit.type='submit';form.append(submit);
  const result=node('div');host.append(node('p','檢視 RTI 訊號在歷史期間的資金表現與交易紀錄，並與買入持有比較。','terminal-meta'),form,result);
  form.onsubmit=event=>{

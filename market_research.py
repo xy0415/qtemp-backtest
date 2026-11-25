@@ -1,6 +1,6 @@
 """Public equity snapshots and timestamp-aligned crypto event returns."""
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 from statistics import median
 from time import monotonic
@@ -85,11 +85,12 @@ def news_events(coin, channel, slot):
 
 @lru_cache(maxsize=8)
 def hourly_closes(coin, slot):
-    frame = yf.Ticker(coin + '-USD').history(period='1mo', interval='1h', auto_adjust=False,
-                                            timeout=12, raise_errors=True)
-    now = datetime.now(timezone.utc).timestamp()
+    now = datetime.now(timezone.utc)
+    frame = yf.Ticker(coin + '-USD').history(start=now - timedelta(days=90), end=now,
+                                            interval='1h', auto_adjust=False, timeout=12, raise_errors=True)
+    latest = now.timestamp()
     return {int(stamp.timestamp()) + 3600: float(close) for stamp, close in frame['Close'].items()
-            if stamp.timestamp() + 3600 <= now and 0 < float(close) < float('inf')}
+            if stamp.timestamp() + 3600 <= latest and 0 < float(close) < float('inf')}
 
 
 def event_research(coin, channel):
