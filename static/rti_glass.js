@@ -6,7 +6,7 @@
   const nav = top.querySelector('nav');
   const motion = matchMedia('(prefers-reduced-motion: reduce)');
   const routes = [
-    ['首頁', '#home', '⌂'], ['加密資產總覽', '#crypto/assets', '◈'],
+    ['首頁', '#home', '⌂'], ['台股', '#tw'], ['美股', '#us'], ['單幣研究', '#crypto/workbench'], ['事件研究', '#crypto/events'], ['資料品質', '#rti/quality'], ['加密資產總覽', '#crypto/assets', '◈'],
     ['市場指標', '#crypto/overview', '▤'], ['板塊輪動', '#crypto/sectors'],
     ['衍生品監控', '#crypto/derivatives'], ['鏈上與交易所', '#crypto/chain'],
     ['加密快訊', '#crypto/news', '≋'], ['行情與 RTI', '#rti/analysis', '∿'],
@@ -37,7 +37,7 @@
   let pillAnimation;
   function highlightRoute() {
     const part = location.hash.slice(1).split('/')[0];
-    const path = ['crypto', 'rti'].includes(part) ? '#' + part : '#home';
+    const path = ['crypto', 'rti', 'tw', 'us'].includes(part) ? '#' + part : '#home';
     const active = [...nav.querySelectorAll('a')].find(link => link.hash === path);
     if (!active || !active.offsetWidth) return;
     nav.querySelectorAll('a').forEach(link => {
@@ -354,3 +354,4 @@
   window.addEventListener('hashchange', () => requestAnimationFrame(() => { highlightRoute(); dockState(); }));
   requestAnimationFrame(() => { highlightRoute(); dockState(); });
 })();
+

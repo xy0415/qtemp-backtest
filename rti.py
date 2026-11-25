@@ -118,6 +118,7 @@ def calculate(frame, rank_len, minimum, divergence=False, tick=.01):
                 stats[entry+'Count']+=1
                 stats[entry+'Sum']+=opens[i]
         results.append(dict(day=dates[i],open=opens[i],high=high,low=low,close=close,
+                            volume=float(volume) if isfinite(volume) and volume>=0 else None,
                             score=score,percentile=display,stage='formal' if formal else 'preliminary' if preliminary else 'raw' if score is not None else 'none',
                             ready=ready,rsi=rsi,trend=trend,momentum=momentum,flow=flow,consensus=consensus,
                             deviation=(close/slow-1)*100,deviationRank=deviation_rank,
@@ -206,3 +207,4 @@ def rti_snapshot(symbol, rank_len, minimum, divergence, slot):
     return dict(symbol=resolved,rankLength=rank_len,minimum=minimum,rows=rows,annual=annual,
                 divergences=confirmed,priceBasis='Yahoo Finance UTC 日線' if crypto else 'Yahoo Finance 還原日線',
                 stale=bool(meta.get('_qtemp_cache_status')=='stale_backup'),asOf=rows[-1]['day'])
+

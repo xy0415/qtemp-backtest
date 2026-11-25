@@ -245,3 +245,11 @@ body #qtemp_root.rti-terminal:fullscreen{overflow:auto;background:radial-gradien
  #qtemp_root .metric-chart svg text{font-size:24px}
  #qtemp_root .metric-gauge{max-width:230px}
 }
+
+
+#qtemp_root .workbench-chart:has(canvas){min-height:460px}
+#qtemp_root .sector-heatmap{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(140px,100%),1fr));gap:5px;margin-top:12px}
+#qtemp_root .sector-heatmap.sector-rendered{display:block;height:420px}
+#qtemp_root .sector-tile{border:1px solid var(--glass-line);color:white;padding:12px;border-radius:8px}
+#qtemp_root .top-menu nav{max-width:100%;overflow-x:auto}
+@media(max-width:660px){#qtemp_root .top-menu nav{order:3;width:100%;justify-content:flex-start}}

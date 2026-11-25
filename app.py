@@ -13,6 +13,7 @@ from financial_market import market_snapshot, official_news, macro_snapshot, mar
 from market_rankings import MARKETS, market_segment, rankings, taiwan_disclosures
 from rti import get_earnings_reference, rti_snapshot, symbol_valid
 from rti_backtest import backtest
+from market_research import EVENT_CHANNELS, EQUITY_FEEDS, RESEARCH_COINS, event_research, news_events, taiwan_close
 from crypto_data import crypto_market, crypto_resource, SORTS
 
 app = Flask(__name__)
@@ -159,6 +160,29 @@ def crypto_resources_api(name):
         return jsonify(error='加密市場資料暫時不可用'), 503
 
 
+@app.get('/api/market/tw/close/<board>')
+def taiwan_close_api(board):
+    if board not in EQUITY_FEEDS:
+        return jsonify(error='不支援的市場'), 404
+    try:
+        return jsonify(taiwan_close(board, int(monotonic() // 300)))
+    except Exception:
+        return jsonify(error='官方收盤資料暫時無法取得'), 503
+
+
+@app.get('/api/market/crypto/events/<coin>')
+def rti_events_api(coin):
+    channel = request.args.get('channel', 'main')
+    if coin not in RESEARCH_COINS or channel not in EVENT_CHANNELS:
+        return jsonify(error='不支援的幣種或事件類型'), 400
+    try:
+        if request.args.get('study') == '1':
+            return jsonify(event_research(coin, channel))
+        return jsonify(events=news_events(coin, channel, int(monotonic() // 300)))
+    except Exception:
+        return jsonify(error='事件或小時 K 線來源暫時無法取得'), 503
+
+
 @app.get('/api/market/tw/disclosures')
 def taiwan_disclosures_api():
     return jsonify(taiwan_disclosures())
@@ -194,7 +218,11 @@ def rti_backtest_api(symbol):
                                 request.args.get('end', datetime.now(timezone.utc).date().isoformat()),
                                 float(request.args.get('initial', '100000')),
                                 float(request.args.get('allocation', '100')),
-                                float(request.args.get('fee', '0.1'))))
+                                float(request.args.get('fee', '0.1')),
+                                float(request.args.get('slippage', '0')),
+                                int(request.args.get('delay', '1')),
+                                request.args.get('split') or None,
+                                request.args.get('audit') == '1'))
     except ValueError as error:
         return jsonify(error=str(error)), 400
     except Exception:
@@ -342,3 +370,4 @@ def api(method):
 @app.errorhandler(413)
 def too_large(_):
     return jsonify({'error': '上傳檔案過大'}), 413
+

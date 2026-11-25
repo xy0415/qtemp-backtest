@@ -8,11 +8,12 @@ const tiny=new Intl.NumberFormat('zh-TW',{maximumSignificantDigits:5});
 const compact=new Intl.NumberFormat('en-US',{notation:'compact',maximumFractionDigits:2});
 const time=new Intl.DateTimeFormat('zh-TW',{timeZone:'Asia/Taipei',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
 const tapeNames={crypto:'加密貨幣'};
+const marketNames={...tapeNames,tw:'台股',us:'美股',rti:'RTI'};
 const menus={
- tw:[['rank','市值排行'],['index','大盤指數'],['etf','台股 ETF'],['lookup','個股查詢'],['disclosures','公司重大訊息'],['news','台股快訊']],
+ tw:[['listed','上市收盤'],['otc','上櫃收盤'],['rank','市值排行'],['index','大盤指數'],['etf','台股 ETF'],['lookup','個股查詢'],['disclosures','公司重大訊息'],['news','台股快訊']],
  us:[['rank','市值排行'],['index','主要指數'],['etf','產業與 ETF'],['lookup','個股查詢'],['news','美股快訊']],
- crypto:[['assets','加密資產總覽'],['overview','市場指標'],['sectors','板塊輪動'],['derivatives','衍生品監控'],['chain','鏈上與交易所'],['news','快訊與公告']],
- rti:[['analysis','行情與 RTI'],['signals','訊號研究'],['zones','區間統計'],['backtest','買賣策略'],['capital','投入策略比較'],['compare','多資產比較'],['resources','研究資源'],['method','指標說明']]
+ crypto:[['assets','加密資產總覽'],['workbench','單幣研究'],['events','事件研究'],['overview','市場指標'],['sectors','板塊輪動'],['derivatives','衍生品監控'],['chain','鏈上與交易所'],['news','快訊與公告']],
+ rti:[['analysis','行情與 RTI'],['signals','訊號研究'],['zones','區間統計'],['backtest','買賣策略'],['capital','投入策略比較'],['compare','多資產比較'],['resources','研究資源'],['method','指標說明'],['quality','資料品質']]
 };
 const legacy={overview:'home',markets:'us',sectors:'us/etf',stocks:'us/lookup',macro:'us/index',news:'us/news',
  quant:'rti',chart:'rti',signals:'rti',zones:'rti',strategy:'rti',compare:'rti',resources:'rti/method',watchlist:'home'};
@@ -199,7 +200,7 @@ function showHome(){
  const copy=node('div',null,'hero-copy');
  const title=node('h1','RTI Market Terminal','hero-headline');
  const links=node('div',null,'hero-links');
- links.append(anchor('加密貨幣','#crypto','terminal-button primary'),anchor('RTI 指標回測','#rti','terminal-button'));
+ links.append(anchor('加密貨幣','#crypto','terminal-button primary'),anchor('台股','#tw','terminal-button'),anchor('美股','#us','terminal-button'),anchor('RTI 指標回測','#rti','terminal-button'));
  copy.append(title,links);left.append(copy);hero.append(left);content.append(hero);
 
  const sections=node('section',null,'landing-sections');sections.id='landing-sections';
@@ -228,8 +229,8 @@ function frame(market,category){
  const wrapper=node('div',null,'terminal-layout');
  const sidebar=node('aside',null,'terminal-sidebar');
  const nav=node('nav');
- nav.setAttribute('aria-label',(tapeNames[market]||'RTI')+'子選單');
- sidebar.append(node('strong',tapeNames[market]||'RTI'),nav);
+ nav.setAttribute('aria-label',marketNames[market]+'子選單');
+ sidebar.append(node('strong',marketNames[market]),nav);
  for(const [id,label] of menus[market]){
   const link=anchor(label,marketLink(market,id));
   if(id===category)link.setAttribute('aria-current','page');
@@ -370,6 +371,7 @@ function showCryptoAssets(host,symbol){
    ['總鎖倉量 USD',quantity(x.tvl,true)],['交易對數',x.marketPairs],['60 天漲跌',move(x.change60d)],['90 天漲跌',move(x.change90d)],
    ['區塊鏈',x.chain],['合約地址',x.address],['分類',window.equationNews.traditional((x.tags||[]).filter(Boolean).join('、'))],['更新時間',dateTime(x.lastUpdated)]]);
   const links=node('div',null,'terminal-actions');
+  if(['BTC','ETH'].includes(x.symbol))links.append(anchor('單幣研究',marketLink('crypto','workbench',x.symbol),'terminal-button'));
   links.append(anchor('查看 RTI 行情',rtiLink(x.symbol+'-USD'),'terminal-button'),anchor('查看相關快訊',marketLink('crypto','news',x.symbol),'terminal-button'));
   details.append(links);
   if(Number.isInteger(x.providerId)){
@@ -555,22 +557,265 @@ function showCryptoDashboard(host,requested){
   externalLink('https://eqn.news/api-docs','方程式新聞 API'));
  sources.append(resources);host.append(sources);
 }
+const eventName={main:'主頻道快訊',binance:'幣安公告',korea:'韓國交易所公告',pricechange:'價格異動',oi:'OI 異動',major:'重大行情'};
+const scripts=new Map();
+function loadScript(url){
+ if(scripts.has(url))return scripts.get(url);
+ const task=new Promise((resolve,reject)=>{
+  const script=node('script');script.src=url;
+  const timer=setTimeout(()=>{script.remove();reject(Error('圖表載入逾時'));},7000);
+  script.onload=()=>{clearTimeout(timer);resolve();};
+  script.onerror=()=>{clearTimeout(timer);script.remove();reject(Error('圖表載入失敗'));};
+  document.head.append(script);
+ }).catch(error=>{scripts.delete(url);throw error;});
+ scripts.set(url,task);return task;
+}
+function eventTitle(row){
+ return window.equationNews.traditional(row.title||'未提供標題');
+}
+function eventFilter(host,coin,withChannel,load){
+ const tools=node('div',null,'terminal-actions');
+ const assets=node('select');assets.setAttribute('aria-label','研究幣種');
+ for(const id of ['BTC','ETH'])assets.add(new Option(id,id));
+ assets.value=coin==='ETH'?'ETH':'BTC';tools.append(assets);
+ const channel=node('select');channel.setAttribute('aria-label','事件類型');
+ for(const [key,label] of Object.entries(eventName))channel.add(new Option(label,key));
+ if(withChannel)tools.append(channel);
+ host.append(tools);
+ function change(){load(assets.value,channel.value)}
+ assets.onchange=channel.onchange=change;
+ change();
+}
+function eventLink(row){
+ const link=externalLink(row.eventUrl||row.url,eventTitle(row));
+ return link||eventTitle(row);
+}
+function eventResearchView(host,symbol){
+ const output=node('div');
+ host.append(node('p','以事件發布後第一根已收盤小時線為基準，比較 1 小時、24 小時及 7 天的報酬與同期 BTC。每類最多讀取最近 100 則事件。缺線或尚未到期的樣本不計。','terminal-meta'));
+ let version=0;
+ eventFilter(host,symbol,true,(coin,channel)=>{
+  const request=++version;
+  notice(output,'載入方程式事件與小時行情…');
+  Promise.all([get('/api/market/crypto/events/'+coin+'?study=1&channel='+channel,300000),window.equationNews.prepareChinese()]).then(([data])=>{
+   if(request!==version||!output.isConnected)return;
+   const label={1:'1 小時',24:'24 小時',168:'7 天'};
+   output.replaceChildren(node('h2',coin+' · '+eventName[channel]),node('p','方程式新聞 · '+data.priceSource+' · 行情截至 '+dateTime(data.coverage)+'（台北）','terminal-meta'),
+    table([['期間',x=>label[x.hours]],['有效樣本',x=>x.samples],['報酬中位數',x=>move(x.median)],['超額報酬中位數',x=>x.excess==null?'—':format.format(x.excess)+' 個百分點'],
+     ['上漲比例',x=>metricPercent(x.positive)],['最低報酬',x=>move(x.minimum)],['最高報酬',x=>move(x.maximum)]],data.stats));
+   const rows=data.events.filter(x=>x.returns['24']!=null).map(x=>x.returns['24'].asset);
+   if(rows.length){
+    const distribution=node('section',null,'terminal-method');
+    distribution.append(node('h2','24 小時報酬分布'));
+    const buckets=[['低於 −5%',-Infinity,-5],['−5% 至 −1%',-5,-1],['−1% 至 1%',-1,1],['1% 至 5%',1,5],['5% 以上',5,Infinity]];
+    distribution.append(table([['區間',x=>x[0]],['樣本',x=>x[1]],['占比',x=>{
+     const bar=node('meter');bar.max=rows.length;bar.value=x[1];bar.setAttribute('aria-label',x[0]+' '+x[1]+' 筆');return bar;
+    }]],buckets.map(([name,lo,hi])=>[name,rows.filter(v=>v>=lo&&v<hi).length])));
+    output.append(distribution);
+   }
+   output.append(node('h2','事件明細'),table([['發布時間（台北）',x=>dateTime(x.time)],['事件',eventLink],
+    ...[1,24,168].map(h=>[label[h],x=>move(x.returns[String(h)]?.asset)]),
+    ['24 小時 BTC',x=>move(x.returns['24']?.btc)]],data.events));
+  }).catch(error=>{if(request===version&&output.isConnected)notice(output,error.message)});
+ });
+ host.append(output);
+}
+function coinWorkbench(host,symbol){
+ const panel=node('div');
+ let version=0, dispose;
+ eventFilter(host,symbol,true,(coin,channel)=>{
+  const attempt=++version;
+  dispose?.();dispose=null;
+  notice(panel,'讀取已收盤日 K 與 RTI…');
+  const history=get('/api/rti/'+coin+'-USD',120000);
+  const events=Promise.all([get('/api/market/crypto/events/'+coin+'?channel='+channel,300000),window.equationNews.prepareChinese()]);
+  Promise.allSettled([history,events]).then(async ([price,news])=>{
+   if(attempt!==version||!panel.isConnected)return;
+   if(price.status==='rejected'){notice(panel,price.reason.message);return;}
+   const data=price.value;
+   const rows=data.rows.slice(-365);
+   const latest=rows.at(-1);
+   if(!latest){notice(panel,'目前沒有可用的日線');return;}
+   const timeline=news.status==='fulfilled'?news.value[0].events:[];
+   const chart=node('div',null,'workbench-chart terminal-chart');
+   const readout=node('p',null,'terminal-meta');
+   const range=node('div',null,'terminal-actions');
+   const sources=node('div',null,'terminal-actions');
+   sources.append(anchor('回測 '+coin,'#rti/backtest/'+coin+'-USD','terminal-button'),anchor('事件研究','#crypto/events/'+coin,'terminal-button'));
+   panel.replaceChildren(node('h2',coin+'／USD'),node('p',data.priceBasis+' · 日線截至 '+data.asOf+' UTC'+(data.stale?' · 上次成功資料':''),'terminal-meta'),range,chart,readout,sources);
+   readout.textContent='收盤 '+quantity(latest.close)+' USD · RTI 技術溫度 '+quantity(latest.percentile);
+   const byDay=new Map();
+   for(const row of timeline){
+    if(!byDay.has(row.day))byDay.set(row.day,[]);
+    byDay.get(row.day).push(row);
+   }
+   const feed=node('div',null,'terminal-method');
+   panel.append(feed);
+   function showEvents(day){
+    feed.replaceChildren(node('h2',day?day+' UTC 事件':'近期事件'));
+    if(news.status==='rejected'){feed.append(node('p','方程式事件暫時無法取得。','terminal-meta'));return;}
+    const items=day?(byDay.get(day)||[]):timeline.slice(0,10);
+    if(!items.length){feed.append(node('p','這個 UTC 日期沒有載入的事件。','terminal-meta'));return;}
+    for(const item of items){
+     const entry=node('details');
+     entry.append(node('summary',dateTime(item.time)+' · '+eventTitle(item)));
+     for(const line of item.summary)entry.append(node('p',window.equationNews.traditional(line)));
+     const link=externalLink(item.url,'來源原文');if(link)entry.append(link);
+     feed.append(entry);
+    }
+   }
+   showEvents();
+   try{
+    await loadScript('https://cdn.jsdelivr.net/npm/lightweight-charts@5.0.9/dist/lightweight-charts.standalone.production.js');
+    if(attempt!==version||!chart.isConnected)return;
+    const L=window.LightweightCharts;
+    const chartApi=L.createChart(chart,{autoSize:true,height:460,layout:{background:{color:'#151515'},textColor:'#ddd',attributionLogo:true},grid:{vertLines:{color:'#242424'},horzLines:{color:'#242424'}}});
+    dispose=()=>chartApi.remove();
+    const candle=chartApi.addSeries(L.CandlestickSeries,{upColor:'#60c3ad',downColor:'#e67d84',borderVisible:false,wickUpColor:'#60c3ad',wickDownColor:'#e67d84'},0);
+    const volume=chartApi.addSeries(L.HistogramSeries,{priceFormat:{type:'volume'},priceScaleId:''},0);
+    volume.priceScale().applyOptions({scaleMargins:{top:.82,bottom:0}});
+    const rti=chartApi.addSeries(L.LineSeries,{color:'#eac395',lineWidth:2},1);
+    candle.setData(rows.map(x=>({time:x.day,open:x.open,high:x.high,low:x.low,close:x.close})));
+    volume.setData(rows.filter(x=>Number.isFinite(x.volume)).map(x=>({time:x.day,value:x.volume,color:x.close>=x.open?'#60c3ad66':'#e67d8466'})));
+    rti.setData(rows.map(x=>Number.isFinite(x.percentile)?{time:x.day,value:x.percentile}:{time:x.day}));
+    const markers=rows.flatMap(x=>[
+     ...(x.entry&&x.stage==='formal'?[{time:x.day,position:'belowBar',color:x.entry==='buy'?'#60c3ad':'#e67d84',shape:x.entry==='buy'?'arrowUp':'arrowDown',text:x.entry==='buy'?'買入':'賣出'}]:[]),
+     ...(byDay.has(x.day)?[{time:x.day,position:'aboveBar',color:'#dadada',shape:'circle',text:String(byDay.get(x.day).length)}]:[])
+    ]);
+    L.createSeriesMarkers(candle,markers);
+    chartApi.subscribeClick(({time})=>{
+     if(typeof time==='string')showEvents(time);
+     else if(time?.year)showEvents([time.year,String(time.month).padStart(2,'0'),String(time.day).padStart(2,'0')].join('-'));
+    });
+    const choose=(days,active)=>{
+     for(const item of range.children)item.setAttribute('aria-pressed',String(item===active));
+     chartApi.timeScale().setVisibleRange({from:rows.at(-Math.min(days,rows.length)).day,to:latest.day});
+    };
+    for(const days of [30,90,180,365]){
+     const chip=button(days+' 日',()=>choose(days,chip),'terminal-button');range.append(chip);
+    }
+    choose(90,range.children[1]);
+    chart.insertAdjacentElement('afterend',node('p','上圖 K 線與成交量 · 下圖 RTI 技術溫度 · 點日期查看事件','terminal-meta'));
+    const attribution=externalLink('https://www.tradingview.com/','TradingView Lightweight Charts');
+    if(attribution)sources.append(attribution);
+   }catch{
+    if(attempt!==version||!chart.isConnected)return;
+    dispose?.();dispose=null;
+    drawSeries(chart,rows.slice(-90),{title:coin+' 收盤價'});
+    const oscillator=node('div',null,'terminal-chart');chart.after(oscillator);
+    drawSeries(oscillator,rows.slice(-90),{field:'percentile',title:'RTI 技術溫度',temperature:true});
+   }
+  });
+ });
+ host.append(panel);
+ const observer=new MutationObserver(()=>{
+  if(!panel.isConnected){version++;dispose?.();observer.disconnect();}
+ });
+ observer.observe(content,{childList:true});
+}
+function officialClose(host,board){
+ const area=node('div');host.append(area);
+ function load(){
+  notice(area,'讀取官方收盤資料…');
+  get('/api/market/tw/close/'+board,300000).then(data=>{
+   if(!area.isConnected)return;
+   const field=node('input');field.type='search';field.placeholder='搜尋代號或名稱';field.setAttribute('aria-label','搜尋收盤行情');
+   const view=node('div');const rows=data.items.slice().sort((a,b)=>(b.volume??-1)-(a.volume??-1));
+   const update=()=>{
+    const q=field.value.trim().toUpperCase();
+    view.replaceChildren(table([['代號',x=>anchor(x.ticker,marketLink('tw','lookup',x.ticker))],['名稱',x=>x.name],['收盤（元）',x=>quantity(x.value)],['漲跌',x=>move(x.changePct),x=>direction(x.changePct)],['成交股數',x=>quantity(x.volume)],['交易日',x=>x.asOf]],rows.filter(x=>(x.ticker+' '+x.name).toUpperCase().includes(q)).slice(0,100)));
+   };
+   area.replaceChildren(node('p',data.source+' · 盤後資料 · 依成交股數顯示前 100 筆，搜尋涵蓋來源全部標的。','terminal-meta'),field,view);
+   field.oninput=update;update();
+  }).catch(error=>{if(area.isConnected)notice(area,error.message,load)});
+ }
+ load();
+}
+function dataQuality(host){
+ const groups=[
+  ['台股上市收盤','/api/market/tw/close/listed','臺灣證券交易所','官方盤後行情'],
+  ['台股上櫃收盤','/api/market/tw/close/otc','證券櫃檯買賣中心','官方盤後行情'],
+  ['美股市值榜','/api/market/rankings/us','Yahoo Finance／Nasdaq','報價延遲視來源'],
+  ['加密行情','/api/market/rankings/crypto','CoinMarketCap 等','聚合行情'],
+  ['方程式快訊','/api/market/crypto/events/BTC?channel=main','方程式新聞','事件發布時間'],
+  ['RTI 日線','/api/rti/BTC-USD','Yahoo Finance','加密幣 UTC 已收盤日線']
+ ];
+ host.append(node('p','檢查目前資料可用性。資料時間與本站檢查時間分開顯示，來源沒提供時間時標為未提供。','terminal-meta'));
+ const output=table([['項目',x=>x[0]],['來源',x=>x[2]],['口徑',x=>x[3]],['狀態',()=>node('span','待檢查')],['資料時間',()=>node('span','—')]],groups);
+ host.append(output);
+ const refresh=button('檢查資料來源',run,'terminal-button');host.append(refresh);
+ const checked=node('p',null,'terminal-meta');host.append(checked);
+ async function run(){
+  refresh.disabled=true;
+  const rows=[...output.querySelectorAll('tbody tr')];
+  await Promise.all(groups.map(async (group,i)=>{
+   const row=rows[i];
+   row.cells[3].textContent='檢查中';row.cells[4].textContent='—';
+   try{
+    const data=await get(group[1],0);
+    const item=data.items?.find(x=>x.asOf);
+    const asOf=data.asOf||item?.asOf||data.events?.[0]?.time;
+    const usable=data.items?.length??data.events?.length??data.rows?.length??0;
+    row.cells[1].textContent=data.source||data.priceBasis||group[2];
+    row.cells[3].textContent=!usable?'來源無資料':data.stale?'上次成功資料':'可用';
+    row.cells[4].textContent=asOf?dateTime(asOf):'未提供';
+   }catch{row.cells[3].textContent='暫時無法取得';}
+  }));
+  checked.textContent='檢查完成 '+dateTime(new Date().toISOString())+'（台北）';refresh.disabled=false;
+ }
+ run();
+}
+
 function showCryptoSectors(host){
  const detail=node('div');
- cryptoPanel(host,'板塊排名','categories',(out,data)=>{
+ const panel=cryptoPanel(host,'板塊熱力圖','categories',(out,data)=>{
   const rows=asList(data,'categories').slice().sort((a,b)=>b.market_cap-a.market_cap);
-  out.append(table([['板塊',row=>button(window.equationNews.traditional(row.name),()=>{
+  function open(row){
    detail.replaceChildren();
    cryptoPanel(detail,window.equationNews.traditional(row.name)+' · 成分幣','category',(body,d)=>{
-    body.append(table([['幣種',x=>anchor(x.symbol+' · '+x.name,marketLink('crypto','assets',x.symbol))],['價格 USD',x=>numerical(usdQuote(x).price)],
-     ['市值 USD',x=>numerical(usdQuote(x).market_cap,true)]],asList(d,'coins')));
+    const coins=asList(d,'coins');
+    const observed=coins.filter(x=>metricValue(usdQuote(x).percent_change_24h)!==null);
+    const rising=observed.filter(x=>Number(usdQuote(x).percent_change_24h)>0).length;
+    body.append(node('p','24H 上漲 '+rising+'／'+observed.length+'（有漲跌資料的已載入成分幣）','terminal-meta'),
+     table([['幣種',x=>anchor(x.symbol+' · '+x.name,marketLink('crypto','assets',x.symbol))],['價格 USD',x=>numerical(usdQuote(x).price)],
+      ['24H 漲跌',x=>move(metricValue(usdQuote(x).percent_change_24h)),x=>direction(usdQuote(x).percent_change_24h)],
+      ['市值 USD',x=>numerical(usdQuote(x).market_cap,true)]],coins));
    },{id:row.id});
    detail.scrollIntoView({block:'nearest'});
-  },'terminal-link')],['幣種數',x=>x.num_tokens],['平均漲跌',x=>move(x.avg_price_change)],
-   ['市值 USD',x=>numerical(x.market_cap,true)],['市值變化',x=>move(x.market_cap_change)],
+  }
+  const chart=node('div',null,'sector-heatmap');
+  const sectors=rows.filter(row=>Number(row.market_cap)>0).slice(0,24);
+  const color=value=>value>0?'#23574c':value<0?'#67373e':'#454545';
+  function fallback(){
+   chart.replaceChildren(...sectors.map(row=>{
+    const tile=button(window.equationNews.traditional(row.name)+' '+move(row.avg_price_change),()=>open(row),'sector-tile');
+    tile.style.background=color(row.avg_price_change);return tile;
+   }));
+  }
+  fallback();
+  out.append(node('p','顯示市值前 24 個板塊。圖塊面積代表市值，紅綠代表平均漲跌；板塊成分可能重疊。','terminal-meta'),chart);
+  loadScript('https://cdn.jsdelivr.net/npm/echarts@5.6.0/dist/echarts.min.js').then(()=>{
+   if(!chart.isConnected||!sectors.length)return;
+   chart.replaceChildren();
+   chart.classList.add('sector-rendered');
+   const tree=window.echarts.init(chart,null,{renderer:'canvas'});
+   tree.setOption({aria:{enabled:true},tooltip:{formatter:({data:d})=>d.tooltip},series:[{type:'treemap',roam:false,nodeClick:false,breadcrumb:{show:false},
+    label:{color:'#fff',overflow:'truncate'},itemStyle:{borderColor:'#141414',borderWidth:2,gapWidth:2},data:sectors.map((row,index)=>({
+     index,name:window.equationNews.traditional(row.name)+'  '+move(row.avg_price_change),value:Number(row.market_cap),itemStyle:{color:color(row.avg_price_change)},
+     tooltip:window.echarts.format.encodeHTML(window.equationNews.traditional(row.name)+' · '+quantity(row.market_cap,true)+' USD · '+move(row.avg_price_change))
+    }))}]});
+   tree.on('click',e=>{if(sectors[e.data?.index])open(sectors[e.data.index])});
+   const resize=new ResizeObserver(()=>tree.resize());resize.observe(chart);
+   const observer=new MutationObserver(()=>{if(!chart.isConnected){resize.disconnect();tree.dispose();observer.disconnect();}});
+   observer.observe(content,{childList:true});
+  }).catch(()=>{chart.classList.remove('sector-rendered');fallback();});
+  const list=node('details',null,'metric-history-table');
+  list.append(node('summary','查看板塊排名表'),table([['板塊',row=>button(window.equationNews.traditional(row.name),()=>open(row),'terminal-link')],['幣種數',x=>x.num_tokens],
+   ['平均漲跌',x=>move(x.avg_price_change)],['市值 USD',x=>numerical(x.market_cap,true)],['市值變化',x=>move(x.market_cap_change)],
    ['24H 成交額 USD',x=>numerical(x.volume,true)],['成交額變化',x=>move(x.volume_change)]],rows));
+  out.append(list);
  });
- host.append(detail);
+ panel.after(detail);
 }
 const precisePercent=new Intl.NumberFormat('zh-TW',{style:'percent',maximumFractionDigits:6,signDisplay:'exceptZero'});
 function contractPercent(value){
@@ -667,11 +912,15 @@ function showBacktest(host,symbol){
  const initial=field('起始本金','100000','number');initial.min='1';
  const allocation=field('每次買賣比例 %','100','number');allocation.min='0.01';allocation.max='100';allocation.step='0.01';
  const fee=field('單次交易成本 %','0.1','number');fee.min='0';fee.max='5';fee.step='0.01';
+ const slippage=field('單次滑價 %','0','number');slippage.min='0';slippage.max='5';slippage.step='0.01';
+ const delay=field('成交延遲（日 K）','1','number');delay.min='1';delay.max='10';delay.step='1';
+ const split=field('前後段切分日（選填）','','date');split.required=false;
+ const audit=field('檢查未來資料與暖機','1','checkbox');
  const submit=node('button','執行回測','terminal-button primary');submit.type='submit';form.append(submit);
  const result=node('div');host.append(node('p','檢視 RTI 訊號在歷史期間的資金表現與交易紀錄，並與買入持有比較。','terminal-meta'),form,result);
  form.onsubmit=event=>{
   event.preventDefault();const selected=cleanSymbol(ticker.value,ticker.value.match(/^\d/) ? 'tw' : 'us');
-  const params=new URLSearchParams({start:start.value,end:end.value,initial:initial.value,allocation:allocation.value,fee:fee.value});
+  const params=new URLSearchParams({start:start.value,end:end.value,initial:initial.value,allocation:allocation.value,fee:fee.value,slippage:slippage.value,delay:delay.value,split:split.value,audit:audit.checked?'1':'0'});
   notice(result,'正在計算歷史日線與 RTI 訊號…');submit.disabled=true;
   get('/api/rti/'+urlSymbol(selected)+'/backtest?'+params,180000).then(data=>{
    if(!result.isConnected)return;
@@ -682,10 +931,14 @@ function showBacktest(host,symbol){
    const graph=node('div',null,'terminal-chart');
    result.replaceChildren(vitals,node('p',[data.symbol,data.start+' 至 '+data.end,data.source,data.stale?'上次成功資料':null].filter(Boolean).join(' · '),'terminal-meta'),
     node('p',data.note,'terminal-meta'),node('h2','策略資產曲線'),graph,node('h2','交易明細'),table([
-     ['日期',x=>x.day],['方向',x=>x.action==='buy'?'買入':'賣出'],['成交價格',x=>quantity(x.price)],['成交數量',x=>quantity(x.shares)],
+     ['訊號日',x=>x.signalDay],['成交日',x=>x.day],['方向',x=>x.action==='buy'?'買入':'賣出'],['成交價格',x=>quantity(x.price)],['手續成本',x=>quantity(x.fee)],['成交數量',x=>quantity(x.shares)],
      ['剩餘現金',x=>quantity(x.cash)],['持有數量',x=>quantity(x.holdings)],['交易後資產',x=>quantity(x.equity)]
     ],data.transactions,'所選期間沒有可執行的正式訊號。'));
    drawSeries(graph,data.curve.map(x=>({day:x.day,close:x.value})),{title:'RTI 策略資產',divergences:[]});
+   if(data.segments?.length)result.append(node('h2','前後段績效'),node('p','兩段分別以相同本金重跑。只有在未參考後段結果調整規則時，後段才可視為樣本外。','terminal-meta'),
+    table([['區段',x=>x.name],['期間',x=>x.start+' 至 '+x.end],['策略報酬',x=>move(x.totalReturn*100)],['買入持有',x=>move(x.benchmarkReturn*100)],['最大回撤',x=>move(x.maxDrawdown*100)],['成交筆數',x=>x.trades]],data.segments));
+   if(data.audit)result.append(node('h2','未來資料與暖機檢查'),node('p','抽查正式訊號日期，僅用該日及以前的資料重算，並對照縮短暖機後的分數。','terminal-meta'),
+    table([['抽查日期',x=>x.day],['原始分數',x=>quantity(x.original)],['截斷重算',x=>quantity(x.replay)],['訊號與分數',x=>x.matches?'一致':'有差異'],['縮短暖機 K 棒',x=>x.warmupBars],['縮短後分數',x=>quantity(x.shorter)]],data.audit));
   }).catch(error=>{if(result.isConnected)notice(result,error.message)}).finally(()=>submit.disabled=false);
  };
 }
@@ -1071,13 +1324,16 @@ function route(){
  }
  const focusedMetric=document.activeElement?.closest('.metric-nav');
  content.replaceChildren();
- if(!['crypto','rti'].includes(market))showHome();
+ if(!Object.hasOwn(menus,market))showHome();
  else {
   if(!menus[market].some(item=>item[0]===category))category=menus[market][0][0];
   const host=frame(market,category);
-  if(market==='rti'){if(category==='method')showMethod(host);else if(category==='backtest')showBacktest(host,symbol);else if(category==='capital')showCapital(host);else if(category==='compare')showComparison(host);else if(['signals','zones','resources'].includes(category))rtiResearch(host,category,symbol);else showRTI(host,symbol);}
+  if(market==='rti'){if(category==='quality')dataQuality(host);else if(category==='method')showMethod(host);else if(category==='backtest')showBacktest(host,symbol);else if(category==='capital')showCapital(host);else if(category==='compare')showComparison(host);else if(['signals','zones','resources'].includes(category))rtiResearch(host,category,symbol);else showRTI(host,symbol);}
   else if(category==='news')showNews(host,market,symbol,params.get('channel'));
   else if(category==='assets')showCryptoAssets(host,symbol);
+  else if(category==='workbench')coinWorkbench(host,symbol);
+  else if(category==='events')eventResearchView(host,symbol);
+  else if(market==='tw'&&['listed','otc'].includes(category))officialClose(host,category);
   else if(category==='overview')showCryptoDashboard(host,params.get('metric'));
   else if(category==='sectors')showCryptoSectors(host);
   else if(category==='derivatives')showCryptoDerivatives(host);
@@ -1093,4 +1349,5 @@ mountTapes();
 window.addEventListener('hashchange',route);
 route();
 })();
+
 
